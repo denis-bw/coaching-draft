@@ -12,10 +12,26 @@ import profilePlaceholder from "../../assets/PlaceholderProfile.jpg"
 import BtnTheme from '../BtnTheme/BtnTheme';
 import { ReactComponent as SettingsIcon } from '../../assets/SettingsIcon.svg';
 import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
 
 const Header = ({ toggleSidebar, isMobile, title }) => {
   const { user } = useSelector((state) => state.auth);
+  const [previewImage, setPreviewImage] = useState(user.avatar || null);
 
+  useEffect(() => {
+    if (user.avatar) {
+      const img = new Image();
+      img.src = user.avatar;
+
+      img.onload = () => {
+        setPreviewImage(user.avatar);
+      };
+      img.onerror = () => {
+        setPreviewImage(null); 
+      };
+    }
+  }, [user.avatar]);
+  
   return (
     <HeaderContainer>
       {isMobile && (
@@ -28,7 +44,7 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <TexeName>{user.username || "User"}</TexeName>
             <NavLink to="my-account">
               <img
-                src={user.avatar || profilePlaceholder}
+                src={previewImage ||  profilePlaceholder}
                 alt="User"
                 style={{ width: '2rem', height: '2rem', borderRadius: '9999px', borderColor: "#FFF" }}
               />
@@ -45,7 +61,7 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <TexeName>{user.username || "User"}</TexeName>
             <NavLink to="my-account">
               <img
-                src={user.avatar || profilePlaceholder}
+                src={previewImage ||  profilePlaceholder}
                 alt="User"
                 style={{ width: '2rem', height: '2rem', borderRadius: '9999px', borderColor: "#FFF" }}
               />

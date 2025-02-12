@@ -45,7 +45,16 @@ const MyAccount = () => {
 
   useEffect(() => {
     if (user.avatar) {
-      setPreviewImage(user.avatar);
+      const img = new Image();
+      img.src = user.avatar;
+
+      img.onload = () => {
+        setPreviewImage(user.avatar);
+      };
+      img.onerror = () => {
+        console.log("Зображення не знайдено.");
+        setPreviewImage(null); 
+      };
     }
   }, [user.avatar]);
 

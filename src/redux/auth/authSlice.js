@@ -134,7 +134,11 @@ const authSlice = createSlice({
     })
     .addCase(updateUserProfile.rejected, (state, action) => {
       state.isLoading = false;
+      console.log(action)
       state.error = action.payload.message || 'Failed to update profile';
+      if (action.payload.status === 401) {
+         state.isLoggedIn = false
+      }
     }),
 });
 

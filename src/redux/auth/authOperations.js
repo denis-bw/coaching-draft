@@ -183,7 +183,7 @@ export const updateUserProfile = createAsyncThunk(
       const response = await axios.put('users/updateprofile', updatedData); 
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data || 'Failed to update profile');
+      return rejectWithValue({message: error.response?.data, status: error.response?.status }|| 'Failed to update profile');
     }
   }
 );
