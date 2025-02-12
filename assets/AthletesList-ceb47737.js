@@ -1,1 +1,0 @@
-import{j as e,l as i}from"./index-f76ad55d.js";const l=()=>{const s=[{id:1,name:"Athlete A"},{id:2,name:"Athlete B"},{id:3,name:"Athlete C"}];return e.jsxs("div",{children:[e.jsx("h1",{children:"Список спортсменів"}),e.jsx("ul",{children:s.map(t=>e.jsx("li",{children:e.jsx(i,{to:`/athletes/${t.id}`,children:t.name})},t.id))})]})};export{l as default};
