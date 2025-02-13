@@ -22,10 +22,12 @@ import {
 } from './LoginPage.styled';
 
 import HeaderForUnlogged from '../../components/HeaderForUnlogged/HeaderForUnlogged';
+import { ToastContainer,toast } from 'react-toastify';
+import { setIsErrorAuthorized } from '../../redux/auth/authSlice';
 
 const LoginPage = () => {
   const dispatch = useDispatch();
-  const { error, isLoading } = useSelector((state) => state.auth);
+  const { error, isLoading, isErrorAuthorized } = useSelector((state) => state.auth);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -33,9 +35,21 @@ const LoginPage = () => {
     email: '',
     password: '',
   });
-
+  
   useEffect(() => {
-    if (error) {dispatch(clearError());}
+    if (isErrorAuthorized) {
+    toast.error(`Час сеансу закінчився. Будь ласка, увійдіть ще раз.`, {
+      position: 'top-right',
+      autoClose: 3000,
+    });
+    dispatch(setIsErrorAuthorized(false));
+  }
+  }, []);
+  
+  useEffect(() => {    
+    if (error) {
+      dispatch(clearError());
+    }
   }, [dispatch]);
   
   useEffect(() => {
@@ -71,6 +85,7 @@ const LoginPage = () => {
 
   return (
     <>
+      <ToastContainer />
       <HeaderForUnlogged/>
 
       <Container>

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import {requestWrapper} from '../../utils/requestWrapper'
 
 // const BASE_URL = import.meta.env.VITE_BASE_URL_AUTH;
 const BASE_URL = "https://coaching-draft-backend.onrender.com/api/auth/"
@@ -178,12 +179,15 @@ export const fetchResetPassword = createAsyncThunk(
 
 export const updateUserProfile = createAsyncThunk(
   'auth/updateUserProfile',
-  async (updatedData, { rejectWithValue }) => {
+  async (updatedData, thunkAPI) => {
     try {
-      const response = await axios.put('users/updateprofile', updatedData); 
+      const response = await requestWrapper(
+        () => axios.put('users/updateprofile', updatedData),
+        thunkAPI.dispatch 
+      );
       return response.data;
     } catch (error) {
-      return rejectWithValue({message: error.response?.data, status: error.response?.status }|| 'Failed to update profile');
+      return thunkAPI.rejectWithValue(error.response?.data || 'Failed to update profile');
     }
   }
 );

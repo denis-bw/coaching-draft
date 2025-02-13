@@ -62,9 +62,14 @@ const ResetPasswordPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         if (newPassword !== confirmPassword) {
         toast.error('Паролі не співпадають');
         return;
+        }
+        if (!email) {
+            toast.error('Email не надано у запиті');
+            return;
         }
 
         try {

@@ -17,12 +17,12 @@ import { createTransform } from 'redux-persist';
 const authTransform = createTransform(
   
   (inboundState) => {
-    const { successMessage, isLoading, isLoggedIn, error,  user, ...persistedState } = inboundState;
+    const { successMessage, isLoading, isLoggedIn, error, isErrorAuthorized, user, ...persistedState } = inboundState;
     return persistedState;
   },
   (outboundState) => {
     return {
-      ...outboundState, successMessage: null, isLoading: false, isLoggedIn: false, error: null, 
+      ...outboundState, successMessage: null, isLoading: false, isLoggedIn: false, error: null, isErrorAuthorized: false,
       user: {
             ...outboundState.user,
             email: null,

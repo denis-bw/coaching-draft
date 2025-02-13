@@ -46,11 +46,12 @@ import { refreshUser } from './redux/auth/authOperations';
 
 function App() {
   const dispatch = useDispatch();
-  const { token, isLoggedIn } = useSelector((state) => state.auth); 
+  const { token, isLoggedIn,  user } = useSelector((state) => state.auth); 
   let lastPrivatePath = "/my-account"
 
   useEffect(() => {
-    if (token && !isLoggedIn) {
+    if (token && !isLoggedIn  && !user.email) {
+      console.log("AAA")
       dispatch(refreshUser());
     }
   }, [dispatch, token, isLoggedIn]);

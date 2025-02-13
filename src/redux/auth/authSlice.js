@@ -1,6 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchAuthorizationUser,fetchLoginUser, fetchLogout, refreshUser, fetchForgotPassword, fetchResetPassword, updateUserProfile } from './authOperations.js';
 
+
+
 const initialState = {
   user: { email: null, username: null, location: null, dateOfBirth: null, avatar: null},
   token: null,
@@ -8,6 +10,7 @@ const initialState = {
   isLoggedIn: false,
   error: null,
   successMessage: null,
+  isErrorAuthorized: false,
 };
 
 const authSlice = createSlice({
@@ -16,12 +19,20 @@ const authSlice = createSlice({
   reducers: {
   clearError: (state) => {
       state.error = null; 
-    },
+  },
   clearMessage: (state) => {
       state.successMessage = null; 
-    },
+  },
   setToken: (state, action) => {
       state.token = action.payload; 
+  },
+  setIsLoggedIn: (state, action) => {
+    state.isLoggedIn = action.payload.isLoggedIn; 
+    state.token = action.payload.token;
+    state.isErrorAuthorized = action.payload.isErrorAuthorized; 
+  },
+  setIsErrorAuthorized: (state, action) => {
+    state.isErrorAuthorized = action.payload; 
   },
   },
   extraReducers: (builder) => builder
@@ -128,20 +139,15 @@ const authSlice = createSlice({
       state.error = null;
     })
     .addCase(updateUserProfile.fulfilled, (state, action) => {
-      console.log(action.payload, "Ф")
       state.user = { ...state.user, ...action.payload.updatedFields };
       state.isLoading = false;
     })
     .addCase(updateUserProfile.rejected, (state, action) => {
       state.isLoading = false;
-      console.log(action)
-      state.error = action.payload.message || 'Failed to update profile';
-      if (action.payload.status === 401) {
-         state.isLoggedIn = false
-      }
+      state.error = action.payload.message 
     }),
 });
 
 export const authReducer = authSlice.reducer;
-export const { clearError, clearMessage, setToken } = authSlice.actions;
+export const { clearError, clearMessage, setToken, setIsLoggedIn, setIsErrorAuthorized } = authSlice.actions;
 

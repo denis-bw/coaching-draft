@@ -163,7 +163,7 @@ const MyAccount = () => {
           throw new Error(result.error);
         }
       } catch (error) {
-        toast.error(`Помилка при збереженні: ${error.message || 'Щось пішло не так'}`, {
+        toast.error(`Помилка при збереженні даних`, {
           position: 'top-right',
           autoClose: 3000,
         });

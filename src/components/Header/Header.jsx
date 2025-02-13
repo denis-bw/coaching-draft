@@ -5,7 +5,8 @@ import {
   Title, 
   ContanerSettings, 
   TexeName,
-  MenuIcon
+  MenuIcon,
+  ImgAvatar
 } from './Header.styled';
 import { NavLink } from 'react-router-dom';
 import profilePlaceholder from "../../assets/PlaceholderProfile.jpg"
@@ -43,10 +44,9 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <BtnTheme/>
             <TexeName>{user.username || "User"}</TexeName>
             <NavLink to="my-account">
-              <img
+              <ImgAvatar
                 src={previewImage ||  profilePlaceholder}
                 alt="User"
-                style={{ width: '2rem', height: '2rem', borderRadius: '9999px', borderColor: "#FFF" }}
               />
             </NavLink>
           </ContanerSettings>
@@ -60,10 +60,9 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <BtnTheme/>
             <TexeName>{user.username || "User"}</TexeName>
             <NavLink to="my-account">
-              <img
+              <ImgAvatar
                 src={previewImage ||  profilePlaceholder}
                 alt="User"
-                style={{ width: '2rem', height: '2rem', borderRadius: '9999px', borderColor: "#FFF" }}
               />
             </NavLink>
           </ContanerSettings>
