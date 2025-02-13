@@ -1,4 +1,4 @@
-import{d as r,i as x,r as a,h,u as b,n as f,y as $,t as w,j as o,L as k,v}from"./index-7aef204e.js";import{H as j}from"./HeaderForUnlogged-04a0bae8.js";const y=r.div`
+import{d as r,i as x,r as a,h,u as b,n as f,y as $,t as w,j as o,L as k,v as j}from"./index-62bf0a9d.js";import{H as v}from"./HeaderForUnlogged-c3ad30bf.js";const y=r.div`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -128,7 +128,7 @@ import{d as r,i as x,r as a,h,u as b,n as f,y as $,t as w,j as o,L as k,v}from".
         border-color: ${({theme:e})=>e.BgActiveLink};
         color: ${({theme:e})=>e.white};
     }
-`,D=r.div`
+`,D=r.p`
   color: ${({theme:e})=>e.red};
   font-size: 0.875rem;
   margin-top: 0.25rem;
@@ -139,4 +139,4 @@ import{d as r,i as x,r as a,h,u as b,n as f,y as $,t as w,j as o,L as k,v}from".
   margin-top: -1.5rem;
   margin-bottom: 2rem;
   line-height: 1.5;
-`,H=()=>{const e=x(),[l,n]=a.useState(""),{error:i,successMessage:s,isLoading:c}=h(t=>t.auth),g=b();a.useEffect(()=>{i&&e(f())},[e]),a.useEffect(()=>{s&&($.success(s),e(w()))},[s]),a.useEffect(()=>{const t=localStorage.getItem("forgotEmailFormData")||"";t&&n(t)},[]);const u=t=>{const{name:d,value:m}=t.target;localStorage.setItem("forgotEmailFormData",m),n(m)},p=async t=>{t.preventDefault(),localStorage.removeItem("forgotEmailFormData");try{await e(v(l)).unwrap(),n("")}catch(d){console.error("Помилка при відправці запиту:",d)}};return o.jsxs(o.Fragment,{children:[o.jsx(k,{}),o.jsx(j,{}),o.jsx(y,{children:o.jsxs(G,{children:[o.jsx(B,{children:"Відновлення паролю"}),o.jsx(L,{children:"Після надсилання форми - на вашу електронну пошту прийде посилання для створення нового паролю"}),o.jsxs(E,{onSubmit:p,children:[o.jsxs(C,{children:[o.jsx(F,{htmlFor:"email",children:"Email"}),o.jsx(I,{id:"email",name:"email",type:"email",value:l,onChange:u,placeholder:"Введіть ваш email",required:!0}),i&&o.jsx(D,{children:i})]}),o.jsx(S,{type:"submit",disabled:c,children:c?"Завантаження...":"Відправити"}),o.jsx(z,{type:"button",onClick:()=>g(-1),children:"Назад"})]})]})})]})};export{H as default};
+`,H=()=>{const e=x(),[l,n]=a.useState(""),{error:i,successMessage:s,isLoading:c}=h(t=>t.auth),g=b();a.useEffect(()=>{i&&e(f())},[e]),a.useEffect(()=>{s&&($.success(s),e(w()))},[s]),a.useEffect(()=>{const t=localStorage.getItem("forgotEmailFormData")||"";t&&n(t)},[]);const u=t=>{const{name:d,value:m}=t.target;localStorage.setItem("forgotEmailFormData",m),n(m)},p=async t=>{t.preventDefault(),localStorage.removeItem("forgotEmailFormData");try{await e(j(l)).unwrap(),n("")}catch(d){console.error("Помилка при відправці запиту:",d)}};return o.jsxs(o.Fragment,{children:[o.jsx(k,{}),o.jsx(v,{}),o.jsx(y,{children:o.jsxs(G,{children:[o.jsx(B,{children:"Відновлення паролю"}),o.jsx(L,{children:"Після надсилання форми - на вашу електронну пошту прийде посилання для створення нового паролю"}),o.jsxs(E,{onSubmit:p,children:[o.jsxs(C,{children:[o.jsx(F,{htmlFor:"email",children:"Email"}),o.jsx(I,{id:"email",name:"email",type:"email",value:l,onChange:u,placeholder:"Введіть ваш email",required:!0}),i&&o.jsx(D,{children:i})]}),o.jsx(S,{type:"submit",disabled:c,children:c?"Завантаження...":"Відправити"}),o.jsx(z,{type:"button",onClick:()=>g(-1),children:"Назад"})]})]})})]})};export{H as default};
