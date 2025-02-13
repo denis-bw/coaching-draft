@@ -1,4 +1,4 @@
-import{d as o,l as n,j as r}from"./index-ae991d8e.js";import{H as i}from"./HeaderForUnlogged-dc5057a4.js";const a=o.div`
+import{d as o,l as n,j as r}from"./index-7aef204e.js";import{H as i}from"./HeaderForUnlogged-04a0bae8.js";const a=o.div`
   display: flex;
   flex-direction: column;
   align-items: center;
