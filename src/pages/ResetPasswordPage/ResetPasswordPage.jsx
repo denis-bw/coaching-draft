@@ -137,7 +137,7 @@ const ResetPasswordPage = () => {
                 <SubmitButton type="submit" disabled={isLoading}>
                 {isLoading ? 'Завантаження...' : 'Створити пароль'}
                 </SubmitButton>
-                <LinkToLoginPahe to="/login">Прейти до Login</LinkToLoginPahe>
+                <LinkToLoginPahe to="/login">Прейти до входу</LinkToLoginPahe>
             </Form>
             </FormCard>
         </Container>

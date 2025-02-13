@@ -13,25 +13,25 @@ export function useNavigationPrompt(when) {
   const [pendingLocation, setPendingLocation] = useState(null);
   const [isNavigationConfirmed, setIsNavigationConfirmed] = useState(false);
 
- 
   const normalizePath = useCallback((path) => {
-    
     const basename = '/coaching-draft';
     let normalizedPath = path;
     
-   
     if (normalizedPath.startsWith(basename)) {
       normalizedPath = normalizedPath.substring(basename.length);
     }
     
-    
     normalizedPath = normalizedPath.replace(/\/+/g, '/');
-    
-    
     normalizedPath = normalizedPath.replace(/\/$/, '');
     
     return normalizedPath;
   }, []);
+
+  const isSameLocation = useCallback((currentPath, nextPath) => {
+    const normalizedCurrent = normalizePath(currentPath);
+    const normalizedNext = normalizePath(nextPath);
+    return normalizedCurrent === normalizedNext;
+  }, [normalizePath]);
 
   const cancelNavigation = useCallback(() => {
     setShowPrompt(false);
@@ -73,6 +73,13 @@ export function useNavigationPrompt(when) {
         if (isNavigationConfirmed) {
           return originalPush.apply(navigator, [to, ...args]);
         }
+
+        const toPath = typeof to === 'string' ? to : to.pathname;
+        
+
+        if (isSameLocation(location.pathname, toPath)) {
+          return originalPush.apply(navigator, [to, ...args]);
+        }
         
         const normalizedTo = typeof to === 'string' 
           ? { pathname: normalizePath(to) }
@@ -85,6 +92,13 @@ export function useNavigationPrompt(when) {
 
       navigator.replace = (to, ...args) => {
         if (isNavigationConfirmed) {
+          return originalReplace.apply(navigator, [to, ...args]);
+        }
+
+        const toPath = typeof to === 'string' ? to : to.pathname;
+        
+
+        if (isSameLocation(location.pathname, toPath)) {
           return originalReplace.apply(navigator, [to, ...args]);
         }
         
@@ -129,7 +143,7 @@ export function useNavigationPrompt(when) {
       unblock();
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [when, navigator, location, isNavigationConfirmed, normalizePath]);
+  }, [when, navigator, location, isNavigationConfirmed, normalizePath, isSameLocation]);
 
   return [showPrompt, handleConfirmNavigation, cancelNavigation];
 }

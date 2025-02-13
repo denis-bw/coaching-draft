@@ -37,6 +37,8 @@ const MyAccount = () => {
   const [birthdate, setBirthdate] = useState(user.dateOfBirth || "");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [previewImage, setPreviewImage] = useState(user.avatar || null);
+  const [isUsernameValid, setIsUsernameValid] = useState(true);
+  const [isFocused, setIsFocused] = useState(false);
   
   const [showPrompt, confirmNavigation, cancelNavigation] = useNavigationPrompt(hasUnsavedChanges);
 
@@ -122,7 +124,10 @@ const MyAccount = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    if (name === "username") setUsername(value);
+    if (name === "username") {
+      setUsername(value);
+      setIsUsernameValid(value.length >= 3);
+    }
     if (name === "location") setLocation(value);
     if (name === "birthdate") setBirthdate(value);
   };
@@ -175,7 +180,7 @@ const MyAccount = () => {
       });
     }
   };
-
+  console.log( username)
   const handleImageError = (e) => {
     e.target.src = profilePlaceholder;
   };
@@ -223,6 +228,9 @@ const MyAccount = () => {
                   maxLength={25}
                   minLength={3}
                   onChange={handleChange} 
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  $isEmpty={!isFocused && username === ''} 
                 />
               </WrapperInput>
             </FormGroup>
@@ -267,7 +275,7 @@ const MyAccount = () => {
           </FormRow>
 
           <ButtonWrapper>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit"  disabled={isLoading || !isUsernameValid}>
               {isLoading ? 'Збереження...' : 'Зберегти зміни'}
             </Button>
           </ButtonWrapper>

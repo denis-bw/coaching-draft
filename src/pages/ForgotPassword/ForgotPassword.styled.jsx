@@ -148,7 +148,7 @@ export const BackButton = styled.button`
     }
 `;
 
-export const ErrorText = styled.div`
+export const ErrorText = styled.p`
   color: ${({ theme }) => theme.red};
   font-size: 0.875rem;
   margin-top: 0.25rem;

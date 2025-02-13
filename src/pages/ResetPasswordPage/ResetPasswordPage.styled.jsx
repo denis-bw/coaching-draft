@@ -63,15 +63,37 @@ export const Input = styled.input`
   color: ${({ theme }) => theme.textBlack};
   transition: all 0.2s ease-in-out;
 
-  &:focus {
+&:focus {
     outline: none;
     border-color: ${({ theme }) => theme.lightGreen};
     box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.5)`};
-  }
+}
 
-  &::placeholder {
+&::placeholder {
     color: ${({ theme }) => theme.textGray};
-  }
+}
+
+&:-webkit-autofill,
+&:-webkit-autofill:hover,
+&:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px ${({ theme }) => theme.ContainerBGColor} inset;
+  -webkit-text-fill-color: ${({ theme }) => theme.textBlack};
+  transition: background-color 5000s ease-in-out 0s;
+  border-color: ${({ theme }) => theme.lightGreen};
+}
+
+&:valid {
+    border-color: ${({ theme }) => theme.lightGreen};
+}
+
+&:not(:placeholder-shown):not(:-webkit-autofill):invalid {
+    border-color: ${({ theme }) => theme.red};
+}
+
+&:focus:not(:placeholder-shown):not(:-webkit-autofill):invalid {
+    box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.red.slice(1, 3), 16)}, ${parseInt(theme.red.slice(3, 5), 16)}, ${parseInt(theme.red.slice(5, 7), 16)}, 0.5)`};
+}
+
 `;
 
 export const SubmitButton = styled.button`
