@@ -19,12 +19,14 @@ import {
 } from './ResetPasswordPage.styled';
 
 import { fetchResetPassword } from '../../redux/auth/authOperations';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector} from 'react-redux';
 import { clearError, clearMessage } from '../../redux/auth/authSlice';
 import { ToastContainer, toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom'; 
 
 const ResetPasswordPage = () => {
     const dispatch = useDispatch();  
+     const navigate = useNavigate();
     const location = useLocation();
     const [showPassword, setShowPassword] = useState(false);
     const [showPasswordC, setShowPasswordC] = useState(false);
@@ -46,8 +48,8 @@ const ResetPasswordPage = () => {
 
     useEffect(() => {
         if (successMessage) {
-        toast.success(successMessage);
         dispatch(clearMessage());
+        navigate('/login', { state: { toastMessage: successMessage } });
         }
     }, [successMessage, dispatch]);
 

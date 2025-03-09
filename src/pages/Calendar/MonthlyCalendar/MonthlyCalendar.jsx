@@ -1,7 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-
+  import { useOutletContext } from "react-router-dom";
+import { useEffect } from 'react'
+  
 const MonthlyCalendar = () => {
+  
+  const { setTitle } = useOutletContext();
+  
+    useEffect(() => {
+      setTitle("Календар");
+    }, [setTitle]);
+      
   return (
     <div>
       <h1>Календар за місяць</h1>

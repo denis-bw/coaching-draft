@@ -24,11 +24,12 @@ import {
 import HeaderForUnlogged from '../../components/HeaderForUnlogged/HeaderForUnlogged';
 import { ToastContainer,toast } from 'react-toastify';
 import { setIsErrorAuthorized } from '../../redux/auth/authSlice';
+import { useLocation } from 'react-router-dom';
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const { error, isLoading, isErrorAuthorized } = useSelector((state) => state.auth);
-
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -45,6 +46,12 @@ const LoginPage = () => {
     dispatch(setIsErrorAuthorized(false));
   }
   }, []);
+  
+  useEffect(() => {
+    if (location.state?.toastMessage) {
+        toast.success(location.state.toastMessage);
+    }
+  }, [location.state]);
   
   useEffect(() => {    
     if (error) {
