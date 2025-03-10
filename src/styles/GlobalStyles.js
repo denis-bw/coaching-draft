@@ -6,6 +6,7 @@ const GlobalStyles = createGlobalStyle`
     caret-color: ${({ theme }) => theme.mode === 'dark' ? theme.textWhite : theme.textBlack};
      &::-webkit-scrollbar {
     width: 6px;
+    
   }
 
   &::-webkit-scrollbar-track {
@@ -35,7 +36,7 @@ const GlobalStyles = createGlobalStyle`
     -moz-osx-font-smoothing: grayscale;
     color: ${({ theme }) => theme.textBlack || '#343434'};
     transition: background-color 0.5s ease, color 0.5s ease;
-
+   
  
   }
 

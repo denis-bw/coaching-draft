@@ -6,12 +6,14 @@ const MyAccount = lazy(() => import('./pages/MyAccount/MyAccount'));
 const TeamsList = lazy(() => import('./pages/MyTeams/TeamsList/TeamsList'));
 const TeamDetails = lazy(() => import('./pages/MyTeams/TeamDetails/TeamDetails'));
 const AthletesList = lazy(() => import('./pages/MyTeams/AthletesList/AthletesList'));
+
 const MeasurementsSelection = lazy(() => import('./pages/MyTeams/MeasurementsSelection/MeasurementsSelection'));
 const Measurements = lazy(() => import('./pages/MyTeams/Measurements/Measurements'));
 
 const ParentsInfo = lazy(() => import('./pages/MyTeams/Athlete/ParentsInfo/ParentsInfo'));
 const AthleteHistory = lazy(() => import('./pages/MyTeams/Athlete/AthleteHistory/AthleteHistory'));
 const AthleteDetails = lazy(() => import('./pages/MyTeams/Athlete/AthleteDetails'));
+const AthleteCreate = lazy(() => import('./pages/MyTeams/Athlete/AthleteCreate/AthleteCreate'));
 
 const WeeklyCalendar = lazy(() => import('./pages/Calendar/WeeklyCalendar/WeeklyCalendar'));
 const MonthlyCalendar = lazy(() => import('./pages/Calendar/MonthlyCalendar/MonthlyCalendar'));
@@ -79,7 +81,9 @@ function App() {
           <Route path="teams/:teamId" element={<TeamDetails />} />
 
           <Route path="athletes" element={<AthletesList />} />
-          <Route path="athletes/:athleteId" element={<AthleteDetails />}/>
+          <Route path="athletes/:athleteId" element={<AthleteDetails />} />
+          <Route path="create-athletes" element={<AthleteCreate />} />
+          //
           <Route path="athletes/:athleteId/parents" element={<ParentsInfo />} />
           <Route path="athletes/:athleteId/history" element={<AthleteHistory />} />
           
