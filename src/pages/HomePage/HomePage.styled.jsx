@@ -67,6 +67,9 @@ export const StyledLink = styled(NavLink)`
     &:hover {
       background-color: ${({ theme }) => theme.darkGreen};
     }
+      &:focus {
+      background-color: ${({ theme }) => theme.darkGreen};
+    }
   }
 
   &.secondary {
@@ -75,6 +78,12 @@ export const StyledLink = styled(NavLink)`
     border: 2px solid ${({ theme }) => theme.greenMain};
     
     &:hover {
+      background-color: ${({ theme }) => theme.BgActiveLink};
+      border-color: ${({ theme }) => theme.BgActiveLink};
+      color: ${({ theme }) => theme.white};
+    }
+
+    &:focus {
       background-color: ${({ theme }) => theme.BgActiveLink};
       border-color: ${({ theme }) => theme.BgActiveLink};
       color: ${({ theme }) => theme.white};

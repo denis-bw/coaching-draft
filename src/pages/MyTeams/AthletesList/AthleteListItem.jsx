@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { useOutletContext } from 'react-router-dom';
+import React from 'react'
 import { 
   AthleteInfo, 
   AthleteName, 

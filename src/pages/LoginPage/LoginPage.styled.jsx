@@ -139,6 +139,11 @@ export const StyledLink = styled(NavLink)`
     color: ${({ theme }) => theme.darkGreen};
     text-decoration: underline;
   }
+
+  &:focus {
+    color: ${({ theme }) => theme.darkGreen};
+    text-decoration: underline;
+  }
 `;
 
 
@@ -161,6 +166,11 @@ export const ForgotPassword = styled(NavLink)`
   
   &:hover {
     color: ${({ theme }) => theme.greenMain};
+    text-decoration: underline;
+  }
+  &:focus {
+    color: ${({ theme }) => theme.greenMain};
+    text-decoration: underline;
   }
 `;
 
@@ -181,6 +191,12 @@ export const TogglePasswordButton = styled.button`
   cursor: pointer;
 
   &:focus {
+    outline: none;
+    color: ${({ theme }) => theme.textGray};
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.textGray};
     outline: none;
   }
 `;

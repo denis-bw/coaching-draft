@@ -2,8 +2,8 @@ import React from 'react';
 import { GoogleButton } from "./GoogleAuthButton.styled";
 
 const GoogleAuthButton = () => {
-  const BASE_URL = import.meta.env.VITE_BASE_URL_AUTH;
-  // const BASE_URL = "https://coaching-draft-backend.onrender.com/api/auth/"
+  // const BASE_URL = import.meta.env.VITE_BASE_URL_AUTH;
+  const BASE_URL = "https://coaching-draft-backend.onrender.com/api/auth/"
   
     const handleGoogleAuth = () => {
         window.location.href = `${BASE_URL}users/google`;

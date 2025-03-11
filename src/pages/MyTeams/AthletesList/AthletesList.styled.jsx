@@ -74,6 +74,11 @@ export const DropdownOption = styled.button`
     color: ${({ theme }) => theme.textBlack}; 
   }
 
+  &:focus {
+    background-color: ${({ theme, active }) => active ? theme.lightGreen : theme.disabledBG};
+    color: ${({ theme }) => theme.textBlack}; 
+  }
+
   @media (max-width: 768px) {
     padding: 6px 10px;
   }
@@ -103,7 +108,7 @@ export const AthleteItem = styled(NavLink)`
   grid-gap: 12px;
   align-items: center;
   padding: 10px 15px;
-  background-color: ${({ theme }) => theme.lightGreen + '40'};
+  background-color: ${({ theme }) => theme.lightGreen };
   border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
@@ -112,9 +117,13 @@ export const AthleteItem = styled(NavLink)`
   box-sizing: border-box;
 
   &:hover {
-    background-color: ${({ theme }) => theme.lightGreen + '80'};
+    background-color: ${({ theme }) => theme.greenMain};
   }
-  
+
+  &:focus {
+    background-color: ${({ theme }) => theme.greenMain};
+  }
+
   @media (max-width: 768px) {
     padding: 8px 12px;
     grid-template-columns: 28px minmax(0, 1fr) 12px; 
@@ -257,7 +266,7 @@ export const AddButtonWrapper = styled.div`
   width: 100%;
   padding: 10px 0;
   box-sizing: border-box;
-  position: relative; /* Додаємо контекст для абсолютного позиціонування */
+  position: relative;
 `;
 
 export const AddNewAthleteButton = styled(NavLink)`
@@ -279,6 +288,10 @@ export const AddNewAthleteButton = styled(NavLink)`
   padding-right: 40px; 
 
   &:hover {
+    background-color: ${({ theme }) => theme.darkGreen};
+  }
+
+  &:focus {
     background-color: ${({ theme }) => theme.darkGreen};
   }
 
@@ -396,6 +409,11 @@ export const FilterButton = styled.button`
   z-index: 2;
 
   &:hover {
+    background-color: ${({ theme }) => theme.darkGreen};
+    border-color: ${({ theme }) => theme.greenMain};
+  }
+
+  &:focus {
     background-color: ${({ theme }) => theme.darkGreen};
     border-color: ${({ theme }) => theme.greenMain};
   }

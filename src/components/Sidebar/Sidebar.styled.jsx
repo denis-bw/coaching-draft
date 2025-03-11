@@ -18,6 +18,10 @@ export const SidebarToggleButton = styled.button`
     color: ${(p) => p.theme.darkGreen};
   }
   
+  &:focus {
+    color: ${(p) => p.theme.darkGreen};
+  }
+
   svg {
     width: 24px;
     height: 24px;
@@ -51,6 +55,14 @@ export const Logo = styled(NavLink)`
   font-weight: bold;
   color: ${(p) => p.theme.greenMain};
   text-decoration: none;
+
+  &:focus {
+    color: ${({ theme }) => theme.textGray};
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.textGray};
+  }
 `;
 
  export const NamedMenu = styled.p`
@@ -98,6 +110,17 @@ export const StyledLink = styled(NavLink)`
   &:hover {
     background-color:  ${(p) => p.theme.BgActiveLinkHover};
   }
+
+  &:focus {
+    background-color:  ${(p) => p.theme.BgActiveLinkHover};
+  }
+  
+  ${({ as }) =>
+    as === 'button' &&
+    `
+    width:100%;
+    font: inherit;
+  `}
 `;
 
 export const IconWrapper = styled.span`
@@ -121,6 +144,10 @@ export const LogoutButton = styled.button`
     background-color: ${(p) => p.theme.darkGreen};
   }
 
+  &:focus {
+    background-color: ${(p) => p.theme.darkGreen};
+  }
+  
   &:disabled {
     opacity: 0.7;
     cursor: not-allowed;
@@ -149,6 +176,11 @@ export const SubMenuItem = styled(NavLink)`
     color: ${(p) => p.theme.white};
   }
 
+  &:focus {
+    background-color:  ${(p) => p.theme.BgActiveLinkHover};
+    color: ${(p) => p.theme.white};
+  }
+
   &.active {
     color: ${(p) => p.theme.greenMain};
     font-weight: 700;
@@ -157,10 +189,13 @@ export const SubMenuItem = styled(NavLink)`
   &:hover.active {
      color: ${(p) => p.theme.white};
   }
+
+  &:focus.active {
+     color: ${(p) => p.theme.white};
+  }
 `;
 
-export const SidebarIcon = styled.button`
-  /* background-color: black; */
+export const SidebarIcon = styled.div`
   width: 18px;
   height: 18px;
   display: flex;

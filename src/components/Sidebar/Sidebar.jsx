@@ -143,7 +143,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <div key={item.name}>
               {item.submenu ? (
                 <StyledLink 
-                  as="div" 
+                  as="button" 
                   onClick={() => toggleSubmenu(item.name)}
                   active={isActive ? 1 : 0}
                 >

@@ -14,4 +14,12 @@ export const Logo = styled(NavLink)`
   font-size: 24px;
   font-weight: bold;
   color:  ${({ theme }) => theme.greenMain};
+
+  &:focus {
+    color: ${({ theme }) => theme.textGray};
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.textGray};
+  }
 `;

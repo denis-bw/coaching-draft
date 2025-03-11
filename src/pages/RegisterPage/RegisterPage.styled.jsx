@@ -140,6 +140,10 @@ export const StyledLink = styled(NavLink)`
     color: ${({ theme }) => theme.darkGreen};
     text-decoration: underline;
   }
+  &:focus {
+    color: ${({ theme }) => theme.darkGreen};
+    text-decoration: underline;
+  }
 `;
 
 export const PasswordRequirement = styled.div`
@@ -175,6 +179,12 @@ export const TogglePasswordButton = styled.button`
   cursor: pointer;
 
   &:focus {
+    outline: none;
+    color: ${({ theme }) => theme.textGray};
+  }
+
+  &:hover {
+    color: ${({ theme }) => theme.textGray};
     outline: none;
   }
 `;
