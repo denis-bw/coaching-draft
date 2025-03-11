@@ -6,7 +6,7 @@ import {
   DatePickerWrapper, 
   DatePickerSelect,
   CalendarContainer
-} from "./MyAccount.styled"; 
+} from "./CustomDatePicker.styled"; 
 
 
 const range = (start, end, step = 1) => {

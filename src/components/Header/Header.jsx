@@ -9,7 +9,7 @@ import {
   ImgAvatar
 } from './Header.styled';
 import { NavLink } from 'react-router-dom';
-import profilePlaceholder from "../../assets/PlaceholderProfile.jpg"
+import profilePlaceholder from "../../assets/PlaceholderProfileCoach.jpg"
 import BtnTheme from '../BtnTheme/BtnTheme';
 import { ReactComponent as SettingsIcon } from '../../assets/SettingsIcon.svg';
 import { useSelector } from 'react-redux';

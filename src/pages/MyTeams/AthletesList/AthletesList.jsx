@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { NavLink, useOutletContext } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import { 
   AthletesContainer, 
   AthletesHeader, 
@@ -24,7 +24,7 @@ import {
   ProfileImageAthletes,
   CreateIcon,
 } from './AthletesList.styled';
-import profilePlaceholder from "../../../assets/PlaceholderProfile.jpg";
+import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
 
 
 const AthletesList = () => {

@@ -401,6 +401,7 @@ export const FilterButton = styled.button`
 `;
 
 export const ProfileImageAthletes = styled.img`
+border: 2px solid  ${({ theme }) => theme.greenMain};
   width: 100%;
   height: 100%;
   border-radius: 50%;

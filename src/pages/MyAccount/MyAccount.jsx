@@ -22,8 +22,8 @@ import {
   WrapperInput,
   CameraIcon,
 } from "./MyAccount.styled";
-import { CustomDatePicker } from "./CustomDatePicker";
-import profilePlaceholder from "../../assets/PlaceholderProfile.jpg";
+import { CustomDatePicker } from "../../components/CustomDatePicker/CustomDatePicker";
+import profilePlaceholder from "../../assets/PlaceholderProfileCoach.jpg";
 import { ToastContainer, toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
