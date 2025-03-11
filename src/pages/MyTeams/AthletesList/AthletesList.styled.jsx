@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { ReactComponent as OriginalRoadSignPointingRight } from '../../../assets/RoadSignPointingRight.svg';
 import { ReactComponent as OriginalCreateIcon } from '../../../assets/CreateIcon.svg';
 import { NavLink } from 'react-router-dom';
@@ -8,7 +8,6 @@ export const RoadSignPointingRightIcon = styled(OriginalRoadSignPointingRight)`
   height: 24px;
   fill: ${(p) => p.theme.iconColor};
 `;
-
 
 export const CreateIcon = styled(OriginalCreateIcon)`
   width: 20px;
@@ -26,10 +25,17 @@ export const CreateIcon = styled(OriginalCreateIcon)`
   }
 `;
 
+export const AthleteItemWrapper = styled.div`
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  opacity: ${({ isVisible }) => (isVisible ? 1 : 0.6)};
+  transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.9)')};
+  width: 100%;
 
-
-
-
+  @media (max-width: 768px) {
+    transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.85)')};
+    opacity: ${({ isVisible }) => (isVisible ? 1 : 0.5)};
+  }
+`;
 
 export const FilterDropdown = styled.div`
   display: flex;
@@ -212,7 +218,8 @@ export const AthletesListContainer = styled.div`
   box-sizing: border-box;
   
   @media (max-width: 768px) { 
-    padding-left: 10px;
+    padding-left: 6px;
+    padding-right: 10px;
   } 
  
   &::-webkit-scrollbar { 
@@ -406,4 +413,12 @@ border: 2px solid  ${({ theme }) => theme.greenMain};
   height: 100%;
   border-radius: 50%;
   object-fit: cover;
+`;
+
+export const AthleteItemStyled = styled(AthleteItem)`
+  background-color: ${({ theme, isVisible }) => 
+    isVisible 
+      ? `${theme.lightGreen}80` 
+      : `${theme.lightGreen}40`};
+  transition: background-color 0.3s ease-out;
 `;

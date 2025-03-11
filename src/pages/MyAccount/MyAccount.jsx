@@ -180,7 +180,7 @@ const MyAccount = () => {
       });
     }
   };
-  console.log( username)
+  
   const handleImageError = (e) => {
     e.target.src = profilePlaceholder;
   };
@@ -201,6 +201,7 @@ const MyAccount = () => {
                 <ProfileImage 
                   src={previewImage || profilePlaceholder}
                   alt="Фото профілю"
+                  loading="lazy"
                   onError={handleImageError}
                 />
               </PhotoCircle>

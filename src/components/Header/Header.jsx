@@ -45,7 +45,8 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <TexeName>{user.username || "User"}</TexeName>
             <NavLink to="my-account">
               <ImgAvatar
-                src={previewImage ||  profilePlaceholder}
+                src={previewImage || profilePlaceholder}
+                loading="lazy"
                 alt="User"
               />
             </NavLink>
@@ -61,7 +62,8 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <TexeName>{user.username || "User"}</TexeName>
             <NavLink to="my-account">
               <ImgAvatar
-                src={previewImage ||  profilePlaceholder}
+                src={previewImage || profilePlaceholder}
+                loading="lazy"
                 alt="User"
               />
             </NavLink>
