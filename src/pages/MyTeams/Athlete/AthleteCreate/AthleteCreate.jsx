@@ -15,6 +15,8 @@ import {
   Button,
   ButtonWrapper,
   CameraIcon,
+  Label,
+  WrapperInput,
 } from './AthleteCreate.styled'
 import InfoInput from './InfoInput';
 
@@ -22,6 +24,7 @@ const AthleteCreate = () => {
   const { setTitle } = useOutletContext();
   const [isFocused, setIsFocused] = useState(false);
   const [fullName, setFullName] = useState("");
+  const [birthdate, setBirthdate] = useState("");
 
   useEffect(() => {
     setTitle("Створення нового спортсмена");
@@ -54,6 +57,14 @@ const AthleteCreate = () => {
           </PhotoContainer>
 
           < InfoInput id={"sportType"} name={"sportType"} placeholder={"Введіть вид спорту"} labelText={"Вид спорту"} maxLength={30}/>
+          <Label htmlFor="birthdate">Дата народження</Label>
+          <WrapperInput>
+            <CustomDatePicker 
+              selectedDate={birthdate} 
+              onDateChange={setBirthdate} 
+            />
+          </WrapperInput>
+
 
           <ButtonWrapper>
             <Button type="submit">

@@ -159,8 +159,20 @@ export const CameraIcon = styled(OriginalCameraIcon)`
   }
 `;
 
+export const Label = styled.label`
+  display: block;
+  margin-bottom: 0.5rem;
+  color: ${({ theme }) => theme.textPrimary};
+  font-size: 0.875rem;
+  font-weight: 500;
+`;
 
-
+export const WrapperInput = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 500px;
+`
 
 
 
