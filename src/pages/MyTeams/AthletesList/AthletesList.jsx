@@ -201,7 +201,7 @@ const AthletesList = () => {
         </AthletesListContainer>
 
         <AddButtonWrapper>
-          <AddNewAthleteButton to={`/create-athletes`}>
+          <AddNewAthleteButton to={`/athletes/create`}>
             Додати нового спортсмена
             <CreateIcon />
           </AddNewAthleteButton>

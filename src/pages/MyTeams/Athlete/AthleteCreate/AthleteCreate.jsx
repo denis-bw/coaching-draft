@@ -2,41 +2,49 @@ import { useState, useEffect } from 'react';
 import { useOutletContext } from "react-router-dom";
 import { CustomDatePicker } from "../../../../components/CustomDatePicker/CustomDatePicker";
 import profilePlaceholder from "../../../../assets/PlaceholderProfile.png";
-
-import {
-  Container, 
-  Card, 
-  PhotoContainer, 
-  PhotoWrapper, 
-  PhotoCircle, 
-  ProfileImage, 
-  PhotoUploadButton, 
-  HiddenInput,
-  Button,
-  ButtonWrapper,
-  CameraIcon,
-  Label,
-  WrapperInput,
-} from './AthleteCreate.styled'
+import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import InfoInput from './InfoInput';
+import {
+  Container,
+  Card,
+  ContentWrapper,
+  PhotoSection,
+  PhotoWrapper,
+  PhotoCircle,
+  ProfileImage,
+  PhotoUploadButton,
+  HiddenInput,
+  InfoSection,
+  InfoTitle,
+  InputsContainer,
+  InputGroup,
+  Label,
+  Input,
+  ButtonWrapper,
+  Button,
+  CameraIcon,
+  WrapperInput
+} from './AthleteCreate.styled';
 
 const AthleteCreate = () => {
   const { setTitle } = useOutletContext();
   const [isFocused, setIsFocused] = useState(false);
-  const [fullName, setFullName] = useState("");
-  const [birthdate, setBirthdate] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [patronymic, setPatronymic] = useState("");
+  const [birthdate, setBirthdate] = useState( "");
 
   useEffect(() => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
   
-
   return (
     <>
-     
-      <Container>
-        <Card>
-          <PhotoContainer>
+    <Container>
+      <Card>
+        <ContentWrapper>
+          {/* Photo section - left side */}
+          <PhotoSection>
             <PhotoWrapper>
               <PhotoCircle>
                 <ProfileImage 
@@ -54,9 +62,50 @@ const AthleteCreate = () => {
                 accept="image/jpeg,image/jpg,image/png,image/webp"
               />
             </PhotoWrapper>
-          </PhotoContainer>
-
+          </PhotoSection>
+          
+          <InfoSection>
+            <InfoTitle>Особиста інформація</InfoTitle>
+            <InputsContainer>
+              <InputGroup>
+                <Label htmlFor="firstName">Ім'я</Label>
+                <Input 
+                  id="firstName"
+                  type="text" 
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </InputGroup>
+              
+              <InputGroup>
+                <Label htmlFor="lastName">Прізвище</Label>
+                <Input 
+                  id="lastName"
+                  type="text" 
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </InputGroup>
+              
+              <InputGroup>
+                <Label htmlFor="patronymic">По батькові</Label>
+                <Input 
+                  id="patronymic"
+                  type="text" 
+                  value={patronymic}
+                  onChange={(e) => setPatronymic(e.target.value)}
+                />
+              </InputGroup>
+            </InputsContainer>
+          </InfoSection>
+        </ContentWrapper>
           < InfoInput id={"sportType"} name={"sportType"} placeholder={"Введіть вид спорту"} labelText={"Вид спорту"} maxLength={30}/>
+          <Label htmlFor="birthdate">Дата народження</Label>
+                          < InfoInput id={"sportType"} name={"sportType"} placeholder={"Введіть вид спорту"} labelText={"Вид спорту"} maxLength={30}/>
+          <Label htmlFor="birthdate">Дата народження</Label>
+                    < InfoInput id={"sportType"} name={"sportType"} placeholder={"Введіть вид спорту"} labelText={"Вид спорту"} maxLength={30}/>
+          <Label htmlFor="birthdate">Дата народження</Label>
+                    < InfoInput id={"sportType"} name={"sportType"} placeholder={"Введіть вид спорту"} labelText={"Вид спорту"} maxLength={30}/>
           <Label htmlFor="birthdate">Дата народження</Label>
           <WrapperInput>
             <CustomDatePicker 
@@ -65,6 +114,15 @@ const AthleteCreate = () => {
             />
           </WrapperInput>
 
+          <CollapsibleSection title={'Test'}>
+            Будь-який контент
+            <p> Будь-який контент</p>
+            <p> Будь-який контент</p>
+            <p> Будь-який контент</p>
+             <p> Будь-який контент</p>
+            <p> Будь-який контент</p>
+            <p> Будь-який контент</p>
+          </CollapsibleSection>
 
           <ButtonWrapper>
             <Button type="submit">

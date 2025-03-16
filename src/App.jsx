@@ -82,7 +82,7 @@ function App() {
 
           <Route path="athletes" element={<AthletesList />} />
           <Route path="athletes/:athleteId" element={<AthleteDetails />} />
-          <Route path="create-athletes" element={<AthleteCreate />} />
+          <Route path="athletes/create" element={<AthleteCreate />} />
           //
           <Route path="athletes/:athleteId/parents" element={<ParentsInfo />} />
           <Route path="athletes/:athleteId/history" element={<AthleteHistory />} />
