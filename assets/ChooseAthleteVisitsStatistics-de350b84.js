@@ -1,1 +1,0 @@
-import{j as s,g as e}from"./index-6157a231.js";const d=()=>{const t=[{id:1,name:"Атлет 1"},{id:2,name:"Атлет 2"},{id:3,name:"Атлет 3"}];return s.jsxs("div",{children:[s.jsx("h1",{children:"Вибір атлета для статистики вимірювань"}),s.jsx("ul",{children:t.map(i=>s.jsx("li",{children:s.jsx(e,{to:`/statistics-visits/${i.id}`,children:i.name})},i.id))})]})};export{d as default};
