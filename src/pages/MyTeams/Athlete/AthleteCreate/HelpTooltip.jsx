@@ -16,33 +16,69 @@ const Icon = styled(HelpIcon)`
   stroke: ${({ theme }) => theme.white};
 `;
 
-const TooltipText = styled.div`
+const TooltipOuter = styled.div`
   position: absolute;
-  background-color:  ${({ theme }) => theme.ContainerBGColor};
-  color:  ${({ theme }) => theme.textBlack};
+  background-color: ${({ theme }) => theme.ContainerBGColor};
+  color: ${({ theme }) => theme.textBlack};
   padding: 12px;
   border-radius: 10px;
-  border: 2px solid   ${({ theme }) => theme.greenMain};
+  border: 2px solid ${({ theme }) => theme.black};
   font-size: 14px;
   line-height: 1.5;
   width: 300px;
   max-height: 170px;
-  overflow-y: auto;
-  word-wrap: break-word;
   z-index: 100;
   cursor: pointer;
-  top: ${({ top }) => top || '-180%'};
+  top: ${({ top }) => top || '-190%'};
   left: ${({ left }) => left || '-310%'};
   transform: translateX(-50%);
-  
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
   visibility: ${({ visible }) => (visible ? "visible" : "hidden")};
   opacity: ${({ visible }) => (visible ? 1 : 0)};
   transition: opacity 0.2s ease-in-out;
-  
+  white-space: pre-line;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 79%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid ${({ theme }) => theme.black};
+  }
+
+  @media (max-width: 768px) {
+    width: 260px;
+    &::after {
+         left: 84%;
+    }
+  }
 `;
 
-const HelpTooltip = ({ text, top, left  }) => {
+const TooltipInner = styled.div`
+
+  overflow-y: auto;
+  padding-right: 10px;
+  max-height: 146px;
+  word-wrap: break-word; 
+  white-space: normal; 
+  font-size: 14px; 
+  font-weight: 300; 
+
+
+`;
+
+const Title = styled.div`
+  font-size: 14px; 
+  font-weight: 600; 
+  margin-bottom: 5px; 
+`;
+
+const HelpTooltip = ({ title, text, top, left }) => {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -52,7 +88,11 @@ const HelpTooltip = ({ text, top, left  }) => {
       onClick={() => setVisible(!visible)}
     >
       <Icon />
-      <TooltipText visible={visible} top={top} left={left} >{text}</TooltipText>
+    <TooltipOuter visible={visible} top={top} left={left}>
+       
+        <TooltipInner > {title && <Title>{title}</Title>} 
+          {text}</TooltipInner>
+      </TooltipOuter>
     </TooltipWrapper>
   );
 };

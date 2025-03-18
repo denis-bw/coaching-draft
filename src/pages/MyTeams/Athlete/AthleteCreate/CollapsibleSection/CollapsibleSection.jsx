@@ -11,7 +11,7 @@ import {
 
 import HelpTooltip from '../HelpTooltip.jsx';
 
-const CollapsibleSection = ({ children, helpTooltip, title, top, left  }) => {
+const CollapsibleSection = ({ children,  helpTooltiptitle, helpTooltip, title, top, left  }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [userOpened, setUserOpened] = useState(false);
     
@@ -63,7 +63,7 @@ const CollapsibleSection = ({ children, helpTooltip, title, top, left  }) => {
                 <ArrowWrapper>
                     {helpTooltip && (
                         <HelpTooltipContainer onClick={handleTooltipClick}>
-                            <HelpTooltip text={helpTooltip}  top={top} left={left} />
+                            <HelpTooltip title={helpTooltiptitle} text={helpTooltip}  top={top} left={left} />
                         </HelpTooltipContainer>
                     )}
                     <Arrow isOpen={isOpen} />

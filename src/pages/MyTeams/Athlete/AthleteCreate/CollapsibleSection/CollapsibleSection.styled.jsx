@@ -68,8 +68,13 @@ export const Title = styled.h3`
   font-weight: 600;
   margin: 0;
   line-height: 1.2; 
-  max-height: 22px;  
+  max-height: 27px;  
   overflow: hidden; 
+  @media (max-width: 768px) {
+    font-size: 18px; 
+    font-weight: 600;
+    max-height: 24px; 
+  }
 `;
 export const ArrowWrapper = styled.div`
   display: flex;

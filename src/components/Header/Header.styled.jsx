@@ -52,8 +52,9 @@ export const Title = styled.h1`
   @media (max-width: 768px) {
     grid-column: 1 / -1; 
     text-align: center;
-    margin-top: 8px;
     font-size: 20px;
+     font-weight: 600;
+     font-size: 18px
   }
 `;
 
