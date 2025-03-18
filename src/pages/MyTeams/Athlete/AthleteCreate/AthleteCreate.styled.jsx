@@ -15,8 +15,6 @@ export const Container = styled.div`
   justify-content: center;
   width: 100%;
   min-height: 100%;
-  overflow-y: auto;
-
   @media (min-width: ${breakpoints.tablet}) {
     align-items: flex-start;
     height: 100%;

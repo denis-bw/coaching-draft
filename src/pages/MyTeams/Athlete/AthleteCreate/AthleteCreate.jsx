@@ -4,6 +4,7 @@ import { CustomDatePicker } from "../../../../components/CustomDatePicker/Custom
 import profilePlaceholder from "../../../../assets/PlaceholderProfile.png";
 import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import CustomSelectComponent from './CustomSelectComponent';
+
 import InfoInput from './InfoInput';
 import {
   Container,
@@ -207,7 +208,7 @@ const AthleteCreate = () => {
           </ContactsBlock>
         </TwoColumnLayout>
 
-        <CollapsibleSection title={'Фізачні дані'}>
+        <CollapsibleSection helpTooltip={"Це не обов'язкові параметри, але він дає можливість. отримати аналіз  Додайте перший замір щоб відстежувати зміни в параметрах спортсмена з часом. Ви можете додавати нові заміри пізніше для точнішого аналізу."}  top="-620%" left="-310%" title={'Фізачні дані'}>
           <InputsContainer hasphysique>
               <InputGroup>
                 <Label htmlFor="height">Зріст у м.</Label>
@@ -249,7 +250,7 @@ const AthleteCreate = () => {
             </InputsContainer>
         </CollapsibleSection>
 
-        <CollapsibleSection title={'Фізачні дані'}>
+        <CollapsibleSection title={'Спортивна інформація'}>
           Будь-який контент
         </CollapsibleSection>
         <ButtonWrapper>

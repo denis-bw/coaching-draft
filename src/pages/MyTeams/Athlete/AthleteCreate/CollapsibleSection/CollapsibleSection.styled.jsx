@@ -1,53 +1,56 @@
   import styled from 'styled-components';
   import { ReactComponent as OriginalChevronIcon } from '../../../../../assets/ChevronDownicon.svg';
 
-  export const SectionContainer = styled.div`
-    margin: 20px 0;
-    border: 1.7px solid ${({ theme }) => theme.greenMain};
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: ${({ theme }) => theme.ContainerBGColor}; 
+export const SectionContainer = styled.div`
+  
+  margin: 20px 0;
+  border: 1.7px solid ${({ theme }) =>theme.greenMain};
+  border-radius: 8px;
 
-    ${({ isOpen }) => !isOpen && `
-      border-radius: 8px 8px 0 0;
-    `}
-
-     &:hover {
-       border-color: ${({ theme }) => theme.lightGreen}; 
-    }
-  `;
-
-  export const Arrow = styled(OriginalChevronIcon)`
-    stroke: ${(p) => p.theme.white};
-    width: 24px;
-    height: 24px;
-    margin-left: auto;
-    transform: ${({ isOpen }) => (isOpen ? 'rotate(180deg)' : 'rotate(0)')};
-    transition: transform 0.3s ease;
-  `;
-
-  export const SectionHeader = styled.div`
-    background-color: ${({ theme }) => theme.greenMain}; 
-    padding: 8px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    font-weight: bold;
+  background-color: ${({ theme }) => theme.ContainerBGColor}; 
     transition: background-color 0.3s ease;
-    cursor: row-resize;
-    &:hover {
-      background-color: ${({ theme }) => theme.lightGreen}; 
+  ${({ isOpen }) => !isOpen && `
+    border-radius: 8px 8px 0 0;
+  `}
 
-      ${Arrow} {
-        stroke: ${({ theme }) => theme.ContainerBGColor}; 
-      }
-    }
 
-    @media (min-width: 768px) {
-      padding: 10px 20px;
+`;
+
+export const Arrow = styled(OriginalChevronIcon)`
+  stroke: ${(p) => p.theme.white};
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  transform: ${({ isOpen }) => (isOpen ? 'rotate(180deg)' : 'rotate(0)')};
+  transition: transform 0.3s ease;
+`;
+
+export const SectionHeader = styled.div`
+  background-color: ${({ theme }) => theme.greenMain};
+  padding: 8px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  position: relative;
+  cursor: row-resize;
+  border-top-left-radius: 6px; 
+  border-top-right-radius:6px;
+  border: 1.7px solid ${({ theme }) => theme.greenMain};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.lightGreen};
+    border-color: ${({ theme }) => theme.lightGreen}; 
+    ${Arrow} {
+      stroke: ${({ theme }) => theme.ContainerBGColor};
     }
-  `;
+  }
+
+  @media (min-width: 768px) {
+    padding: 10px 20px;
+  }
+`;
 
 export const SectionContent = styled.div`
   padding: 0 20px;
@@ -67,4 +70,14 @@ export const Title = styled.h3`
   line-height: 1.2; 
   max-height: 22px;  
   overflow: hidden; 
+`;
+export const ArrowWrapper = styled.div`
+  display: flex;
+  align-items: center;
+`;
+
+export const HelpTooltipContainer = styled.div`
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
 `;
