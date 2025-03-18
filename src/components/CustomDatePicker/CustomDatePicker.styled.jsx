@@ -6,7 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 export const StyledDatePicker = styled(DatePicker)`
   display: block;
   width: 100%;
- max-width: 100%; 
+  max-width: 100%; 
   padding: 0.75rem 1rem;
   border: 1.6px solid ${({ theme }) => theme.borderColor};
   border-radius: 0.5rem;

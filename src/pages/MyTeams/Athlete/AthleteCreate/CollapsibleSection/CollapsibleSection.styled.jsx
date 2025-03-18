@@ -35,7 +35,7 @@
     cursor: pointer;
     font-weight: bold;
     transition: background-color 0.3s ease;
-
+    cursor: row-resize;
     &:hover {
       background-color: ${({ theme }) => theme.lightGreen}; 
 
