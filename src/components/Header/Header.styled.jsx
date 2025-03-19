@@ -122,7 +122,7 @@ export const TexeName = styled.span`
 export const ImgAvatar =  styled.img`
   background-color: ${({ theme }) => theme.white};
   overflow: hidden;
-  border: 2px solid ${ ({ theme }) => theme.borderColor };
+  border: 2px solid ${ ({ theme }) => theme.borderColor};
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
@@ -136,15 +136,17 @@ export const LinkMyAcc = styled(NavLink)`
   background-color: ${({ theme }) => theme.greenMain};
   text-decoration: none;
   font-size: 1.2rem;
+  transition: box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 
   &:hover {
-    background-color: ${({ theme }) => theme.darkGreen}; 
-    box-shadow: 0 0 0 1px ${({ theme }) => theme.greenMain};
+    background-color: ${({ theme }) => theme.textGray}; 
+    box-shadow: 0 0 1.5px 1px ${({ theme }) => theme.textGray};
   }
-
+  
   &:focus-visible {
     outline: none; 
-    box-shadow: 0 0 0 1px ${({ theme }) => theme.greenMain}, 0 0 0 2px ${({ theme }) => theme.ContainerBGColor}; 
+    box-shadow: 0 0 7px 2px ${({ theme }) => theme.textGray}, 0 0 0 3px ${({ theme }) => theme.ContainerBGColor}; 
     border-radius: 50%;
   }
 `;
+

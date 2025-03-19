@@ -352,12 +352,12 @@ export const SearchInput = styled.input`
   
   &:focus {
     outline: none;
-    border-color: ${({ theme }) => theme.mainBGColor};
+    border-color: ${({ theme }) => theme.textBlack};
   }
   
   &:hover {
     outline: none;
-    border-color: ${({ theme }) => theme.mainBGColor};
+    border-color: ${({ theme }) => theme.textBlack};
   }
 
   @media (max-width: 768px) {
@@ -407,7 +407,7 @@ export const FilterButton = styled.button`
   min-width: 120px;
   transition: all 0.3s ease;
   z-index: 2;
-
+  outline: none;
   &:hover {
     background-color: ${({ theme }) => theme.darkGreen};
     border-color: ${({ theme }) => theme.greenMain};

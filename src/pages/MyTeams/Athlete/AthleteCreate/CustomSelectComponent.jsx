@@ -17,6 +17,7 @@ export const Label = styled.label`
 
 const CustomPlaceholder = styled.span`
   color: ${({ theme }) => theme.textGray};
+  font-family: 'Inter Tight', sans-serif;
 `;
 
 const CustomSelect = styled.button.attrs({ type: "button" })`
@@ -32,7 +33,7 @@ const CustomSelect = styled.button.attrs({ type: "button" })`
   align-items: center;
   font-size: 1rem;
   position: relative;
-  cursor: pointer;
+  cursor: text;
 
   &:focus {
     outline: none;
@@ -79,6 +80,14 @@ const OptionButton = styled.button.attrs({ type: "button" })`
   &.selected {
     background-color: ${({ theme }) => theme.darkGreen};
     color: ${({ theme }) => theme.white};
+    &:hover {
+    background-color: ${({ theme }) => theme.lightGreen};
+  }
+
+  &:focus {
+    outline: none;
+    background-color: ${({ theme }) => theme.lightGreen};
+  }
   }
 `;
 

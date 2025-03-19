@@ -25,7 +25,7 @@ const TooltipWrapper = styled.button.attrs({ type: "button" })`
     outline: none;
 
     ${Icon} {
-      stroke: ${({ theme }) => theme.gray}; 
+      stroke: ${({ theme }) => theme.darkGreen}; 
     }
   }
 `;

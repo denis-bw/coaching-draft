@@ -28,14 +28,11 @@ import {
   WrapperInput,
   TwoColumnLayout,
   FormBlock,
-  ContactsBlock,
+   SecondBlock,
   ContactsTitle,
-  BlockTitle,
   InputRows,
-  InputRow,
-  SelectWrapper,
-  Select,
-  ArrowIcon 
+  InputRow, 
+  Textarea,
 } from './AthleteCreate.styled';
 
 const AthleteCreate = () => {
@@ -57,6 +54,10 @@ const AthleteCreate = () => {
   const [weight, setWeight] = useState("");
   const [dateOfMeasurement, setDateOfMeasurement] = useState("");
   
+  const [role, setRole] = useState('');
+  const [sportCategory, setSportCategory] = useState('');
+  const [notes, setNotes] = useState('');
+
   useEffect(() => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
@@ -65,7 +66,7 @@ const AthleteCreate = () => {
       if (e.key === 'Enter' || e.key === ' ') {
         const fileInput = document.getElementById('photo-upload');
         if (fileInput) {
-          fileInput.click(); // Клік по інпуту, щоб відкрити діалог вибору файлів
+          fileInput.click();
         }
       }
     };
@@ -169,7 +170,7 @@ const AthleteCreate = () => {
             </InputRows>
           </FormBlock>
           
-          <ContactsBlock>
+          < SecondBlock>
             <ContactsTitle>Контакти</ContactsTitle>
             <InputRows>
               <InputRow>
@@ -211,7 +212,7 @@ const AthleteCreate = () => {
                 </InputGroup>
               </InputRow>
             </InputRows>
-          </ContactsBlock>
+          </ SecondBlock>
         </TwoColumnLayout>
 
         <CollapsibleSection helpTooltiptitle={"Ці параметри не є обов'язковими, але вони допомагають отримати детальнішу статистику 📊"} helpTooltip={"Додайте перший замір щоб відстежувати зміни спортсмена. Після створення профілю спортсмена ви зможете додавати нові заміри та повністю керувати ними 😊"}  top="-700%" left="-310%" title={'Фізичні дані'}>
@@ -256,6 +257,57 @@ const AthleteCreate = () => {
             </InputsContainer>
         </CollapsibleSection>
 
+        <CollapsibleSection title={'Спортивна інформація'}>
+          <TwoColumnLayout $hasSportInfo={true}>
+            <FormBlock $hasSportInfo={true}>
+              <InputRows>
+                <InputRow>
+                  <InputGroup>
+                    <Label htmlFor="role">Роль у команді</Label>
+                    <Input 
+                      id="role"
+                      type="text" 
+                      value={role}
+                      onChange={(e) => setRole(e.target.value)}
+                      placeholder="Введіть роль у команді"
+                    />
+                  </InputGroup>
+                </InputRow>
+
+                <InputRow>
+                  <InputGroup>
+                    <Label htmlFor="sportCategory">Спортивний розряд</Label>
+                    <Input 
+                      id="sportCategory"
+                      type="text" 
+                      value={sportCategory}
+                      onChange={(e) => setSportCategory(e.target.value)}
+                      placeholder="Введіть спортивний розряд"
+                    />
+                  </InputGroup>
+                </InputRow>
+
+                <InputRow>
+                  <InputGroup>
+                    <Label htmlFor="notes">Примітки про спортсмена</Label>
+                    <Textarea 
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Додайте примітки про спортсмена"
+                    />
+                  </InputGroup>
+                </InputRow>
+              </InputRows>
+            </FormBlock>
+
+            <SecondBlock $hasSportInfo>
+             <p>sd</p>
+            </ SecondBlock>
+          </TwoColumnLayout>
+        </CollapsibleSection>
+
+          
         <CollapsibleSection title={'Спортивна інформація'}>
           Будь-який контент
         </CollapsibleSection>

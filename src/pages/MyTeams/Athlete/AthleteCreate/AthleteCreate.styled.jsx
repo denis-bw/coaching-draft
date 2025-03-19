@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import { ReactComponent as OriginalCameraIcon } from "../../../../assets/CameraIcon.svg";
 import "react-datepicker/dist/react-datepicker.css";
-import { ReactComponent as ArrowIconSrc } from "../../../../assets/ChevronDownicon.svg";
 
 const breakpoints = {
   mobile: '320px',
@@ -232,8 +231,6 @@ export const Input = styled.input`
     -webkit-appearance: none;
     margin: 0;
   }
-
-
 `;
 
 export const ButtonWrapper = styled.div`
@@ -298,7 +295,7 @@ export const TwoColumnLayout = styled.div`
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
-  
+   margin-top: ${(props) => (props.$hasSportInfo ? '20px' : '0')};
   @media (min-width: ${breakpoints.desktop}) {
     flex-direction: row;
     gap: 20px;
@@ -310,17 +307,20 @@ export const FormBlock = styled.div`
   flex: 1;
   
   @media (min-width: ${breakpoints.desktop}) {
-    margin-top: 3.1rem;
+     margin-top: ${(props) => (props.$hasSportInfo ? "0" : '3.1rem')}
+  }
+
+  
+`;
+
+export const SecondBlock = styled.div`
+  flex: 1;
+  @media (max-width: ${breakpoints.desktop}) {
+    margin-top: ${(props) => (props.$hasSportInfo ? "20px" : '0')}
   }
 `;
 
-export const ContactsBlock = styled.div`
-  flex: 1;
-`;
 
-export const BlockTitle = styled(InfoTitle)`
-  margin-bottom: 1rem;
-`;
 
 export const InputRows = styled.div`
   display: flex;
@@ -343,24 +343,29 @@ export const InputRow = styled.div`
   }
 `;
 
+export const ContactsTitle = styled(InfoTitle)`
+  margin-bottom: 1rem;
+  padding-top: 10px;
 
-export const SelectWrapper = styled.div`
-  position: relative;
+  @media (min-width: ${breakpoints.desktop}) {
+    padding-top: 0;
+  }
 `;
 
-export const Select = styled.select`
+export const Textarea = styled.textarea`
   width: 100%;
   padding: 0.75rem 1rem;
-  padding-right: 2.5rem; 
-  border: 1.6px solid ${({ theme }) => theme.borderColor};
+  border: 1.6px solid ${({ theme, $isEmpty, name }) => 
+    ($isEmpty && name === 'notes') ? theme.red : theme.borderColor};
   border-radius: 0.5rem;
   font-size: 1rem;
   background-color: ${({ theme }) => theme.ContainerBGColor};
   color: ${({ theme }) => theme.textBlack};
   transition: all 0.2s ease-in-out;
-  appearance: none; 
-  -webkit-appearance: none;
-  -moz-appearance: none;
+  resize: vertical;
+  min-height: 120px;
+  max-height: 300px;
+
   &:focus {
       outline: none;
       border-color: ${({ theme }) => theme.lightGreen};
@@ -371,70 +376,16 @@ export const Select = styled.select`
     color: ${({ theme }) => theme.textGray};
   }
 
-  &:-webkit-autofill,
-  &:-webkit-autofill:hover,
-  &:-webkit-autofill:focus {
-    -webkit-box-shadow: 0 0 0 30px ${({ theme }) => theme.ContainerBGColor} inset;
-    -webkit-text-fill-color: ${({ theme }) => theme.textBlack};
-    transition: background-color 5000s ease-in-out 0s;
-    border-color: ${({ theme }) => theme.lightGreen};
-  }
-
-  &:not(:placeholder-shown):not(:-webkit-autofill):invalid {
-      border-color: ${({ theme }) => theme.red};
-  }
-
-  &:focus:not(:placeholder-shown):not(:-webkit-autofill):invalid {
-      box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.red.slice(1, 3), 16)}, ${parseInt(theme.red.slice(3, 5), 16)}, ${parseInt(theme.red.slice(5, 7), 16)}, 0.5)`};
-  }
-  
   &:disabled {
     background-color: ${({ theme }) => theme.disabledBG};
     cursor: not-allowed;
   }
 
-  &:focus {
-    border-color: ${({ theme }) => theme.lightGreen};
-  }
-  
- & > option {
-    background-color: ${({ theme }) => theme.ContainerBGColor};
-    color: ${({ theme }) => theme.textBlack};
-    padding: 10px;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
+  &:not(:placeholder-shown):not(:-webkit-autofill):invalid {
+    border-color: ${({ theme }) => theme.red};
   }
 
-
-  & > option:checked {
-    background-color: ${({ theme }) => theme.darkGreen}; 
-    color: ${({ theme }) => theme.white}; 
-  }
-`;
-
-export const ArrowIcon = styled(ArrowIconSrc)`
-  stroke: ${(p) => p.theme.iconColor};
-  stroke-width: 3; 
-  position: absolute;
-  right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  transform-origin: center;
-  width: 22px; 
-  height: auto;
-  transition: transform 0.3s ease; 
-  
-  ${Select}:focus + & {
-    transform: translateY(-50%) rotate(180deg);
-  }
-`;
-
-
-export const ContactsTitle = styled(InfoTitle)`
-  margin-bottom: 1rem;
-  padding-top: 10px;
-
-  @media (min-width: ${breakpoints.desktop}) {
-    padding-top: 0;
+  &:focus:not(:placeholder-shown):not(:-webkit-autofill):invalid {
+    box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.red.slice(1, 3), 16)}, ${parseInt(theme.red.slice(3, 5), 16)}, ${parseInt(theme.red.slice(5, 7), 16)}, 0.5)`};
   }
 `;

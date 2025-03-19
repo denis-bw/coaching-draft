@@ -37,9 +37,31 @@ export const DatePickerWrapper = styled.div`
 `;
 
 
+export const DatePickerSelectY  = styled.select`
+  padding: 6px 12px;
+  width: 80px;
+  border: 1.6px solid ${({ theme }) => theme.greenMain};
+  border-radius: 6px;
+  background: ${({ theme }) => theme.ContainerBGColor};
+  color: ${({ theme }) => theme.textBlack};
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.lightGreen};
+    box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.2)`};
+  }
+
+  option {
+    background: ${({ theme }) => theme.ContainerBGColor};
+    color: ${({ theme }) => theme.textBlack};
+  }
+`;
+
 export const DatePickerSelect = styled.select`
   padding: 6px 12px;
-  width: 100px;
+  width: 120px;
   border: 1.6px solid ${({ theme }) => theme.greenMain};
   border-radius: 6px;
   background: ${({ theme }) => theme.ContainerBGColor};

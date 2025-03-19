@@ -39,7 +39,7 @@ export const SectionHeader = styled.button.attrs({ type: "button" })`
   border-top-right-radius: 6px;
   border: 1.7px solid ${({ theme }) => theme.greenMain};
   width: 100%;
-  text-align: left;
+  text-align: left; 
   border: none;  
   
   &:hover {

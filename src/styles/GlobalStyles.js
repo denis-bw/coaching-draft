@@ -4,7 +4,7 @@ const GlobalStyles = createGlobalStyle`
 
   * {
     caret-color: ${({ theme }) => theme.mode === 'dark' ? theme.textWhite : theme.textBlack};
-     &::-webkit-scrollbar {
+      &::-webkit-scrollbar {
     width: 6px;
     
   }
@@ -26,58 +26,63 @@ const GlobalStyles = createGlobalStyle`
 
   }
 
-  html, body {
+html, body {
+  font-family: 'Libre Franklin', sans-serif;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+  background-color: ${({ theme }) => theme.mainBGColor};
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: ${({ theme }) => theme.textBlack || '#343434'};
+  transition: background-color 0.5s ease, color 0.5s ease;
+  
+  ::placeholder {
     font-family: 'Inter Tight', sans-serif;
-    padding: 0;
-    margin: 0;
-    line-height: 1.4;
-    background-color: ${({ theme }) => theme.mainBGColor};
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    color: ${({ theme }) => theme.textBlack || '#343434'};
-    transition: background-color 0.5s ease, color 0.5s ease;
-   
- 
   }
+}
 
+button, input, textarea, select {
+  font-family: inherit;
+}
 
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
-  h1, h2, h3, h4, h5, h6 {
-    margin: 0;
-  }
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+}
 
-  p {
-    margin: 0;
-  }
+p {
+  margin: 0;
+}
 
-  ul, ol {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
-  a {
-    color: inherit;
-    text-decoration: none;
-    outline: none;
-  }
+a {
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
 
-  button {
-    border: none;
-    margin: 0;
-    padding: 0;
-    background-color: transparent;
-    cursor: pointer;
-  }
+button {
+  border: none;
+  margin: 0;
+  padding: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
 
-  img {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
+img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
   
 `;
 

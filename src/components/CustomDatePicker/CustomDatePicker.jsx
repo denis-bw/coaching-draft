@@ -5,7 +5,8 @@ import {
   StyledDatePicker, 
   DatePickerWrapper, 
   DatePickerSelect,
-  CalendarContainer
+  DatePickerSelectY,
+  CalendarContainer,
 } from "./CustomDatePicker.styled"; 
 
 
@@ -82,7 +83,7 @@ export const CustomDatePicker = ({ selectedDate, onDateChange }) => {
           changeMonth,
         }) => (
           <DatePickerWrapper>
-            <DatePickerSelect 
+            <DatePickerSelectY 
               value={getYear(date)} 
               onChange={(e) => {
                 const value = e.target.value;
@@ -93,7 +94,7 @@ export const CustomDatePicker = ({ selectedDate, onDateChange }) => {
               {years.map((year) => (
                 <option key={year} value={year}>{year}</option>
               ))}
-            </DatePickerSelect>
+            </DatePickerSelectY>
 
             <DatePickerSelect 
               value={months[getMonth(date)]} 
