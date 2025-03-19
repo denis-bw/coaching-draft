@@ -61,26 +61,32 @@ const AthleteCreate = () => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
   
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const fileInput = document.getElementById('photo-upload');
+        if (fileInput) {
+          fileInput.click(); // Клік по інпуту, щоб відкрити діалог вибору файлів
+        }
+      }
+    };
+
+  
   return (
     <>
     <Container>
       <Card>
         <ContentWrapper>
-          <PhotoSection>
+                    <PhotoSection>
             <PhotoWrapper>
               <PhotoCircle>
-                <ProfileImage 
-                  src={profilePlaceholder}
-                  alt="Фото спортсмена"
-                />
+                <ProfileImage src={profilePlaceholder} alt="Фото спортсмена" />
               </PhotoCircle>
-              <PhotoUploadButton htmlFor="photo-upload">
+              <PhotoUploadButton htmlFor="photo-upload" tabIndex={0}   onKeyDown={handleKeyDown} >
                 <CameraIcon />
               </PhotoUploadButton>
-              <HiddenInput 
-                id="photo-upload" 
-                type="file" 
-                loading="lazy"
+              <HiddenInput
+                id="photo-upload"
+                type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
               />
             </PhotoWrapper>

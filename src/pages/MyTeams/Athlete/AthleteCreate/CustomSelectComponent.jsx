@@ -6,6 +6,7 @@ const CustomSelectWrapper = styled.div`
   position: relative;
   width: 100%;
 `;
+
 export const Label = styled.label`
   display: block;
   margin-bottom: 0.5rem;
@@ -15,10 +16,10 @@ export const Label = styled.label`
 `;
 
 const CustomPlaceholder = styled.span`
-   color: ${({ theme }) => theme.textGray};
-`
+  color: ${({ theme }) => theme.textGray};
+`;
 
-const CustomSelect = styled.button`
+const CustomSelect = styled.button.attrs({ type: "button" })`
   padding: 0.75rem 1rem;
   width: 100%;
   padding-right: 2.5rem;
@@ -29,14 +30,14 @@ const CustomSelect = styled.button`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
   font-size: 1rem;
-  position: relative; 
-  cursor: text;
+  position: relative;
+  cursor: pointer;
+
   &:focus {
-      outline: none;
-      border-color: ${({ theme }) => theme.lightGreen};
-      box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.5)`};
+    outline: none;
+    border-color: ${({ theme }) => theme.lightGreen};
+    box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.5)`};
   }
 `;
 
@@ -55,13 +56,23 @@ const Dropdown = styled.div`
   overflow-y: auto;
 `;
 
-const Option = styled.div`
+const OptionButton = styled.button.attrs({ type: "button" })`
+  width: 100%;
   padding: 0.75rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
   cursor: pointer;
   color: ${({ theme }) => theme.textBlack};
   transition: background-color 0.3s ease;
+  font-size: 1rem;
 
   &:hover {
+    background-color: ${({ theme }) => theme.lightGreen};
+  }
+
+  &:focus {
+    outline: none;
     background-color: ${({ theme }) => theme.lightGreen};
   }
 
@@ -88,8 +99,7 @@ const CustomSelectComponent = ({ label, value, onChange }) => {
   const [selectedValue, setSelectedValue] = useState(value);
   const selectRef = useRef(null);
 
-  const toggleDropdown = (event) => {
-    event.preventDefault();
+  const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
@@ -122,24 +132,24 @@ const CustomSelectComponent = ({ label, value, onChange }) => {
 
       {isOpen && (
         <Dropdown>
-          <Option
+          <OptionButton
             className={selectedValue === 'Чоловік' ? 'selected' : ''}
             onClick={() => handleSelectOption('Чоловік')}
           >
             Чоловік
-          </Option>
-          <Option
-            className={selectedValue === ' Жінка' ? 'selected' : ''}
-            onClick={() => handleSelectOption(' Жінка')}
+          </OptionButton>
+          <OptionButton
+            className={selectedValue === 'Жінка' ? 'selected' : ''}
+            onClick={() => handleSelectOption('Жінка')}
           >
             Жінка
-          </Option>
-          <Option
+          </OptionButton>
+          <OptionButton
             className={selectedValue === '' ? 'selected' : ''}
             onClick={() => handleSelectOption('')}
           >
             Не вибрано
-          </Option>
+          </OptionButton>
         </Dropdown>
       )}
     </CustomSelectWrapper>

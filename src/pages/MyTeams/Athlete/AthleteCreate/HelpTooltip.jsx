@@ -2,19 +2,36 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { ReactComponent as HelpIcon } from "../../../../assets/HelpIcon.svg";
 
-const TooltipWrapper = styled.div`
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-`;
-
 const Icon = styled(HelpIcon)`
   width: 24px;
   height: 24px;
   cursor: pointer;
   stroke: ${({ theme }) => theme.white};
+  transition: stroke 0.3s ease;
 `;
+
+const TooltipWrapper = styled.button.attrs({ type: "button" })`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+
+  &:focus,
+  &:hover {
+    outline: none;
+
+    ${Icon} {
+      stroke: ${({ theme }) => theme.gray}; 
+    }
+  }
+`;
+
+
+
 
 const TooltipOuter = styled.div`
   position: absolute;

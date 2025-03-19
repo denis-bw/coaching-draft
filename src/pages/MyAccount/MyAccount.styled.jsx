@@ -95,9 +95,16 @@ export const PhotoUploadButton = styled.label`
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   border: 2px solid ${({ theme }) => theme.white};
+  outline: none;
 
   &:hover {
     background-color: ${({ theme }) => theme.darkGreen};
+     box-shadow: 0 0 0 4px ${({ theme }) => theme.greenMain}, 0 0 0 6px ${({ theme }) => theme.white};
+  }
+
+  &:focus-visible {
+    background-color: ${({ theme }) => theme.darkGreen};
+    box-shadow: 0 0 0 4px ${({ theme }) => theme.greenMain}, 0 0 0 6px ${({ theme }) => theme.white};
   }
 
   @media (min-width: ${breakpoints.tablet}) {
@@ -105,6 +112,7 @@ export const PhotoUploadButton = styled.label`
     height: 2.5rem;
   }
 `;
+
 
 export const FormRow = styled.div`
   display: flex;
@@ -225,10 +233,12 @@ export const Button = styled.button`
 
   &:hover {
     background-color: ${({ theme }) => theme.darkGreen};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.lightGreenAlpha};
   }
 
   &:focus {
     outline: none;
+     background-color: ${({ theme }) => theme.darkGreen};
     box-shadow: 0 0 0 2px ${({ theme }) => theme.lightGreenAlpha};
   }
 

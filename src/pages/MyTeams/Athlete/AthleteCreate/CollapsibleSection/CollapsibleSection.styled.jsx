@@ -8,7 +8,7 @@ export const SectionContainer = styled.div`
   border-radius: 8px;
 
   background-color: ${({ theme }) => theme.ContainerBGColor}; 
-    transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease;
   ${({ isOpen }) => !isOpen && `
     border-radius: 8px 8px 0 0;
   `}
@@ -25,7 +25,7 @@ export const Arrow = styled(OriginalChevronIcon)`
   transition: transform 0.3s ease;
 `;
 
-export const SectionHeader = styled.div`
+export const SectionHeader = styled.button.attrs({ type: "button" })`
   background-color: ${({ theme }) => theme.greenMain};
   padding: 8px 14px;
   display: flex;
@@ -36,21 +36,25 @@ export const SectionHeader = styled.div`
   position: relative;
   cursor: row-resize;
   border-top-left-radius: 6px; 
-  border-top-right-radius:6px;
+  border-top-right-radius: 6px;
   border: 1.7px solid ${({ theme }) => theme.greenMain};
-
+  width: 100%;
+  text-align: left;
+  border: none;  
+  
   &:hover {
     background-color: ${({ theme }) => theme.lightGreen};
-    border-color: ${({ theme }) => theme.lightGreen}; 
-    ${Arrow} {
-      stroke: ${({ theme }) => theme.ContainerBGColor};
-    }
+  }
+
+  &:focus {
+    background-color: ${({ theme }) => theme.lightGreen};
   }
 
   @media (min-width: 768px) {
     padding: 10px 20px;
   }
 `;
+
 
 export const SectionContent = styled.div`
   padding: 0 20px;

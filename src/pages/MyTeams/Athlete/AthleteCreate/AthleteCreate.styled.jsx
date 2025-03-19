@@ -97,7 +97,6 @@ export const ProfileImage = styled.img`
   height: 100%;
   object-fit: cover;
 `;
-
 export const PhotoUploadButton = styled.label`
   position: absolute;
   bottom: 0;
@@ -113,9 +112,16 @@ export const PhotoUploadButton = styled.label`
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   border: 2px solid ${({ theme }) => theme.white};
+  outline: none;
 
   &:hover {
     background-color: ${({ theme }) => theme.darkGreen};
+     box-shadow: 0 0 0 4px ${({ theme }) => theme.greenMain}, 0 0 0 6px ${({ theme }) => theme.white};
+  }
+
+  &:focus-visible {
+    background-color: ${({ theme }) => theme.darkGreen};
+    box-shadow: 0 0 0 4px ${({ theme }) => theme.greenMain}, 0 0 0 6px ${({ theme }) => theme.white};
   }
 
   @media (min-width: ${breakpoints.tablet}) {
@@ -127,6 +133,7 @@ export const PhotoUploadButton = styled.label`
 export const HiddenInput = styled.input`
   display: none;
 `;
+
 
 export const InfoSection = styled.div`
   flex: 1;
@@ -252,10 +259,12 @@ export const Button = styled.button`
 
   &:hover {
     background-color: ${({ theme }) => theme.darkGreen};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.lightGreenAlpha};
   }
 
   &:focus {
     outline: none;
+     background-color: ${({ theme }) => theme.darkGreen};
     box-shadow: 0 0 0 2px ${({ theme }) => theme.lightGreenAlpha};
   }
 

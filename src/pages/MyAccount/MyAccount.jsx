@@ -83,21 +83,29 @@ const MyAccount = () => {
     return file;
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const validatedFile = validateFile(file);
-      if (!validatedFile) {
-        e.target.value = ''; 
-        return;
-      }
-      
-
-      const previewUrl = URL.createObjectURL(file);
-      setPreviewImage(previewUrl);
-      setHasUnsavedChanges(true);
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const fileInput = document.getElementById('photo-upload');
+    if (fileInput) {
+      fileInput.click(); // Клік по інпуту, щоб відкрити діалог вибору файлів
     }
-  };
+  }
+};
+
+const handleFileChange = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const validatedFile = validateFile(file);
+    if (!validatedFile) {
+      e.target.value = ''; 
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+    setPreviewImage(previewUrl);
+    setHasUnsavedChanges(true);
+  }
+};
 
   useEffect(() => {
     setTitle("Мій акаунт");
@@ -205,7 +213,7 @@ const MyAccount = () => {
                   onError={handleImageError}
                 />
               </PhotoCircle>
-              <PhotoUploadButton htmlFor="photo-upload">
+              <PhotoUploadButton htmlFor="photo-upload"  tabIndex={0}  onKeyDown={handleKeyDown}>
                 <CameraIcon />
               </PhotoUploadButton>
               <HiddenInput 

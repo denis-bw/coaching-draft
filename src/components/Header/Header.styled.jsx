@@ -3,6 +3,7 @@ import { ReactComponent as OriginalMoonIcon } from '../../assets/MoonIcon.svg';
 import { ReactComponent as OriginalSunIcon } from '../../assets/SunIcon.svg';
 import { ReactComponent as OriginalMenuIcon } from '../../assets/MenuIcon.svg';
 
+import { NavLink } from 'react-router-dom';
 
 export const MenuIcon = styled(OriginalMenuIcon)`
   width: 24px;
@@ -126,4 +127,24 @@ export const ImgAvatar =  styled.img`
   height: 2rem;
   border-radius: 50%;
 `
+export const LinkMyAcc = styled(NavLink)`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  line-height: 40px;
+  background-color: ${({ theme }) => theme.greenMain};
+  text-decoration: none;
+  font-size: 1.2rem;
 
+  &:hover {
+    background-color: ${({ theme }) => theme.darkGreen}; 
+    box-shadow: 0 0 0 1px ${({ theme }) => theme.greenMain};
+  }
+
+  &:focus-visible {
+    outline: none; 
+    box-shadow: 0 0 0 1px ${({ theme }) => theme.greenMain}, 0 0 0 2px ${({ theme }) => theme.ContainerBGColor}; 
+    border-radius: 50%;
+  }
+`;

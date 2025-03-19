@@ -6,9 +6,9 @@ import {
   ContanerSettings, 
   TexeName,
   MenuIcon,
-  ImgAvatar
+  ImgAvatar,
+  LinkMyAcc,
 } from './Header.styled';
-import { NavLink } from 'react-router-dom';
 import profilePlaceholder from "../../assets/PlaceholderProfileCoach.jpg"
 import BtnTheme from '../BtnTheme/BtnTheme';
 import { ReactComponent as SettingsIcon } from '../../assets/SettingsIcon.svg';
@@ -43,13 +43,13 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <SettingsIcon style={{ width: '20px', height: '20px' }}  />
             <BtnTheme/>
             <TexeName>{user.username || "User"}</TexeName>
-            <NavLink to="my-account">
+            <LinkMyAcc to="my-account">
               <ImgAvatar
                 src={previewImage || profilePlaceholder}
                 loading="lazy"
                 alt="User"
               />
-            </NavLink>
+            </LinkMyAcc>
           </ContanerSettings>
         </>
       )}
@@ -60,13 +60,13 @@ const Header = ({ toggleSidebar, isMobile, title }) => {
             <SettingsIcon style={{ width: '20px', height: '20px' }}  />
             <BtnTheme/>
             <TexeName>{user.username || "User"}</TexeName>
-            <NavLink to="my-account">
+            <LinkMyAcc to="my-account">
               <ImgAvatar
                 src={previewImage || profilePlaceholder}
                 loading="lazy"
                 alt="User"
               />
-            </NavLink>
+            </LinkMyAcc>
           </ContanerSettings>
         </>
       )}
