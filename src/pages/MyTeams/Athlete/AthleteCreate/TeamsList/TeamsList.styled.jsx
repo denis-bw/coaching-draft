@@ -127,7 +127,6 @@ export const TeamsContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.greenMain};
   border-radius: 10px;
   @media (max-width: 768px) {
-    width: calc(100% - 30px);
     border-radius: 8px;
   }
    @media (max-width: 1024px) {
@@ -192,7 +191,6 @@ export const TeamsHeader = styled.div`
   padding: 12px 20px;
   background-color: ${({ theme }) => theme.greenMain};
   color: ${({ theme }) => theme.white};
-  border-radius: 10px 10px 0 0;
   margin-bottom: 15px;
   position: relative;
   z-index: 1;
