@@ -9,7 +9,7 @@ import {
   TeamItemWrapper,
   TeamItemStyled
 } from './TeamsList.styled';
-import PlaceholderTeam from "../../../../../assets/PlaceholderTeam.jpg";
+import PlaceholderTeam from "../../../assets/PlaceholderTeam.jpg";
 
 const TeamListItem = ({ team, isVisible }) => {
   return (
