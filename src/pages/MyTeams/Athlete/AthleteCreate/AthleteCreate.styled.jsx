@@ -365,6 +365,7 @@ export const Textarea = styled.textarea`
   resize: vertical;
   min-height: 120px;
   max-height: 300px;
+   transition: none;
 
   &:focus {
       outline: none;

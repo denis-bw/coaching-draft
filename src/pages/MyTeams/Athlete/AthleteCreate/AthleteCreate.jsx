@@ -4,6 +4,7 @@ import { CustomDatePicker } from "../../../../components/CustomDatePicker/Custom
 import profilePlaceholder from "../../../../assets/PlaceholderProfile.png";
 import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import CustomSelectComponent from './CustomSelectComponent';
+import TeamsList from './TeamsList/TeamsList'
 
 import InfoInput from './InfoInput';
 import {
@@ -58,6 +59,17 @@ const AthleteCreate = () => {
   const [sportCategory, setSportCategory] = useState('');
   const [notes, setNotes] = useState('');
 
+  const [selectedTeam, setSelectedTeam] = useState(null);
+
+const handleTeamSelect = (team) => {
+  setSelectedTeam(team);
+  
+  if (team) {
+    console.log(`Вибрана команда: ${team.name} (ID: ${team.id})`);
+  } else {
+    console.log('Вибір команди скасовано', team);
+  }
+};
   useEffect(() => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
@@ -301,8 +313,8 @@ const AthleteCreate = () => {
               </InputRows>
             </FormBlock>
 
-            <SecondBlock $hasSportInfo>
-             <p>sd</p>
+          <SecondBlock $hasSportInfo>
+              <TeamsList />
             </ SecondBlock>
           </TwoColumnLayout>
         </CollapsibleSection>

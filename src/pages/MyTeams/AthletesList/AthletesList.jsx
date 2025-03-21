@@ -80,7 +80,6 @@ const AthletesList = () => {
     };
   }, []);
   
-
   useEffect(() => {
     if (!athletesListRef.current) return;
     
@@ -98,7 +97,10 @@ const AthletesList = () => {
         updatedVisibility[id] = entry.isIntersecting;
       });
       
-      setVisibleItems(updatedVisibility);
+      setVisibleItems((prev) => ({
+        ...prev,
+        ...updatedVisibility
+      }));
     };
     
     observerRef.current = new IntersectionObserver(handleIntersection, options);
@@ -110,7 +112,7 @@ const AthletesList = () => {
     };
   }, []);
   
-  
+ 
   useEffect(() => {
     if (!observerRef.current) return;
     
@@ -120,7 +122,7 @@ const AthletesList = () => {
     athleteElements.forEach(element => {
       observerRef.current.observe(element);
     });
-  }, [filteredAthletes]);
+  }, [searchQuery]);
   
   
 

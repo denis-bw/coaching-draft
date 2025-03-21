@@ -1,33 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import React, { useRef, useEffect, useState } from 'react';
 import { 
   TeamsContainer, 
   TeamsHeader, 
   HeaderRow, 
   TeamsListContainer, 
-  AddNewTeamButton, 
-  AddButtonWrapper,
   EmptyStateMessage,
   TeamsWrapper,
-  SearchContainer,
-  SearchInput,
-  CreateIcon,
+  TeamInfo,
+  TeamName,
+  ProfileImageTeams,
+  TeamIconWrapper,
+  TeamItemWrapper,
+  TeamButton
 } from './TeamsList.styled';
-import TeamListItem from './TeamListItem';
+import PlaceholderTeam from "../../../../../assets/PlaceholderTeam.jpg";
 
 const TeamsList = () => {
-  const { setTitle } = useOutletContext();
-  const [searchQuery, setSearchQuery] = useState('');
   const [visibleItems, setVisibleItems] = useState({});
-   
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  
   const teamsListRef = useRef(null);
   const observerRef = useRef(null);
-  const visibleItemsRef = useRef({});
-  
-  useEffect(() => {
-    setTitle("Команди");
-  }, [setTitle]);
-  
+  const buttonRefs = useRef({});
+
   const teams = [
     { id: 1, name: 'Динамо' },
     { id: 2, name: 'Шахтар' },
@@ -40,8 +35,14 @@ const TeamsList = () => {
     { id: 9, name: 'Дніпро' },
     { id: 10, name: 'Десна' },
   ];
-  
-  const filteredTeams = teams.filter(team => team.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  useEffect(() => {
+    const initialVisibility = {};
+    teams.forEach(team => {
+      initialVisibility[`team-${team.id}`] = true; 
+    });
+    setVisibleItems(initialVisibility);
+  }, []);
 
   useEffect(() => {
     if (!teamsListRef.current) return;
@@ -49,7 +50,7 @@ const TeamsList = () => {
     const options = {
       root: teamsListRef.current,
       rootMargin: '0px',
-      threshold: 0.5,
+      threshold: 0.1, 
     };
     
     const handleIntersection = (entries) => {
@@ -70,22 +71,27 @@ const TeamsList = () => {
     };
     
     observerRef.current = new IntersectionObserver(handleIntersection, options);
-    return () => observerRef.current?.disconnect();
-  }, []);
-  
-  useEffect(() => {
-    if (!observerRef.current) return;
-    observerRef.current.disconnect();
- 
+    
     const teamElements = document.querySelectorAll('[id^="team-"]');
     teamElements.forEach(element => {
       observerRef.current.observe(element);
     });
-  }, [filteredTeams]);
-  
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    teamsListRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    return () => observerRef.current?.disconnect();
+  }, []);
+
+  const handleTeamClick = (team) => {
+    if (selectedTeam && selectedTeam.id === team.id) {
+      console.log('Team deselected:', team);
+      setSelectedTeam(null);
+      
+      if (buttonRefs.current[team.id]) {
+        buttonRefs.current[team.id].blur();
+      }
+    } else {
+      console.log('Team selected:', team);
+      setSelectedTeam(team);
+    }
   };
 
   return (
@@ -93,26 +99,33 @@ const TeamsList = () => {
       <TeamsContainer>
         <TeamsHeader>
           <HeaderRow>
-            <h2>Мої команди</h2>
-            <SearchContainer>
-              <SearchInput 
-                type="text" 
-                placeholder="Пошук команд..." 
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </SearchContainer>
+            <h2>Команда спортсмена</h2>
           </HeaderRow>
         </TeamsHeader>
 
         <TeamsListContainer ref={teamsListRef}>
-          {filteredTeams.length > 0 ? (
-            filteredTeams.map(team => (
-              <TeamListItem 
-                key={team.id}
-                team={team}
-                isVisible={visibleItems[`team-${team.id}`]}
-              />
+          {teams.length > 0 ? (
+            teams.map(team => (
+              <TeamItemWrapper 
+                key={team.id} 
+                isVisible={visibleItems[`team-${team.id}`] !== false}
+                id={`team-${team.id}`}
+              >
+                <TeamButton 
+                  ref={el => buttonRefs.current[team.id] = el}
+                  isVisible={visibleItems[`team-${team.id}`] !== false}
+                  isSelected={selectedTeam && selectedTeam.id === team.id}
+                  onClick={() => handleTeamClick(team)}
+                  type="button"
+                >
+                  <TeamIconWrapper>
+                    <ProfileImageTeams loading="lazy" src={PlaceholderTeam} />
+                  </TeamIconWrapper>
+                  <TeamInfo>
+                    <TeamName>{team.name}</TeamName>
+                  </TeamInfo>
+                </TeamButton>
+              </TeamItemWrapper>
             ))
           ) : (
             <EmptyStateMessage>
@@ -121,12 +134,6 @@ const TeamsList = () => {
           )}
         </TeamsListContainer>
 
-        <AddButtonWrapper>
-          <AddNewTeamButton to={`/teams/create`}>
-            Додати нову команду
-            <CreateIcon />
-          </AddNewTeamButton>
-        </AddButtonWrapper>
       </TeamsContainer>
     </TeamsWrapper>
   );
