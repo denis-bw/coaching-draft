@@ -16,19 +16,17 @@ import {
   HeaderRow, 
   CreateIcon,
 } from './AthletesList.styled';
-import AthleteListItem  from './AthleteListItem';
+import AthleteListItem from './AthleteListItem';
 
 const AthletesList = () => {
   const { setTitle } = useOutletContext();
   const [filterType, setFilterType] = useState('all');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleItems, setVisibleItems] = useState({});
   
   const dropdownRef = useRef(null);
   const athletesListRef = useRef(null);
-  const observerRef = useRef(null);
-  
+  console.log("QQQ")
   useEffect(() => {
     setTitle("Спортсмени");
   }, [setTitle]);
@@ -50,9 +48,7 @@ const AthletesList = () => {
     { id: 20, name: 'Володимир Бондаренко', team: '-' },
   ];
   
-
   const filteredAthletes = athletes.filter(athlete => {
-   
     const matchesFilter = 
       filterType === 'all' ? true :
       filterType === 'withTeam' ? athlete.team && athlete.team !== '-' :
@@ -90,42 +86,30 @@ const AthletesList = () => {
     };
     
     const handleIntersection = (entries) => {
-      const updatedVisibility = {...visibleItems};
-      
       entries.forEach(entry => {
-        const id = entry.target.id;
-        updatedVisibility[id] = entry.isIntersecting;
+        if (entry.target.classList) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            entry.target.classList.remove('hidden');
+          } else {
+            entry.target.classList.add('hidden');
+            entry.target.classList.remove('visible');
+          }
+        }
       });
-      
-      setVisibleItems((prev) => ({
-        ...prev,
-        ...updatedVisibility
-      }));
     };
     
-    observerRef.current = new IntersectionObserver(handleIntersection, options);
-    
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, []);
-  
- 
-  useEffect(() => {
-    if (!observerRef.current) return;
-    
-    observerRef.current.disconnect();
- 
+    const observer = new IntersectionObserver(handleIntersection, options);
+
     const athleteElements = document.querySelectorAll('[id^="athlete-"]');
     athleteElements.forEach(element => {
-      observerRef.current.observe(element);
+      observer.observe(element);
+      element.classList.add('hidden');
     });
-  }, [searchQuery]);
+    
+    return () => observer.disconnect();
+  }, [filteredAthletes]); 
   
-  
-
   const handleFilterClick = (type) => {
     setFilterType(type);
     setIsDropdownOpen(false);
@@ -192,7 +176,6 @@ const AthletesList = () => {
               <AthleteListItem 
                 key={athlete.id}
                 athlete={athlete}
-                isVisible={visibleItems[`athlete-${athlete.id}`]}
               />
             ))
           ) : (

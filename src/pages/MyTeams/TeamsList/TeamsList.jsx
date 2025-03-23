@@ -18,15 +18,44 @@ import TeamListItem from './TeamListItem';
 const TeamsList = () => {
   const { setTitle } = useOutletContext();
   const [searchQuery, setSearchQuery] = useState('');
-  const [visibleItems, setVisibleItems] = useState({});
-   
   const teamsListRef = useRef(null);
   const observerRef = useRef(null);
-  const visibleItemsRef = useRef({});
   
   useEffect(() => {
     setTitle("Команди");
   }, [setTitle]);
+  
+
+  useEffect(() => {
+    if (!teamsListRef.current) return;
+    
+    const options = {
+      root: teamsListRef.current,
+      rootMargin: '0px',
+      threshold: 0.5,
+    };
+    
+    const handleIntersection = (entries) => {
+      entries.forEach(entry => {
+        const element = entry.target;
+        if (entry.isIntersecting) {
+          element.style.opacity = '1';
+          element.style.transform = 'scale(1)';
+        } else {
+          element.style.opacity = '0.6';
+          element.style.transform = 'scale(0.9)';
+        }
+      });
+    };
+    
+    observerRef.current = new IntersectionObserver(handleIntersection, options);
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
   
   const teams = [
     { id: 1, name: 'Динамо' },
@@ -41,51 +70,26 @@ const TeamsList = () => {
     { id: 10, name: 'Десна' },
   ];
   
-  const filteredTeams = teams.filter(team => team.name.toLowerCase().includes(searchQuery.toLowerCase()));
-
-  useEffect(() => {
-    if (!teamsListRef.current) return;
-    
-    const options = {
-      root: teamsListRef.current,
-      rootMargin: '0px',
-      threshold: 0.5,
-    };
-    
-    const handleIntersection = (entries) => {
-      setVisibleItems(prev => {
-        const updatedVisibility = { ...prev };
-        let hasChanges = false;
-        
-        entries.forEach(entry => {
-          const id = entry.target.id;
-          if (updatedVisibility[id] !== entry.isIntersecting) {
-            updatedVisibility[id] = entry.isIntersecting;
-            hasChanges = true;
-          }
-        });
-        
-        return hasChanges ? updatedVisibility : prev;
-      });
-    };
-    
-    observerRef.current = new IntersectionObserver(handleIntersection, options);
-    return () => observerRef.current?.disconnect();
-  }, []);
-  
+  const filteredTeams = teams.filter(team => 
+    team.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
   useEffect(() => {
     if (!observerRef.current) return;
+    
     observerRef.current.disconnect();
- 
-    const teamElements = document.querySelectorAll('[id^="team-"]');
-    teamElements.forEach(element => {
-      observerRef.current.observe(element);
-    });
+
+    setTimeout(() => {
+      const teamItems = document.querySelectorAll('[data-team-item]');
+      teamItems.forEach(item => {
+        observerRef.current.observe(item);
+      });
+    }, 0);
   }, [filteredTeams]);
-  
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    teamsListRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    if (teamsListRef.current) {
+      teamsListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
@@ -111,7 +115,6 @@ const TeamsList = () => {
               <TeamListItem 
                 key={team.id}
                 team={team}
-                isVisible={visibleItems[`team-${team.id}`]}
               />
             ))
           ) : (

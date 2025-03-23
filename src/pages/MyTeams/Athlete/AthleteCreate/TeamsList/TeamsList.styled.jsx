@@ -1,16 +1,37 @@
 import styled from 'styled-components';
 
 export const TeamItemWrapper = styled.div`
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-  opacity: ${({ isVisible }) => (isVisible ? 1 : 0.6)};
-  transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.9)')};
   width: 100%;
+  &:first-child {
+    padding-top: 2px;
+  }
+
   &:not(:first-child) {
     padding-top: 10px;
   }
+
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  
+  &.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  &.hidden {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
+  
   @media (max-width: 768px) {
-    transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.85)')};
-    opacity: ${({ isVisible }) => (isVisible ? 1 : 0.5)};
+    &.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+    
+    &.hidden {
+      opacity: 0.5;
+      transform: scale(0.85);
+    }
   }
 `;
 
@@ -23,7 +44,7 @@ export const EmptyStateMessage = styled.div`
   color: ${({ theme }) => theme.textGray};
   font-size: 14px;
   text-align: center;
-  padding: 40px 20px;
+  padding: 100px 20px;
   
   @media (max-width: 768px) {
     font-size: 13px;
@@ -51,7 +72,7 @@ export const TeamButton = styled.button`
 
   &:hover {
     background-color: ${({ theme, isSelected }) => 
-      isSelected ? theme.greenMain : `${theme.greenMain}80`};
+      isSelected ? theme.greenMain : `${theme.lightGreen}`};
   }
 
   &:focus {
@@ -128,6 +149,8 @@ export const TeamsContainer = styled.div`
   border-radius: 10px;
   @media (max-width: 768px) {
     border-radius: 8px;
+    min-height: 224px;
+    max-height: 224px;
   }
    @media (max-width: 1024px) {
      min-height: 140px;
@@ -135,7 +158,6 @@ export const TeamsContainer = styled.div`
 `;
 
 export const TeamsListContainer = styled.div`
-
   gap: 8px;
   flex: 1;
   overflow-y: auto;

@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import {
   TeamInfo,
   TeamName,
@@ -11,13 +11,10 @@ import {
 } from './TeamsList.styled';
 import PlaceholderTeam from "../../../assets/PlaceholderTeam.jpg";
 
-const TeamListItem = ({ team, isVisible }) => {
+const TeamListItem = ({ team }) => {
   return (
-    <TeamItemWrapper isVisible={isVisible} id={`team-${team.id}`}>
-      <TeamItemStyled
-        to={`/teams/${team.id}`}
-        isVisible={isVisible}
-      >
+    <TeamItemWrapper data-team-item>
+      <TeamItemStyled to={`/teams/${team.id}`}>
         <TeamIconWrapper>
           <ProfileImageTeams
             loading="lazy"

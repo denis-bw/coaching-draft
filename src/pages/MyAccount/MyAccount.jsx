@@ -192,7 +192,7 @@ const handleFileChange = (e) => {
   const handleImageError = (e) => {
     e.target.src = profilePlaceholder;
   };
-
+  
   return (
     <>
       <NavigationPrompt 

@@ -26,14 +26,29 @@ export const CreateIcon = styled(OriginalCreateIcon)`
 `;
 
 export const AthleteItemWrapper = styled.div`
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-  opacity: ${({ isVisible }) => (isVisible ? 1 : 0.6)};
-  transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.9)')};
   width: 100%;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+  
+  &.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  &.hidden {
+    opacity: 0.6;
+    transform: scale(0.9);
+  }
 
   @media (max-width: 768px) {
-    transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.85)')};
-    opacity: ${({ isVisible }) => (isVisible ? 1 : 0.5)};
+    &.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+    
+    &.hidden {
+      opacity: 0.5;
+      transform: scale(0.85);
+    }
   }
 `;
 
@@ -434,9 +449,10 @@ border: 2px solid  ${({ theme }) => theme.greenMain};
 `;
 
 export const AthleteItemStyled = styled(AthleteItem)`
-  background-color: ${({ theme, isVisible }) => 
-    isVisible 
-      ? `${theme.lightGreen}80` 
-      : `${theme.lightGreen}40`};
+  background-color: ${({ theme }) => `${theme.lightGreen}80`};
   transition: background-color 0.3s ease-out;
+  
+  .hidden & {
+    background-color: ${({ theme }) => `${theme.lightGreen}40`};
+  }
 `;

@@ -26,14 +26,14 @@ export const CreateIcon = styled(OriginalCreateIcon)`
 `;
 
 export const TeamItemWrapper = styled.div`
-  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
-  opacity: ${({ isVisible }) => (isVisible ? 1 : 0.6)};
-  transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.9)')};
   width: 100%;
+  opacity: 0.6;
+  transform: scale(0.9);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 
   @media (max-width: 768px) {
-    transform: ${({ isVisible }) => (isVisible ? 'scale(1)' : 'scale(0.85)')};
-    opacity: ${({ isVisible }) => (isVisible ? 1 : 0.5)};
+    opacity: 0.5;
+    transform: scale(0.85);
   }
 `;
 
@@ -164,6 +164,7 @@ export const TeamsListContainer = styled.div`
   padding-bottom: 20px; 
   width: 100%;
   box-sizing: border-box;
+  scroll-behavior: smooth;
   
   @media (max-width: 768px) { 
     padding-left: 6px;
@@ -336,9 +337,10 @@ export const ProfileImageTeams = styled.img`
 `;
 
 export const TeamItemStyled = styled(TeamItem)`
-  background-color: ${({ theme, isVisible }) => 
-    isVisible 
-      ? `${theme.lightGreen}80` 
-      : `${theme.lightGreen}40`};
+  background-color: ${({ theme }) => `${theme.lightGreen}80`};
   transition: background-color 0.3s ease-out;
+  
+  &:hover {
+    background-color: ${({ theme }) => theme.greenMain};
+  }
 `;

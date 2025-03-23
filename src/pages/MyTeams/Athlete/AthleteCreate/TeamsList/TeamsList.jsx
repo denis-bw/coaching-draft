@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { 
   TeamsContainer, 
   TeamsHeader, 
@@ -16,11 +16,9 @@ import {
 import PlaceholderTeam from "../../../../../assets/PlaceholderTeam.jpg";
 
 const TeamsList = () => {
-  const [visibleItems, setVisibleItems] = useState({});
   const [selectedTeam, setSelectedTeam] = useState(null);
   
   const teamsListRef = useRef(null);
-  const observerRef = useRef(null);
   const buttonRefs = useRef({});
 
   const teams = [
@@ -36,51 +34,8 @@ const TeamsList = () => {
     { id: 10, name: 'Десна' },
   ];
 
-  useEffect(() => {
-    const initialVisibility = {};
-    teams.forEach(team => {
-      initialVisibility[`team-${team.id}`] = true; 
-    });
-    setVisibleItems(initialVisibility);
-  }, []);
 
-  useEffect(() => {
-    if (!teamsListRef.current) return;
-    
-    const options = {
-      root: teamsListRef.current,
-      rootMargin: '0px',
-      threshold: 0.1, 
-    };
-    
-    const handleIntersection = (entries) => {
-      setVisibleItems(prev => {
-        const updatedVisibility = { ...prev };
-        let hasChanges = false;
-        
-        entries.forEach(entry => {
-          const id = entry.target.id;
-          if (updatedVisibility[id] !== entry.isIntersecting) {
-            updatedVisibility[id] = entry.isIntersecting;
-            hasChanges = true;
-          }
-        });
-        
-        return hasChanges ? updatedVisibility : prev;
-      });
-    };
-    
-    observerRef.current = new IntersectionObserver(handleIntersection, options);
-    
-    const teamElements = document.querySelectorAll('[id^="team-"]');
-    teamElements.forEach(element => {
-      observerRef.current.observe(element);
-    });
-    
-    return () => observerRef.current?.disconnect();
-  }, []);
-
-  const handleTeamClick = (team) => {
+  const handleTeamClick = useCallback((team) => {
     if (selectedTeam && selectedTeam.id === team.id) {
       console.log('Team deselected:', team);
       setSelectedTeam(null);
@@ -92,8 +47,44 @@ const TeamsList = () => {
       console.log('Team selected:', team);
       setSelectedTeam(team);
     }
-  };
+  }, [selectedTeam]);
 
+  useEffect(() => {
+    if (!teamsListRef.current) return;
+    
+    const options = {
+      root: teamsListRef.current,
+      rootMargin: '0px',
+      threshold: 0.1, 
+    };
+    
+    const handleIntersection = (entries) => {
+      entries.forEach(entry => {
+
+        if (entry.target.classList) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            entry.target.classList.remove('hidden');
+          } else {
+            entry.target.classList.add('hidden');
+            entry.target.classList.remove('visible');
+          }
+        }
+      });
+    };
+    
+    const observer = new IntersectionObserver(handleIntersection, options);
+    
+    const teamElements = document.querySelectorAll('[id^="team-"]');
+    teamElements.forEach(element => {
+      observer.observe(element);
+  
+      element.classList.add('hidden');
+    });
+    
+    return () => observer.disconnect();
+  }, []);
+  console.log("QQ")
   return (
     <TeamsWrapper>
       <TeamsContainer>
@@ -108,12 +99,11 @@ const TeamsList = () => {
             teams.map(team => (
               <TeamItemWrapper 
                 key={team.id} 
-                isVisible={visibleItems[`team-${team.id}`] !== false}
+                className="team-item"
                 id={`team-${team.id}`}
               >
                 <TeamButton 
                   ref={el => buttonRefs.current[team.id] = el}
-                  isVisible={visibleItems[`team-${team.id}`] !== false}
                   isSelected={selectedTeam && selectedTeam.id === team.id}
                   onClick={() => handleTeamClick(team)}
                   type="button"
@@ -133,7 +123,6 @@ const TeamsList = () => {
             </EmptyStateMessage>
           )}
         </TeamsListContainer>
-
       </TeamsContainer>
     </TeamsWrapper>
   );

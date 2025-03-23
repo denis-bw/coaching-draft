@@ -12,13 +12,11 @@ import {
 } from './AthletesList.styled';
 import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
 
-
-const AthleteListItem = ({ athlete, isVisible }) => {
+const AthleteListItem = ({ athlete }) => {
   return (
-    <AthleteItemWrapper isVisible={isVisible} id={`athlete-${athlete.id}`}>
+    <AthleteItemWrapper className="athlete-item" id={`athlete-${athlete.id}`}>
       <AthleteItemStyled 
         to={`/athletes/${athlete.id}`}
-        isVisible={isVisible}
       >
         <AthleteIconWrapper>
           <ProfileImageAthletes
@@ -38,4 +36,4 @@ const AthleteListItem = ({ athlete, isVisible }) => {
   );
 };
 
-export default AthleteListItem
+export default AthleteListItem;
