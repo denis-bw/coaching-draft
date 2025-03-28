@@ -5,6 +5,7 @@ import profilePlaceholder from "../../../../assets/PlaceholderProfile.png";
 import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import CustomSelectComponent from './CustomSelectComponent';
 import TeamsList from './TeamsList/TeamsList'
+import PreviousEstablishments from './PreviousEstablishments/PreviousEstablishments';
 
 import InfoInput from './InfoInput';
 import {
@@ -34,6 +35,9 @@ import {
   InputRows,
   InputRow, 
   Textarea,
+  EducationalInstitutionsContainer,
+  CoachInfoContainer,
+  ColumnSection,
 } from './AthleteCreate.styled';
 
 const AthleteCreate = () => {
@@ -43,7 +47,7 @@ const AthleteCreate = () => {
   const [lastName, setLastName] = useState("");
   const [patronymic, setPatronymic] = useState("");
   const [birthdate, setBirthdate] = useState("");
-
+  
   const [address, setAddress] = useState("");
   const [gender, setGender] = useState("");
 
@@ -61,15 +65,14 @@ const AthleteCreate = () => {
 
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-const handleTeamSelect = (team) => {
-  setSelectedTeam(team);
+  const [university, setUniversity] = useState("");
+  const [school, setSchool] = useState("");
+
+  const [currentSportInstitution, setCurrentSportInstitution] = useState('');
+  const [trainer, setTrainer] = useState('');
+  const [trainerContacts, setTrainerContacts] = useState('');
+  const [entryDate, setEntryDate] = useState(null);
   
-  if (team) {
-    console.log(`Вибрана команда: ${team.name} (ID: ${team.id})`);
-  } else {
-    console.log('Вибір команди скасовано', team);
-  }
-};
   useEffect(() => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
@@ -320,9 +323,88 @@ const handleTeamSelect = (team) => {
         </CollapsibleSection>
 
           
-        <CollapsibleSection title={'Спортивна інформація'}>
-          Будь-який контент
+        <CollapsibleSection title={'Навчальні заклади'}>
+          <EducationalInstitutionsContainer>
+            <InputRow>
+            <InputGroup>
+              <Label htmlFor="school">Школа</Label>
+                  <Input id="school"
+                    type="text"
+                    placeholder="Введіть назву школи"
+                    value={school}
+                    onChange={(e) => setSchool(e.target.value)} />
+            </InputGroup>
+
+            <InputGroup $isUniversity>
+              <Label htmlFor="university">Університет</Label>
+                  <Input
+                    id="university"
+                    type="text"
+                    placeholder="Введіть назву університету"
+                    value={university}
+                    onChange={(e) => setUniversity(e.target.value)} 
+                  />
+            </InputGroup>
+            </InputRow>
+          </EducationalInstitutionsContainer> 
         </CollapsibleSection>
+          
+        <CollapsibleSection title={'Спортивний заклад'}>
+          <Card>
+      <CoachInfoContainer>
+        <ColumnSection>
+          <InputGroup>
+            <Label>Поточний спортивний заклад</Label>
+            <Input 
+              type="text"
+              value={currentSportInstitution}
+              onChange={(e) => setCurrentSportInstitution(e.target.value)}
+              placeholder="Введіть назву закладу"
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label>Тренер</Label>
+            <Input 
+              type="text"
+              value={trainer}
+              onChange={(e) => setTrainer(e.target.value)}
+              placeholder="Введіть ім'я тренера"
+            />
+          </InputGroup>
+        </ColumnSection>
+        
+        <ColumnSection>
+          <InputGroup>
+            <Label>Контакти тренера</Label>
+            <Input 
+              type="text"
+              value={trainerContacts}
+              onChange={(e) => setTrainerContacts(e.target.value)}
+              placeholder="Введіть контакти"
+            />
+          </InputGroup>
+          <InputGroup>
+            <Label>Дата вступу</Label>
+            <WrapperInput>
+              <CustomDatePicker 
+                selectedDate={entryDate} 
+                onDateChange={setEntryDate} 
+              />
+            </WrapperInput>
+          </InputGroup>
+        </ColumnSection>
+      </CoachInfoContainer>
+    </Card>
+      </CollapsibleSection>
+          
+        <CollapsibleSection title={'Минулі спортивні заклади'}>
+          <PreviousEstablishments />
+          </CollapsibleSection>
+          
+        <CollapsibleSection title={'TESR'}>
+           <p>asdf</p>
+        </CollapsibleSection>
+
         <ButtonWrapper>
           <Button type="submit">
             Створити

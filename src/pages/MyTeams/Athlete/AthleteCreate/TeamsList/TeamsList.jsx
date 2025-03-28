@@ -84,7 +84,6 @@ const TeamsList = () => {
     
     return () => observer.disconnect();
   }, []);
-  console.log("QQ")
   return (
     <TeamsWrapper>
       <TeamsContainer>

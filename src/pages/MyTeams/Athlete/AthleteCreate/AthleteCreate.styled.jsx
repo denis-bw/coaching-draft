@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { ReactComponent as OriginalCameraIcon } from "../../../../assets/CameraIcon.svg";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -173,6 +173,14 @@ export const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
+
+  ${({ $isUniversity }) =>
+    $isUniversity &&
+    css`
+      @media (min-width: 1024px) {
+       margin-top: 10px; 
+      }  
+    `}
 `;
 
 export const Label = styled.label`
@@ -256,13 +264,11 @@ export const Button = styled.button`
 
   &:hover {
     background-color: ${({ theme }) => theme.darkGreen};
-    box-shadow: 0 0 0 2px ${({ theme }) => theme.lightGreenAlpha};
   }
 
   &:focus {
     outline: none;
-     background-color: ${({ theme }) => theme.darkGreen};
-    box-shadow: 0 0 0 2px ${({ theme }) => theme.lightGreenAlpha};
+    background-color: ${({ theme }) => theme.darkGreen};
   }
 
   &:disabled {
@@ -388,5 +394,48 @@ export const Textarea = styled.textarea`
 
   &:focus:not(:placeholder-shown):not(:-webkit-autofill):invalid {
     box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.red.slice(1, 3), 16)}, ${parseInt(theme.red.slice(3, 5), 16)}, ${parseInt(theme.red.slice(5, 7), 16)}, 0.5)`};
+  }
+`;
+
+export const EducationalInstitutionsContainer = styled.div`
+  margin: 20px 0;
+`
+export const CoachInfoContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (min-width: ${breakpoints.desktop}) {
+    flex-direction: row;
+    gap: 40px;
+  }
+`;
+
+export const ColumnSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+`;
+
+export const DatePickerWrapper = styled.div`
+  width: 100%;
+  
+  .react-datepicker-wrapper {
+    width: 100%;
+  }
+  
+  .react-datepicker__input-container {
+    width: 100%;
+  }
+  
+  input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1.6px solid ${({ theme }) => theme.borderColor};
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    background-color: ${({ theme }) => theme.ContainerBGColor};
+    color: ${({ theme }) => theme.textBlack};
   }
 `;
