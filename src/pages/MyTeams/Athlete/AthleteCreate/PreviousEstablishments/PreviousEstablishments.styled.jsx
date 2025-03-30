@@ -158,6 +158,12 @@ export const ErrorMessage = styled.span`
   color: ${({ theme }) => theme.red};
   font-size: 0.75rem;
   margin-left: 0.5rem;
+    @media (max-width: 400px) {
+      width: 72px;
+    font-size: 0.65rem;  
+    white-space: normal; 
+    word-wrap: break-word; 
+  }
 `;
 
 export const AddButton = styled.button`
@@ -169,15 +175,16 @@ export const AddButton = styled.button`
   color: ${({ theme }) => theme.white};
   border: none;
   border-radius: 0.5rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: background-color 0.2s ease;
 
   &:hover {
-    background-color: ${({ theme }) => theme.darkGreen};
+    background-color: ${({ theme }) => theme.lightGreen};
   }
   &:focus {
     outline: none;
-    background-color: ${({ theme }) => theme.darkGreen};
+    background-color: ${({ theme }) => theme.lightGreen};
   }
 `;
 
@@ -206,5 +213,6 @@ export const EmptyState = styled.div`
   text-align: center;
   color: ${({ theme }) => theme.textGray};
   padding: 1rem;
+  padding-top: 0;
   background-color: ${({ theme }) => theme.ContainerBGColor};
 `;

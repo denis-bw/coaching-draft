@@ -38,6 +38,18 @@ export const Card = styled.form`
     max-width: 100%;
     padding: 22px 32px;
   }
+
+  ${({ $isSportsFacility }) =>
+    $isSportsFacility &&
+    css`
+      @media (min-width: ${breakpoints.tablet}) {
+       padding: 14px 0;
+      }
+  
+      @media (min-width: ${breakpoints.desktop}) {
+        padding: 14px 0;
+      }
+  `}
 `;
 
 export const ContentWrapper = styled.div`
@@ -174,14 +186,19 @@ export const InputGroup = styled.div`
   flex-direction: column;
   width: 100%;
 
-  ${({ $isUniversity }) =>
+${({ $isUniversity }) =>
     $isUniversity &&
     css`
+      @media (max-width: 1024px) {
+        margin-top: 10px; 
+      }
+
       @media (min-width: 1024px) {
-       margin-top: 10px; 
-      }  
+        margin-top: 0;
+      }
     `}
 `;
+
 
 export const Label = styled.label`
   display: block;
@@ -409,6 +426,7 @@ export const CoachInfoContainer = styled.div`
     flex-direction: row;
     gap: 40px;
   }
+
 `;
 
 export const ColumnSection = styled.div`
@@ -416,6 +434,12 @@ export const ColumnSection = styled.div`
   flex-direction: column;
   gap: 20px;
   flex: 1;
+
+  ${({ $isSportsFacility }) =>
+    $isSportsFacility &&
+    css`
+      gap: 10px;
+  `}
 `;
 
 export const DatePickerWrapper = styled.div`
@@ -439,3 +463,4 @@ export const DatePickerWrapper = styled.div`
     color: ${({ theme }) => theme.textBlack};
   }
 `;
+

@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import FormDatePicker from './FormDatePicker'; 
 import {
   Container,
   InstitutionsList,
@@ -19,8 +20,9 @@ import {
   EmptyState,
   InstitutionsListContainer,
 } from './PreviousEstablishments.styled';
+import ErrorTooltip from '../../../../../components/ErrorTooltip/ErrorTooltip';
 
-const PreviousEstablishments = () => {
+const PreviousEstablishments = ({ onDataUpdate }) => {
   const [institutions, setInstitutions] = useState([]);
   const [currentInstitution, setCurrentInstitution] = useState({
     coachName: '',
@@ -32,9 +34,24 @@ const PreviousEstablishments = () => {
 
   const [errors, setErrors] = useState({});
 
+  const maxLength = 100;
+
+  useEffect(() => {
+    
+    const formattedData = institutions.map(inst => ({
+      previousCoach: inst.coachName,
+      previousInstitution: inst.institution || '',
+      coachContacts: inst.coachContacts || '',
+      entryDate: inst.entryDate || '',
+      exitDate: inst.exitDate || ''
+    }));
+    
+    onDataUpdate(formattedData);
+  }, [institutions, onDataUpdate]);
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
-      e.preventDefault(); 
+      e.preventDefault();
     }
   };
 
@@ -43,41 +60,35 @@ const PreviousEstablishments = () => {
 
     if (!currentInstitution.coachName.trim()) {
       newErrors.coachName = "Ім'я тренера є обов'язковим";
-    } else if (currentInstitution.coachName.length > 50) {
-      newErrors.coachName = "Ім'я тренера не може перевищувати 50 символів";
     }
 
-    if (currentInstitution.institution && currentInstitution.institution.length > 100) {
-      newErrors.institution = "Назва закладу не може перевищувати 100 символів";
-    }
+    
+    if (currentInstitution.entryDate && currentInstitution.exitDate) {
+      const entryDate = new Date(currentInstitution.entryDate);
+      const exitDate = new Date(currentInstitution.exitDate);
+      
 
-    if (currentInstitution.coachContacts && currentInstitution.coachContacts.length > 100) {
-      newErrors.coachContacts = "Контакти не можуть перевищувати 100 символів";
-    }
-
-    if (currentInstitution.entryDate && currentInstitution.exitDate &&
-        currentInstitution.exitDate < currentInstitution.entryDate) {
-      newErrors.exitDate = "Дата виходу не може бути раніше дати вступу";
+      const timeDiff = exitDate.getTime() - entryDate.getTime();
+      const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      
+      if (diffDays <= 0) {
+        newErrors.exitDate = "Дата виходу має бути пізніше дати вступу";
+      }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-
   const addInstitution = () => {
     if (validateInstitution()) {
-      const updatedInstitutions = [
-        ...institutions, 
-        { 
-          ...currentInstitution,
-          id: Date.now()
-        }
-      ];
+      const newInstitution = {
+        ...currentInstitution,
+        id: Date.now() 
+      };
 
-      setInstitutions(updatedInstitutions);
+      setInstitutions(prev => [...prev, newInstitution]);
 
- 
       setCurrentInstitution({
         coachName: '',
         institution: '',
@@ -89,13 +100,10 @@ const PreviousEstablishments = () => {
     }
   };
 
- 
   const removeInstitution = (idToRemove) => {
-    const updatedInstitutions = institutions.filter(
-      (institution) => institution.id !== idToRemove
+    setInstitutions(prev => 
+      prev.filter(institution => institution.id !== idToRemove)
     );
-
-    setInstitutions(updatedInstitutions);
   };
 
   const updateCurrentInstitution = (field, value) => {
@@ -104,10 +112,47 @@ const PreviousEstablishments = () => {
       [field]: value
     }));
 
+   
     if (errors[field]) {
-      const newErrors = { ...errors };
-      delete newErrors[field];
-      setErrors(newErrors);
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    if (field === 'entryDate' && currentInstitution.exitDate) {
+      const entryDate = new Date(value);
+      const exitDate = new Date(currentInstitution.exitDate);
+      
+      const timeDiff = exitDate.getTime() - entryDate.getTime();
+      const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      
+      if (diffDays <= 0) {
+        setErrors(prev => ({
+          ...prev,
+          exitDate: "Дата виходу з закладу має бути пізніше дати вступу"
+        }));
+      } else {
+        if (errors.exitDate) {
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors.exitDate;
+            return newErrors;
+          });
+        }
+      }
+    }
+  };
+
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      return date.toLocaleDateString('uk-UA');
+    } catch {
+      return dateString;
     }
   };
 
@@ -115,38 +160,38 @@ const PreviousEstablishments = () => {
     <Container>
       {institutions.length === 0 ? (
         <EmptyState>Додайте інформацію</EmptyState>
-          ) : ( <InstitutionsListContainer>
-        
-        <InstitutionsList $hasInstitutions={institutions.length > 0}>
-          {institutions.map((institution) => (
-            <InstitutionItem key={institution.id}>
-              <InstitutionDetails>
-                <DetailRow>
-                  <strong>Тренер:</strong> 
-                  <span>{institution.coachName}</span>
-                </DetailRow>
-                <DetailRow>
-                  <strong>Заклад:</strong> 
-                  <span>{institution.institution || 'Без назви'}</span>
-                </DetailRow>
-                <DetailRow>
-                  <strong>Контакти:</strong> 
-                  <span>{institution.coachContacts || 'Не вказано'}</span>
-                </DetailRow>
-                <DetailRow>
-                  <strong>Період:</strong> 
-                  <span>
-                    {institution.entryDate} - {institution.exitDate || 'дотепер'}
-                  </span>
-                </DetailRow>
-              </InstitutionDetails>
-              <RemoveButton onClick={() => removeInstitution(institution.id)}>
-                ✕
-              </RemoveButton>
-            </InstitutionItem>
-          ))}
-        </InstitutionsList>
-       </ InstitutionsListContainer>
+      ) : (
+        <InstitutionsListContainer>
+          <InstitutionsList $hasInstitutions={institutions.length > 0}>
+            {institutions.map((institution) => (
+              <InstitutionItem key={institution.id}>
+                <InstitutionDetails>
+                  <DetailRow>
+                    <strong>Тренер:</strong> 
+                    <span>{institution.coachName}</span>
+                  </DetailRow>
+                  <DetailRow>
+                    <strong>Заклад:</strong> 
+                    <span>{institution.institution || 'Без назви'}</span>
+                  </DetailRow>
+                  <DetailRow>
+                    <strong>Контакти:</strong> 
+                    <span>{institution.coachContacts || 'Не вказано'}</span>
+                  </DetailRow>
+                  <DetailRow>
+                    <strong>Період:</strong> 
+                    <span>
+                      {formatDateForDisplay(institution.entryDate) || 'Не вказано'} - {formatDateForDisplay(institution.exitDate) || 'Не вказано'}
+                    </span>
+                  </DetailRow>
+                </InstitutionDetails>
+                <RemoveButton onClick={() => removeInstitution(institution.id)}>
+                  ✕
+                </RemoveButton>
+              </InstitutionItem>
+            ))}
+          </InstitutionsList>
+        </InstitutionsListContainer>
       )}
 
       <FormGrid>
@@ -164,6 +209,7 @@ const PreviousEstablishments = () => {
               value={currentInstitution.coachName}
               onChange={(e) => updateCurrentInstitution('coachName', e.target.value)}
               placeholder="Введіть ім'я тренера"
+              maxLength={maxLength}
               $error={errors.coachName}
             />
           </InputGroup>
@@ -171,9 +217,6 @@ const PreviousEstablishments = () => {
           <InputGroup>
             <Label>
               Минулий спортивний заклад
-              {errors.institution && (
-                <ErrorMessage>{errors.institution}</ErrorMessage>
-              )}
             </Label>
             <Input 
               type="text"
@@ -181,7 +224,7 @@ const PreviousEstablishments = () => {
               value={currentInstitution.institution}
               onChange={(e) => updateCurrentInstitution('institution', e.target.value)}
               placeholder="Введіть назву закладу"
-              $error={errors.institution}
+              maxLength={maxLength}
             />
           </InputGroup>
         </ColumnGrid>
@@ -190,9 +233,6 @@ const PreviousEstablishments = () => {
           <InputGroup>
             <Label>
               Контакти тренера
-              {errors.coachContacts && (
-                <ErrorMessage>{errors.coachContacts}</ErrorMessage>
-              )}
             </Label>
             <Input 
               type="text"
@@ -200,33 +240,36 @@ const PreviousEstablishments = () => {
               value={currentInstitution.coachContacts}
               onChange={(e) => updateCurrentInstitution('coachContacts', e.target.value)}
               placeholder="Введіть контакти тренера"
-              $error={errors.coachContacts}
+              maxLength={maxLength}
             />
           </InputGroup>
 
           <DateInputWrapper>
             <DateInputGroup>
               <Label>Дата вступу</Label>
-              <Input 
-                type="date"
+              <FormDatePicker
                 value={currentInstitution.entryDate}
-                onChange={(e) => updateCurrentInstitution('entryDate', e.target.value)}
+                onChange={(value) => updateCurrentInstitution('entryDate', value)}
+                placeholder="Оберіть дату вступу"
               />
             </DateInputGroup>
 
             <DateInputGroup>
               <Label>
-                Дата залишення 
+                Дата виходу 
                 {errors.exitDate && (
-                  <ErrorMessage>{errors.exitDate}</ErrorMessage>
+                  <ErrorTooltip
+                    title="Неправильно введені дані"
+                    text={errors.exitDate}
+                  />
                 )}
               </Label>
-              <Input 
-                type="date"
+              <FormDatePicker
                 value={currentInstitution.exitDate}
-                onChange={(e) => updateCurrentInstitution('exitDate', e.target.value)}
-                min={currentInstitution.entryDate}
-                $error={errors.exitDate}
+                onChange={(value) => updateCurrentInstitution('exitDate', value)}
+                placeholder="Оберіть дату вихлду"
+                minDate={currentInstitution.entryDate}
+                hasError={!!errors.exitDate}
               />
             </DateInputGroup>
           </DateInputWrapper>

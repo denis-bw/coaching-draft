@@ -73,6 +73,8 @@ const AthleteCreate = () => {
   const [trainerContacts, setTrainerContacts] = useState('');
   const [entryDate, setEntryDate] = useState(null);
   
+  const [establishmentsData, setEstablishmentsData] = useState({});
+  console.log(establishmentsData)
   useEffect(() => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
@@ -230,7 +232,7 @@ const AthleteCreate = () => {
           </ SecondBlock>
         </TwoColumnLayout>
 
-        <CollapsibleSection helpTooltiptitle={"Ці параметри не є обов'язковими, але вони допомагають отримати детальнішу статистику 📊"} helpTooltip={"Додайте перший замір щоб відстежувати зміни спортсмена. Після створення профілю спортсмена ви зможете додавати нові заміри та повністю керувати ними 😊"}  top="-700%" left="-310%" title={'Фізичні дані'}>
+        <CollapsibleSection helpTooltiptitle={"Ці параметри не є обов'язковими, але вони допомагають отримати детальнішу статистику 📊"} helpTooltip={"Додайте перший замір щоб відстежувати зміни спортсмена. Після створення профілю спортсмена ви зможете додавати нові заміри та повністю керувати ними 😊"}  title={'Фізичні дані'}>
           <InputsContainer hasphysique>
               <InputGroup>
                 <Label htmlFor="height">Зріст у м.</Label>
@@ -350,9 +352,9 @@ const AthleteCreate = () => {
         </CollapsibleSection>
           
         <CollapsibleSection title={'Спортивний заклад'}>
-          <Card>
-      <CoachInfoContainer>
-        <ColumnSection>
+          <Card $isSportsFacility>
+      <CoachInfoContainer >
+        <ColumnSection $isSportsFacility>
           <InputGroup>
             <Label>Поточний спортивний заклад</Label>
             <Input 
@@ -373,7 +375,7 @@ const AthleteCreate = () => {
           </InputGroup>
         </ColumnSection>
         
-        <ColumnSection>
+        <ColumnSection $isSportsFacility>
           <InputGroup>
             <Label>Контакти тренера</Label>
             <Input 
@@ -398,8 +400,10 @@ const AthleteCreate = () => {
       </CollapsibleSection>
           
         <CollapsibleSection title={'Минулі спортивні заклади'}>
-          <PreviousEstablishments />
-          </CollapsibleSection>
+          <PreviousEstablishments 
+            onDataUpdate={setEstablishmentsData} 
+          />
+        </CollapsibleSection>
           
         <CollapsibleSection title={'TESR'}>
            <p>asdf</p>

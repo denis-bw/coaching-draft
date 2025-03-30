@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import styled from "styled-components";
-import { ReactComponent as HelpIcon } from "../../../../assets/HelpIcon.svg";
+import { ReactComponent as ErrorIcon } from "../../assets/ErrorIcon.svg";
 
-const Icon = styled(HelpIcon)`
-  width: 24px;
-  height: 24px;
+const Icon = styled(ErrorIcon)`
+  width: 18px;
+  height: 18px;
   cursor: pointer;
-  stroke: ${({ theme }) => theme.white};
+  fill: ${({ theme }) => theme.red};
   transition: stroke 0.3s ease;
 `;
 
@@ -36,7 +36,7 @@ const TooltipOuter = styled.div`
   color: ${({ theme }) => theme.textBlack};
   padding: 12px;
   border-radius: 10px;
-  border: 2px solid ${({ theme }) => theme.black};
+  border: 2px solid ${({ theme }) => theme.red};
   font-size: 14px;
   line-height: 1.5;
   max-width: 300px;
@@ -70,14 +70,14 @@ const TooltipOuter = styled.div`
           left: 79.4%;
           margin-left: -6px;
           border-width: 9px 9px 0;
-          border-color: ${theme.black} transparent transparent;
+          border-color: ${theme.red} transparent transparent;
         ` 
         : `
           top: -9px; /* Трохи нижче, ніж зовнішня стрілка */
           left: 79.4%;
           margin-left: -6px;
           border-width: 0 9px 9px;
-          border-color: transparent transparent ${theme.black};
+          border-color: transparent transparent ${theme.red};
         `
     }
   }
@@ -96,15 +96,17 @@ const TooltipInner = styled.div`
   white-space: normal; 
   font-size: 14px; 
   font-weight: 300;
+  /* color: ${({ theme }) => theme.red}; */
 `;
 
 const Title = styled.div`
   font-size: 14px; 
-  font-weight: 600; 
+  font-weight: 700; 
   margin-bottom: 5px; 
+  color:  ${({ theme }) => theme.red};
 `;
 
-const HelpTooltip = ({ title, text }) => {
+const ErrorTooltip = ({ title, text }) => {
   const [visible, setVisible] = useState(false);
   const [placement, setPlacement] = useState('top');
   const [tooltipPosition, setTooltipPosition] = useState(null);
@@ -197,4 +199,4 @@ const HelpTooltip = ({ title, text }) => {
   );
 };
 
-export default HelpTooltip;
+export default ErrorTooltip;

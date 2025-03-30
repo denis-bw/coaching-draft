@@ -215,7 +215,6 @@ export const TeamsHeader = styled.div`
   color: ${({ theme }) => theme.white};
   margin-bottom: 15px;
   position: relative;
-  z-index: 1;
 
   h2 {
     margin: 0;
