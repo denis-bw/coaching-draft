@@ -3,14 +3,9 @@ import FormDatePicker from './FormDatePicker';
 import {
   Container,
   InstitutionsList,
-  InstitutionItem,
-  InstitutionDetails,
-  DetailRow,
-  RemoveButton,
   FormGrid,
   ColumnGrid,
   InputGroup,
-  Label,
   Input,
   ErrorMessage,
   AddButton,
@@ -19,6 +14,17 @@ import {
   DateInputGroup,
   EmptyState,
   InstitutionsListContainer,
+  ContainerList,
+  InstitutionItem, 
+  InstitutionHeader, 
+  Label, 
+  RemoveButton,
+  DeleteIcon,
+  ContentContainer,
+  LabelCard,
+  InfoBlock,
+  Value,
+  TextTitle,
 } from './PreviousEstablishments.styled';
 import ErrorTooltip from '../../../../../components/ErrorTooltip/ErrorTooltip';
 
@@ -157,41 +163,53 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
   };
 
   return (
-    <Container>
+     <Container>
       {institutions.length === 0 ? (
         <EmptyState>Додайте інформацію</EmptyState>
       ) : (
-        <InstitutionsListContainer>
-          <InstitutionsList $hasInstitutions={institutions.length > 0}>
-            {institutions.map((institution) => (
-              <InstitutionItem key={institution.id}>
-                <InstitutionDetails>
-                  <DetailRow>
-                    <strong>Тренер:</strong> 
-                    <span>{institution.coachName}</span>
-                  </DetailRow>
-                  <DetailRow>
-                    <strong>Заклад:</strong> 
-                    <span>{institution.institution || 'Без назви'}</span>
-                  </DetailRow>
-                  <DetailRow>
-                    <strong>Контакти:</strong> 
-                    <span>{institution.coachContacts || 'Не вказано'}</span>
-                  </DetailRow>
-                  <DetailRow>
-                    <strong>Період:</strong> 
-                    <span>
-                      {formatDateForDisplay(institution.entryDate) || 'Не вказано'} - {formatDateForDisplay(institution.exitDate) || 'Не вказано'}
-                    </span>
-                  </DetailRow>
-                </InstitutionDetails>
-                <RemoveButton onClick={() => removeInstitution(institution.id)}>
-                  ✕
-                </RemoveButton>
-              </InstitutionItem>
-            ))}
-          </InstitutionsList>
-        </InstitutionsListContainer>
+        <ContainerList>
+          <InstitutionsListContainer>
+            <InstitutionsList $hasInstitutions={institutions.length > 0}>
+                {institutions.map((institution) => (
+                 
+                  <InstitutionItem key={institution.id}>
+                    <InstitutionHeader>
+                      <TextTitle>Вказана інформація</TextTitle>
+                      <RemoveButton
+                        onClick={() => removeInstitution(institution.id)}
+                        aria-label="Видалити заклад"
+                      >
+                        <DeleteIcon />
+                      </RemoveButton>
+                    </InstitutionHeader>
+                    
+                    <ContentContainer>
+    
+                      
+                        <InfoBlock>
+                          <Value><LabelCard>Тренер: </LabelCard> {institution.coachName}</Value>
+                        </InfoBlock>
+                        <InfoBlock>
+                          <Value><LabelCard>Заклад: </LabelCard>{institution.institution.trim() ? institution.institution : 'Не вказано'}</Value>
+                        </InfoBlock>
+                        <InfoBlock>
+                          <Value><LabelCard>Контакти: </LabelCard> {institution.coachContacts.trim() ? institution.coachContacts : 'Не вказано'}</Value>
+                        </InfoBlock>
+                        <InfoBlock>
+                          <LabelCard>Період:</LabelCard>
+                          <Value>
+                            {formatDateForDisplay(institution.entryDate) || 'Не вказано'} <span> - </span> 
+                            {formatDateForDisplay(institution.exitDate) || 'Не вказано'}
+                          </Value>
+                        </InfoBlock>
+                 
+                    </ContentContainer>
+                  </InstitutionItem>
+              ))}
+            </InstitutionsList>
+          </InstitutionsListContainer>
+        </ContainerList>
+      
       )}
 
       <FormGrid>

@@ -32,7 +32,7 @@ export const HeaderContainer = styled.header`
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   width: 100%;
-  padding: 20px 56px 0px 56px;
+  padding: 0px 56px 0px 56px;
   gap: 10px;
   @media (max-width: 768px) {
     grid-template-columns: auto auto;

@@ -133,6 +133,7 @@ export const LogoutButton = styled.button`
   padding: 0.75rem;
   background-color: ${(p) => p.theme.greenMain};
   color: ${(p) => p.theme.white};
+  text-transform: uppercase;
   border-radius: 0.25rem;
   display: flex;
   align-items: center;

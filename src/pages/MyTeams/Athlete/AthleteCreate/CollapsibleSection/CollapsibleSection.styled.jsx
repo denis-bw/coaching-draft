@@ -1,5 +1,5 @@
-  import styled from 'styled-components';
-  import { ReactComponent as OriginalChevronIcon } from '../../../../../assets/ChevronDownicon.svg';
+import styled from 'styled-components';
+import { ReactComponent as OriginalChevronIcon } from '../../../../../assets/ChevronDownicon.svg';
 
 export const SectionContainer = styled.div`
   
@@ -15,6 +15,7 @@ export const SectionContainer = styled.div`
 
 
 `;
+
 
 export const Arrow = styled(OriginalChevronIcon)`
   stroke: ${(p) => p.theme.white};
@@ -60,10 +61,14 @@ export const SectionContent = styled.div`
   padding: 0 20px;
   max-height: ${({ isOpen }) => (isOpen ? '1000px' : '0')};
   opacity: ${({ isOpen }) => (isOpen ? '1' : '0')};
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: 
     max-height ${({ isOpen }) => (isOpen ? '0.8s' : '0.4s')} ease-in-out,
     opacity ${({ isOpen }) => (isOpen ? '0.8s' : '0.4s')} ease-in-out;
+  @media (max-width: 768px) {
+     padding: 0 10px;
+  }
 `;
 
 export const Title = styled.h3`
@@ -90,3 +95,4 @@ export const HelpTooltipContainer = styled.div`
   display: flex;
   align-items: center;
 `;
+

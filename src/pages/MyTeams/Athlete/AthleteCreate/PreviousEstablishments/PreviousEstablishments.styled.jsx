@@ -1,80 +1,30 @@
 import styled from 'styled-components';
+import { ReactComponent as OriginalDeleteIcon } from '../../../../../assets/DeleteIcon.svg';
+
+export const DeleteIcon = styled(OriginalDeleteIcon)`
+  stroke: ${(p) => p.theme.red};
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  transform: ${({ isOpen }) => (isOpen ? 'rotate(180deg)' : 'rotate(0)')};
+  transition: transform 0.3s ease;
+    &:hover {
+      stroke: ${(p) => p.theme.redDark};
+  }
+`;
 
 export const Container = styled.div`
   display: flex;
+  width: 100%;
+  flex-shrink: 1;
   flex-direction: column;
   margin: 0 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 1rem 0;
   background-color: ${({ theme }) => theme.ContainerBGColor};
 `;
-export const InstitutionsListContainer = styled.div`
-    padding: 10px 0;
-    border: 1.6px solid ${({ theme }) => theme.gray};
-    border-radius: 0.5rem;
-   margin-bottom: 1rem;
-`
 
-export const InstitutionsList = styled.div`
-  flex-grow: 1;
-  max-height: 300px;
-  overflow-y: auto;
-  display: ${({ $hasInstitutions }) => $hasInstitutions ? 'block' : 'none'};
-  background-color: ${({ theme }) => theme.ContainerBGColor};
-  
-`;
-
-export const InstitutionItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid ${({ theme }) => theme.gray};
-  background-color: ${({ theme }) => theme.ContainerBGColor};
-  transition: background-color 0.3s ease;
-  
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background-color: ${({ theme }) => theme.mainBGColor};
-  }
-
-  // Обмеження для тексту в картках
-  & > div > div > span {
-    max-width: 150px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-`;
-
-export const InstitutionDetails = styled.div`
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-export const DetailRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textBlack};
-`;
-
-export const RemoveButton = styled.button`
-  background: none;
-  border: none;
-  color: ${({ theme }) => theme.red};
-  cursor: pointer;
-  transition: color 0.2s ease;
-  padding: 0.5rem;
-
-  &:hover {
-    color: ${({ theme }) => theme.redDark};
-  }
-`;
 
 export const FormGrid = styled.div`
   display: grid;
@@ -186,6 +136,7 @@ export const AddButton = styled.button`
     outline: none;
     background-color: ${({ theme }) => theme.lightGreen};
   }
+
 `;
 
 export const ButtonWrapper = styled.div`
@@ -210,9 +161,166 @@ export const DateInputGroup = styled(InputGroup)`
 `;
 
 export const EmptyState = styled.div`
+margin-bottom: 1rem;
+  width: 100%;
+  padding: 30px;
   text-align: center;
+  font-size: 16px;
+  color: ${({ theme }) => theme.textGray} ;
+  border: 1px dashed ${({ theme }) => theme.textGray} ;
+  border-radius: 8px;
+`;
+
+export const ContainerList = styled.div`
+  width: 100%;
+  margin-bottom: 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px;
+  border: 1px solid  ${({ theme }) => theme.lightGreen};
+  border-radius: 8px;
+  max-width: 100%;
+`;
+
+export const InstitutionsListContainer = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding-bottom:4px;
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+`;
+
+export const InstitutionsList = styled.div`
+  display: inline-flex;
+  white-space: nowrap;
+  padding-bottom: 5px;
+  
+  min-width:  max-content;
+  
+  ${props => !props.$hasInstitutions && `
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;
+  `}
+`;
+
+
+export const TextTitle = styled.p`
+ color: ${({ theme }) => theme.greenMain};
+  font-weight: 600;
+`
+export const InstitutionItem = styled.div`
+  flex: 0 0 auto;
+  width: 230px;
+  height: 200px;
+  margin-right: 16px;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: ${({ theme }) => theme.mainBGColor};
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  &:last-child {
+    margin-right: 0px;
+  }
+  
+  @media (max-width: 768px) {
+    min-width: 230px;
+    max-width: 230px;
+    width: 230px;
+  }
+`;
+
+export const InstitutionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 24px;
+`;
+
+export const ContentContainer = styled.div`
+  flex: 1;
+  width: 210px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background:  ${({ theme }) => theme.disabledBG};
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.disabledBG};;
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.disabledBG};
+  }
+`;
+
+export const InfoBlock = styled.div`
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid ${({ theme }) => theme.disabledBG};
+  margin-right: 10px;
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+`;
+
+export const LabelCard = styled.span`
+  font-weight: 600;
+  font-size: 14px;
   color: ${({ theme }) => theme.textGray};
-  padding: 1rem;
-  padding-top: 0;
-  background-color: ${({ theme }) => theme.ContainerBGColor};
+  margin-bottom: 2px;
+`;
+
+export const Value = styled.p`
+  font-size: 13px;
+  color: ${({ theme }) => theme.textBlack};
+  word-wrap: break-word;
+  word-break: break-word;
+`;
+
+export const RemoveButton = styled.button`
+
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: ${({ theme }) => theme.mainBGColor};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.2s;
+  z-index: 2;
+  
+
 `;

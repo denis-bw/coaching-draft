@@ -7,7 +7,7 @@ import CustomSelectComponent from './CustomSelectComponent';
 import TeamsList from './TeamsList/TeamsList'
 import PreviousEstablishments from './PreviousEstablishments/PreviousEstablishments';
 
-import InfoInput from './InfoInput';
+
 import {
   Container,
   Card,

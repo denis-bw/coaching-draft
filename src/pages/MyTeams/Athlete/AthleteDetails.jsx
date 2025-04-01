@@ -22,6 +22,8 @@ const AthleteDetails = () => {
           </li>
         </ul>
       </nav>
+
+      
     </div>
   );
 };
