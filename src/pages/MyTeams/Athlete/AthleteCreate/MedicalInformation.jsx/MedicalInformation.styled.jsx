@@ -25,7 +25,6 @@ export const Container = styled.div`
   background-color: ${({ theme }) => theme.ContainerBGColor};
 `;
 
-
 export const FormGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
@@ -110,7 +109,7 @@ export const ErrorMessage = styled.span`
   margin-left: 0.5rem;
   text-align: right;
     @media (max-width: 400px) {
-    width: 92px;
+    width: 102px;
     font-size: 0.65rem;  
     white-space: normal; 
     word-wrap: break-word; 
@@ -137,7 +136,6 @@ export const AddButton = styled.button`
     outline: none;
     background-color: ${({ theme }) => theme.lightGreen};
   }
-
 `;
 
 export const ButtonWrapper = styled.div`
@@ -162,13 +160,13 @@ export const DateInputGroup = styled(InputGroup)`
 `;
 
 export const EmptyState = styled.div`
-margin-bottom: 1rem;
+  margin-bottom: 1rem;
   width: 100%;
   padding: 30px;
   text-align: center;
   font-size: 16px;
-  color: ${({ theme }) => theme.textGray} ;
-  border: 1px dashed ${({ theme }) => theme.textGray} ;
+  color: ${({ theme }) => theme.textGray};
+  border: 1px dashed ${({ theme }) => theme.textGray};
   border-radius: 8px;
 `;
 
@@ -178,42 +176,41 @@ export const ContainerList = styled.div`
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px;
-  border: 1px solid  ${({ theme }) => theme.lightGreen};
+  border: 1px solid ${({ theme }) => theme.lightGreen};
   border-radius: 8px;
   max-width: 100%;
 `;
 
-export const InstitutionsListContainer = styled.div`
+export const MedicalRecordsListContainer = styled.div`
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
-  padding-bottom:4px;
+  padding-bottom: 4px;
   &::-webkit-scrollbar {
     height: 8px;
   }
 `;
 
-export const InstitutionsList = styled.div`
+export const MedicalRecordsList = styled.div`
   display: inline-flex;
   white-space: nowrap;
   padding-bottom: 5px;
+  min-width: max-content;
   
-  min-width:  max-content;
-  
-  ${props => !props.$hasInstitutions && `
+  ${props => !props.$hasMedicalRecords && `
     justify-content: center;
     align-items: center;
     min-height: 100px;
   `}
 `;
 
-
 export const TextTitle = styled.p`
- color: ${({ theme }) => theme.greenMain};
+  color: ${({ theme }) => theme.greenMain};
   font-weight: 600;
-`
-export const InstitutionItem = styled.div`
+`;
+
+export const MedicalRecordItem = styled.div`
   flex: 0 0 auto;
   width: 230px;
   height: 200px;
@@ -244,7 +241,7 @@ export const InstitutionItem = styled.div`
   }
 `;
 
-export const InstitutionHeader = styled.div`
+export const MedicalRecordHeader = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -270,12 +267,12 @@ export const ContentContainer = styled.div`
   }
   
   &::-webkit-scrollbar-track {
-    background:  ${({ theme }) => theme.disabledBG};
+    background: ${({ theme }) => theme.disabledBG};
     border-radius: 2px;
   }
   
   &::-webkit-scrollbar-thumb {
-    background: ${({ theme }) => theme.disabledBG};;
+    background: ${({ theme }) => theme.disabledBG};
     border-radius: 2px;
   }
   
@@ -310,7 +307,6 @@ export const Value = styled.p`
 `;
 
 export const RemoveButton = styled.button`
-
   width: 20px;
   height: 20px;
   border-radius: 50%;
@@ -321,7 +317,7 @@ export const RemoveButton = styled.button`
   cursor: pointer;
   font-size: 10px;
   transition: all 0.2s;
-
+  
   &:focus {
     outline: none;
   }
@@ -329,5 +325,23 @@ export const RemoveButton = styled.button`
   &:focus-within svg {
     stroke: ${(p) => p.theme.redDark};
   }
+`;
 
+
+export const FormRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid  ${(p) => p.theme.greenMain};
+  @media (min-width: 768px) {
+    flex-direction: row;
+  }
+`;
+
+export const FormColumn = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `;

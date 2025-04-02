@@ -20,7 +20,7 @@ export const Container = styled.div`
   }
 `;
 
-export const Card = styled.form`
+export const Card = styled.div`
   width: 100%;
   padding: 10px 4px;
   display: flex;

@@ -55,11 +55,6 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
     onDataUpdate(formattedData);
   }, [institutions, onDataUpdate]);
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-    }
-  };
 
   const validateInstitution = () => {
     const newErrors = {};
@@ -77,8 +72,8 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
       const timeDiff = exitDate.getTime() - entryDate.getTime();
       const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       
-      if (diffDays <= 0) {
-        newErrors.exitDate = "Дата виходу має бути пізніше дати вступу";
+      if (diffDays < 0) { // Змінено з <= 0 на < 0, щоб дозволити однакові дати
+        newErrors.exitDate = "Дата виходу має бути не раніше дати вступу";
       }
     }
 
@@ -89,9 +84,12 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
   const addInstitution = () => {
     if (validateInstitution()) {
       const newInstitution = {
-        ...currentInstitution,
-        id: Date.now() 
-      };
+      ...currentInstitution,
+      coachName: currentInstitution.coachName.trim(),
+      institution: currentInstitution.institution.trim(),
+      coachContacts: currentInstitution.coachContacts.trim(),
+      id: Date.now() 
+    };
 
       setInstitutions(prev => [...prev, newInstitution]);
 
@@ -134,10 +132,10 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
       const timeDiff = exitDate.getTime() - entryDate.getTime();
       const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       
-      if (diffDays <= 0) {
+      if (diffDays < 0) { // Змінено з <= 0 на < 0, щоб дозволити однакові дати
         setErrors(prev => ({
           ...prev,
-          exitDate: "Дата виходу з закладу має бути пізніше дати вступу"
+          exitDate: "Дата виходу з закладу має бути не раніше дати вступу"
         }));
       } else {
         if (errors.exitDate) {
@@ -223,7 +221,7 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
             </Label>
             <Input 
               type="text"
-              onKeyDown={handleKeyDown} 
+             
               value={currentInstitution.coachName}
               onChange={(e) => updateCurrentInstitution('coachName', e.target.value)}
               placeholder="Введіть ім'я тренера"
@@ -238,7 +236,7 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
             </Label>
             <Input 
               type="text"
-              onKeyDown={handleKeyDown} 
+              
               value={currentInstitution.institution}
               onChange={(e) => updateCurrentInstitution('institution', e.target.value)}
               placeholder="Введіть назву закладу"
@@ -254,7 +252,7 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
             </Label>
             <Input 
               type="text"
-              onKeyDown={handleKeyDown} 
+             
               value={currentInstitution.coachContacts}
               onChange={(e) => updateCurrentInstitution('coachContacts', e.target.value)}
               placeholder="Введіть контакти тренера"
@@ -285,7 +283,7 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
               <FormDatePicker
                 value={currentInstitution.exitDate}
                 onChange={(value) => updateCurrentInstitution('exitDate', value)}
-                placeholder="Оберіть дату вихлду"
+                placeholder="Оберіть дату виходу"
                 minDate={currentInstitution.entryDate}
                 hasError={!!errors.exitDate}
               />

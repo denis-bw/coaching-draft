@@ -6,6 +6,7 @@ import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import CustomSelectComponent from './CustomSelectComponent';
 import TeamsList from './TeamsList/TeamsList'
 import PreviousEstablishments from './PreviousEstablishments/PreviousEstablishments';
+import MedicalInformation from './MedicalInformation.jsx/MedicalInformation';
 
 
 import {
@@ -42,7 +43,6 @@ import {
 
 const AthleteCreate = () => {
   const { setTitle } = useOutletContext();
-  const [isFocused, setIsFocused] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [patronymic, setPatronymic] = useState("");
@@ -50,7 +50,7 @@ const AthleteCreate = () => {
   
   const [address, setAddress] = useState("");
   const [gender, setGender] = useState("");
-
+  
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [socialMedia, setSocialMedia] = useState("");
@@ -74,7 +74,13 @@ const AthleteCreate = () => {
   const [entryDate, setEntryDate] = useState(null);
   
   const [establishmentsData, setEstablishmentsData] = useState({});
-  console.log(establishmentsData)
+
+  const [medicalData, setMedicalData] = useState({
+    allergies: "",
+    diseases: "",
+  });
+  const [medicalInformation,  setMedicalInformation] = useState({});
+ 
   useEffect(() => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
@@ -114,7 +120,7 @@ const AthleteCreate = () => {
             <InfoTitle>Особиста інформація</InfoTitle>
             <InputsContainer>
               <InputGroup>
-                <Label htmlFor="firstName">Ім'я</Label>
+                <Label htmlFor="firstName">Ім'я *</Label>
                 <Input 
                   id="firstName"
                     type="text" 
@@ -125,7 +131,7 @@ const AthleteCreate = () => {
               </InputGroup>
               
               <InputGroup>
-                <Label htmlFor="lastName">Прізвище</Label>
+                <Label htmlFor="lastName">Прізвище *</Label>
                 <Input 
                   id="lastName"
                   type="text" 
@@ -154,7 +160,7 @@ const AthleteCreate = () => {
             <InputRows >
               <InputRow>
                 <InputGroup>
-                  <Label htmlFor="birthdate">Дата народження</Label>
+                  <Label htmlFor="birthdate">Дата народження *</Label>
                   <WrapperInput>
                     <CustomDatePicker 
                       selectedDate={birthdate} 
@@ -405,10 +411,14 @@ const AthleteCreate = () => {
           />
         </CollapsibleSection>
           
+        <CollapsibleSection title={'Медична інформація'}>
+            <MedicalInformation onDataUpdate={setMedicalInformation} medicalData={medicalData} setMedicalData={setMedicalData}  />
+        </CollapsibleSection>
+
         <CollapsibleSection title={'TESR'}>
            <p>asdf</p>
         </CollapsibleSection>
-
+          
         <ButtonWrapper>
           <Button type="submit">
             Створити

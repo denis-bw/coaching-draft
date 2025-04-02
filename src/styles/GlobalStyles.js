@@ -24,7 +24,19 @@ const GlobalStyles = createGlobalStyle`
     background-color: ${(p) => p.theme.darkGreen}; 
   }
 
-  }
+ 
+::selection {
+  background-color: ${({ theme }) => theme.lightGreen};
+  color: ${({ theme }) => theme.white}; 
+}
+
+::-moz-selection {
+  background-color: ${({ theme }) => theme.lightGreen};
+  color: ${({ theme }) => theme.white};
+}
+
+
+}
 
 html, body {
   font-family: 'Libre Franklin', sans-serif;

@@ -78,7 +78,7 @@ export const TeamButton = styled.button`
   &:focus {
     outline: none;
     background-color: ${({ theme, isSelected }) => 
-      isSelected ? theme.greenMain : `${theme.greenMain}80`};
+       isSelected ? theme.greenMain : `${theme.lightGreen}`};
   }
 
   &:focus:not(:focus-visible) {

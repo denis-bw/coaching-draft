@@ -16,7 +16,12 @@ export const Label = styled.label`
 `;
 
 const CustomPlaceholder = styled.span`
-  color: ${({ theme }) => theme.textGray};
+  color: ${({ selectedValue, theme }) => 
+    selectedValue === '' 
+      ? theme.textBlack 
+      : selectedValue === 'Чоловік' || selectedValue === 'Жінка' 
+      ? theme.greenMain 
+      : theme.textGray}; 
   font-family: 'Inter Tight', sans-serif;
 `;
 
@@ -68,26 +73,14 @@ const OptionButton = styled.button.attrs({ type: "button" })`
   transition: background-color 0.3s ease;
   font-size: 1rem;
 
-  &:hover {
+  &:hover, &:focus {
     background-color: ${({ theme }) => theme.lightGreen};
-  }
-
-  &:focus {
     outline: none;
-    background-color: ${({ theme }) => theme.lightGreen};
   }
 
   &.selected {
     background-color: ${({ theme }) => theme.darkGreen};
     color: ${({ theme }) => theme.white};
-    &:hover {
-    background-color: ${({ theme }) => theme.lightGreen};
-  }
-
-  &:focus {
-    outline: none;
-    background-color: ${({ theme }) => theme.lightGreen};
-  }
   }
 `;
 
@@ -105,7 +98,7 @@ const ArrowIcon = styled(ArrowIconSrc)`
 
 const CustomSelectComponent = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedValue, setSelectedValue] = useState(value);
+  const [selectedValue, setSelectedValue] = useState(value || ''); 
   const selectRef = useRef(null);
 
   const toggleDropdown = () => {
@@ -114,7 +107,7 @@ const CustomSelectComponent = ({ label, value, onChange }) => {
 
   const handleSelectOption = (value) => {
     setSelectedValue(value);
-    onChange(value);
+    onChange(value); 
     setIsOpen(false);
   };
 
@@ -135,7 +128,9 @@ const CustomSelectComponent = ({ label, value, onChange }) => {
     <CustomSelectWrapper ref={selectRef}>
       {label && <Label onClick={toggleDropdown}>{label}</Label>} 
       <CustomSelect onClick={toggleDropdown}>
-        <CustomPlaceholder>{selectedValue || 'Не вибрано'}</CustomPlaceholder> 
+        <CustomPlaceholder selectedValue={selectedValue}>
+          {selectedValue || 'Не вибрано'}
+        </CustomPlaceholder>
         <ArrowIcon open={isOpen} />
       </CustomSelect>
 
@@ -154,7 +149,7 @@ const CustomSelectComponent = ({ label, value, onChange }) => {
             Жінка
           </OptionButton>
           <OptionButton
-            className={selectedValue === '' ? 'selected' : ''}
+            className={selectedValue === '' ? 'selected' : ''} 
             onClick={() => handleSelectOption('')}
           >
             Не вибрано

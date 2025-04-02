@@ -1,85 +1,85 @@
-import styled from "styled-components";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+  import styled from "styled-components";
+  import DatePicker from "react-datepicker";
+  import "react-datepicker/dist/react-datepicker.css";
 
 
-export const StyledDatePicker = styled(DatePicker)`
-  display: block;
-  width: 100%;
-  max-width: 100%; 
-  padding: 0.75rem 1rem;
-  border: 1.6px solid ${({ theme }) => theme.borderColor};
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  background-color: ${({ theme }) => theme.ContainerBGColor};
-  color: ${({ theme }) => theme.textBlack};
-  transition: all 0.2s ease-in-out;
+  export const StyledDatePicker = styled(DatePicker)`
+    display: block;
+    width: 100%;
+    max-width: 100%; 
+    padding: 0.75rem 1rem;
+    border: 1.6px solid ${({ theme }) => theme.borderColor};
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    background-color: ${({ theme }) => theme.ContainerBGColor};
+    color: ${({ theme }) => theme.textBlack};
+    transition: all 0.2s ease-in-out;
 
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.lightGreen};
-    box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.5)`};
-  }
+    &:focus {
+      outline: none;
+      border-color: ${({ theme }) => theme.lightGreen};
+      box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.5)`};
+    }
 
-  &::placeholder {
-    color: ${({ theme }) => theme.textGray};
-  }
-`;
+    &::placeholder {
+      color: ${({ theme }) => theme.textGray};
+    }
+  `;
 
-export const DatePickerWrapper = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 10px;
-  padding: 8px 4px;
-  background: ${({ theme }) => theme.ContainerBGColor};
-  border-radius: 12px;
-`;
+  export const DatePickerWrapper = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px;
+    padding: 8px 4px;
+    background: ${({ theme }) => theme.ContainerBGColor};
+    border-radius: 12px;
+  `;
 
 
-export const DatePickerSelectY  = styled.select`
-  padding: 6px 12px;
-  width: 80px;
-  border: 1.6px solid ${({ theme }) => theme.greenMain};
-  border-radius: 6px;
-  background: ${({ theme }) => theme.ContainerBGColor};
-  color: ${({ theme }) => theme.textBlack};
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.lightGreen};
-    box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.2)`};
-  }
-
-  option {
+  export const DatePickerSelectY  = styled.select`
+    padding: 6px 12px;
+    width: 80px;
+    border: 1.6px solid ${({ theme }) => theme.greenMain};
+    border-radius: 6px;
     background: ${({ theme }) => theme.ContainerBGColor};
     color: ${({ theme }) => theme.textBlack};
-  }
-`;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
 
-export const DatePickerSelect = styled.select`
-  padding: 6px 12px;
-  width: 120px;
-  border: 1.6px solid ${({ theme }) => theme.greenMain};
-  border-radius: 6px;
-  background: ${({ theme }) => theme.ContainerBGColor};
-  color: ${({ theme }) => theme.textBlack};
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
+    &:focus {
+      outline: none;
+      border-color: ${({ theme }) => theme.lightGreen};
+      box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.2)`};
+    }
 
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.lightGreen};
-    box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.2)`};
-  }
+    option {
+      background: ${({ theme }) => theme.ContainerBGColor};
+      color: ${({ theme }) => theme.textBlack};
+    }
+  `;
 
-  option {
+  export const DatePickerSelect = styled.select`
+    padding: 6px 12px;
+    width: 120px;
+    border: 1.6px solid ${({ theme }) => theme.greenMain};
+    border-radius: 6px;
     background: ${({ theme }) => theme.ContainerBGColor};
     color: ${({ theme }) => theme.textBlack};
-  }
-`;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+    &:focus {
+      outline: none;
+      border-color: ${({ theme }) => theme.lightGreen};
+      box-shadow: 0 0 0 2px ${({ theme }) => `rgba(${parseInt(theme.lightGreen.slice(1, 3), 16)}, ${parseInt(theme.lightGreen.slice(3, 5), 16)}, ${parseInt(theme.lightGreen.slice(5, 7), 16)}, 0.2)`};
+    }
+
+    option {
+      background: ${({ theme }) => theme.ContainerBGColor};
+      color: ${({ theme }) => theme.textBlack};
+    }
+  `;
 
 
 export const CalendarContainer = styled.div`
@@ -112,27 +112,31 @@ export const CalendarContainer = styled.div`
     font-size: 0.9rem;
   }
 
-  .react-datepicker__day:not([aria-disabled=true]):hover, .react-datepicker__month-text:not([aria-disabled=true]):hover, .react-datepicker__quarter-text:not([aria-disabled=true]):hover, .react-datepicker__year-text:not([aria-disabled=true]):hover  {
+  .react-datepicker__day:not([aria-disabled=true]):hover, 
+  .react-datepicker__month-text:not([aria-disabled=true]):hover, 
+  .react-datepicker__quarter-text:not([aria-disabled=true]):hover, 
+  .react-datepicker__year-text:not([aria-disabled=true]):hover {
     border-radius: 50%;
-    background-color:  ${({ theme }) => theme.black};
+    background-color: ${({ theme }) => theme.darkGreen} !important;
     color: ${({ theme }) => theme.white};
   }
+  
   .react-datepicker__day {
     color: ${({ theme }) => theme.textBlack};
     border-radius: 50%;
     &:hover {
-      background-color: ${({ theme }) => theme.darkGreen};
-      border-radius: 50%;
+      background-color: ${({ theme }) => theme.darkGreen} !important;
+       color: ${({ theme }) => theme.white};
     }
   }
 
   .react-datepicker__day--selected {
     background-color: ${({ theme }) => theme.greenMain};
     color: ${({ theme }) => theme.white};
-     border-radius: 50%;
+    border-radius: 50%;
 
     &:hover {
-      background-color: ${({ theme }) => theme.darkGreen};
+      background-color: ${({ theme }) => theme.darkGreen} !important;
     }
   }
 

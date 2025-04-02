@@ -198,13 +198,21 @@ const FormDatePicker = ({
 
   const handleDateChange = (newDate) => {
     setDate(newDate);
-    onChange(newDate ? newDate.toISOString().split('T')[0] : ''); 
+    if (newDate) {
+     
+    const year = newDate.getFullYear();
+    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+    const day = String(newDate.getDate()).padStart(2, '0');
+    onChange(`${year}-${month}-${day}`);
+  } else {
+    onChange('');
+  }
   };
 
   let parsedMinDate = parseDate(minDate);
   
   if (parsedMinDate) {
-    parsedMinDate = addDays(parsedMinDate, 1);
+    parsedMinDate = addDays(parsedMinDate, 0); // Змінено з addDays(parsedMinDate, 1) на addDays(parsedMinDate, 0), щоб дозволити вибір однакової дати
   }
 
   return (
