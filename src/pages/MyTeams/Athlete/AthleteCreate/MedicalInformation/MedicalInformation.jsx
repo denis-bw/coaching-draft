@@ -33,7 +33,6 @@ const MedicalInformation = ({ onDataUpdate, medicalData, setMedicalData }) => {
 
 const [medicalRecords, setMedicalRecords] = useState([]);
 
-console.log(medicalData)
   
 const [currentMedicalRecord, setCurrentMedicalRecord] = useState({
   doctorName: '',

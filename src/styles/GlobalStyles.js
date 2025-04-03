@@ -95,7 +95,9 @@ img {
   width: 100%;
   height: auto;
 }
-  
+ label {
+  cursor: pointer;
+} 
 `;
 
 export default GlobalStyles;

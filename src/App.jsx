@@ -53,7 +53,6 @@ function App() {
 
   useEffect(() => {
     if (token && !isLoggedIn  && !user.email) {
-      console.log("AAA")
       dispatch(refreshUser());
     }
   }, [dispatch, token, isLoggedIn]);

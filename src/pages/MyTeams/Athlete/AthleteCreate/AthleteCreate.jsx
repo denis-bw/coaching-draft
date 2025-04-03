@@ -6,7 +6,8 @@ import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import CustomSelectComponent from './CustomSelectComponent';
 import TeamsList from './TeamsList/TeamsList'
 import PreviousEstablishments from './PreviousEstablishments/PreviousEstablishments';
-import MedicalInformation from './MedicalInformation.jsx/MedicalInformation';
+import MedicalInformation from './MedicalInformation/MedicalInformation';
+import ParentsSection from './ParentsSection/ParentsSection';
 
 
 import {
@@ -80,7 +81,9 @@ const AthleteCreate = () => {
     diseases: "",
   });
   const [medicalInformation,  setMedicalInformation] = useState({});
- 
+ const [ParentsInformation,  setParentsInformation] = useState({});
+
+  
   useEffect(() => {
     setTitle("Створення нового спортсмена");
   }, [setTitle]);
@@ -415,8 +418,8 @@ const AthleteCreate = () => {
             <MedicalInformation onDataUpdate={setMedicalInformation} medicalData={medicalData} setMedicalData={setMedicalData}  />
         </CollapsibleSection>
 
-        <CollapsibleSection title={'TESR'}>
-           <p>asdf</p>
+        <CollapsibleSection title={'Родичи спортсмена'}>
+          <ParentsSection  onDataUpdate={setParentsInformation}/>
         </CollapsibleSection>
           
         <ButtonWrapper>

@@ -60,7 +60,7 @@ export const ModalDescription = styled.p`
 // Нижня частина модалки
 export const ModalFooter = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 12px;
   margin-top: 24px;
 `;
@@ -87,11 +87,11 @@ export const Button = styled.button`
 
 
 export const CancelButton = styled(Button)`
-  background-color: ${({ theme }) => theme.gray};  
+  background-color: ${({ theme }) => theme.greenMain};  
   color: ${({ theme }) => theme.white}; 
-
+  width: 100%;
   &:hover {
-    background-color: ${({ theme }) => theme.black};  
+    background-color: ${({ theme }) => theme.darkGreen};  
     color: ${({ theme }) => theme.white};
   }
 `;
@@ -100,7 +100,7 @@ export const CancelButton = styled(Button)`
 export const ConfirmButton = styled(Button)`
   background-color: ${({ theme }) => theme.red}; 
   color: ${({ theme }) => theme.white}; 
-
+  width: 100%;
   &:hover {
     background-color: ${({ theme }) => theme.redDark};  
   }
