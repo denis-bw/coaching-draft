@@ -1,1 +1,0 @@
-import{j as e,g as n}from"./index-3e8e2c94.js";const s=[{id:1,name:"Атлет 1"},{id:2,name:"Атлет 2"},{id:3,name:"Атлет 3"}],r=()=>e.jsxs("div",{children:[e.jsx("h1",{children:"Вибір атлета для історії платежів"}),e.jsx("ul",{children:s.map(i=>e.jsx("li",{children:e.jsx(n,{to:`/payment-history/${i.id}`,children:i.name})},i.id))})]});export{r as default};
