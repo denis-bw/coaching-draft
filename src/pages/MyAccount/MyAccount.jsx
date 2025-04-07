@@ -87,7 +87,7 @@ const handleKeyDown = (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
     const fileInput = document.getElementById('photo-upload');
     if (fileInput) {
-      fileInput.click(); // Клік по інпуту, щоб відкрити діалог вибору файлів
+      fileInput.click(); 
     }
   }
 };

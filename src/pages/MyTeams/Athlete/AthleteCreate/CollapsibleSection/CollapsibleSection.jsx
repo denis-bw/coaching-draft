@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
     SectionContainer,
     SectionHeader,
@@ -10,20 +10,33 @@ import {
 } from './CollapsibleSection.styled';
 import HelpTooltip from '../HelpTooltip.jsx';
 
-const CollapsibleSection = ({ children, helpTooltiptitle, helpTooltip, title, top, left }) => {
+const CollapsibleSection = forwardRef(({ children, helpTooltiptitle, helpTooltip, title, top, left }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [userOpened, setUserOpened] = useState(false);
     const sectionRef = useRef(null);
     const contentRef = useRef(null);
     const hasOpened = useRef(false);
 
-    const toggleSection = () => {
-        setIsOpen(prev => {
-            if (!userOpened) {
-                setUserOpened(true);
+    useImperativeHandle(ref, () => ({
+        open: () => {
+           
+            setIsOpen(true);
+            setUserOpened(true);
+        },
+        close: () => {
+            setIsOpen(false);
+        },
+        scrollIntoView: (options) => {
+            if (sectionRef.current) {
+                sectionRef.current.scrollIntoView(options);
             }
-            return !prev;
-        });
+        },
+        isOpen: () => isOpen
+    }));
+
+    const toggleSection = () => {
+        setIsOpen(prev => !prev);
+        setUserOpened(true);
     };
 
     useEffect(() => {
@@ -73,11 +86,11 @@ const CollapsibleSection = ({ children, helpTooltiptitle, helpTooltip, title, to
                     <Arrow isOpen={isOpen} />
                 </ArrowWrapper>
             </SectionHeader>
-            <SectionContent ref={contentRef} isOpen={isOpen}>
+            <SectionContent ref={contentRef} isOpen={isOpen} role="region">
                 {children}
             </SectionContent>
         </SectionContainer>
     );
-};
+});
 
 export default CollapsibleSection;

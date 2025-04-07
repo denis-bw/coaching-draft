@@ -1,25 +1,13 @@
-import axios from 'axios';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {requestWrapper} from '../../utils/requestWrapper'
+import { axios,token } from '../../utils/api';
 
-const BASE_URL = import.meta.env.VITE_BASE_URL_AUTH;
-// const BASE_URL = "https://coaching-draft-backend.onrender.com/api/auth/"
-axios.defaults.baseURL = BASE_URL
-
-const token = {
-    setToken(token) {
-        axios.defaults.headers.Authorization = `Bearer ${token}`;
-    },
-    unsetToken() {
-        axios.defaults.headers.Authorization = '';
-    }
-}
 
 export const fetchAuthorizationUser = createAsyncThunk(
   'userDetails/fetchAuthorizationUser',
   async (dataUser, thunkApi) => {
       try {
-      const { data } = await axios.post('users/register', dataUser);
+      const { data } = await axios.post('auth/users/register', dataUser);
       token.setToken(data.token); 
       return data;
     } catch (err) {
@@ -44,7 +32,7 @@ export const fetchLoginUser = createAsyncThunk(
   'userDetails/fetchLoginUser',
   async (dataUser, thunkApi) => {
     try {   
-      const { data } = await axios.post('users/login', dataUser);
+      const { data } = await axios.post('auth/users/login', dataUser);
       token.setToken(data.token);
       return data;
     } catch (err) { 
@@ -73,7 +61,7 @@ export const fetchLoginUser = createAsyncThunk(
 export const fetchLogout = createAsyncThunk('userDetails/fetchLogIn',
     async (_, thunkApi) => {
         try {   
-            await axios.post('users/logout');
+            await axios.post('auth/users/logout');
             token.unsetToken();
         } catch (err) {  
                 if (err.response) {
@@ -101,7 +89,7 @@ export const refreshUser = createAsyncThunk(
 
     try {
       token.setToken(auth.token);
-      const res = await axios.get('users/current', {
+      const res = await axios.get('auth/users/current', {
       headers: {
         'Cache-Control': 'no-cache', 
       },});
@@ -120,7 +108,7 @@ export const fetchForgotPassword = createAsyncThunk(
   'userDetails/fetchForgotPassword',
   async (email, thunkApi) => {
     try {
-      const { data } = await axios.post('users/forgot-password', { email });
+      const { data } = await axios.post('auth/users/forgot-password', { email });
       return {
         message: data.message || 'Інструкції для відновлення пароля відправлені на вашу пошту'
       };
@@ -150,7 +138,7 @@ export const fetchResetPassword = createAsyncThunk(
   'auth/resetPassword',
   async ({ email, token, newPassword }, thunkApi) => {
     try {
-      const { data } = await axios.post("users/reset-password" , 
+      const { data } = await axios.post("auth/users/reset-password" , 
         { email, token, newPassword }
       );
       return {
@@ -182,7 +170,7 @@ export const updateUserProfile = createAsyncThunk(
   async (updatedData, thunkAPI) => {
     try {
       const response = await requestWrapper(
-        () => axios.put('users/updateprofile', updatedData),
+        () => axios.put('auth/users/updateprofile', updatedData),
         thunkAPI.dispatch 
       );
       return response.data;

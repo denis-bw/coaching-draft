@@ -156,7 +156,7 @@ const ParentsSection = ({ onDataUpdate }) => {
 
         <InputGroup>
           <Label>
-            Контакти родича
+            Контакти родича *ф
           </Label>
           <Input 
             type="text"

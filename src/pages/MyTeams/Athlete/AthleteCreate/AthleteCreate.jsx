@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from "react-router-dom";
 import { CustomDatePicker } from "../../../../components/CustomDatePicker/CustomDatePicker";
 import profilePlaceholder from "../../../../assets/PlaceholderProfile.png";
@@ -8,8 +8,9 @@ import TeamsList from './TeamsList/TeamsList'
 import PreviousEstablishments from './PreviousEstablishments/PreviousEstablishments';
 import MedicalInformation from './MedicalInformation/MedicalInformation';
 import ParentsSection from './ParentsSection/ParentsSection';
-
-
+import { useDispatch } from 'react-redux';
+import { createAthlete } from '../../../../redux/athletes/athletesOperations';
+import { toast } from 'react-toastify';
 import {
   Container,
   Card,
@@ -32,7 +33,7 @@ import {
   WrapperInput,
   TwoColumnLayout,
   FormBlock,
-   SecondBlock,
+  SecondBlock,
   ContactsTitle,
   InputRows,
   InputRow, 
@@ -43,12 +44,18 @@ import {
 } from './AthleteCreate.styled';
 
 const AthleteCreate = () => {
+  const sportsFacilitySectionRef = useRef(null);
+  const topOfTheFormRef = useRef(null);
+  const dispatch = useDispatch();
+  
   const { setTitle } = useOutletContext();
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [patronymic, setPatronymic] = useState("");
   const [birthdate, setBirthdate] = useState("");
-  
+
   const [address, setAddress] = useState("");
   const [gender, setGender] = useState("");
   
@@ -72,64 +79,208 @@ const AthleteCreate = () => {
   const [currentSportInstitution, setCurrentSportInstitution] = useState('');
   const [trainer, setTrainer] = useState('');
   const [trainerContacts, setTrainerContacts] = useState('');
-  const [entryDate, setEntryDate] = useState(null);
+  const [entryDate, setEntryDate] = useState("");
   
   const [establishmentsData, setEstablishmentsData] = useState({});
-
+  
   const [medicalData, setMedicalData] = useState({
     allergies: "",
     diseases: "",
   });
-  const [medicalInformation,  setMedicalInformation] = useState({});
- const [ParentsInformation,  setParentsInformation] = useState({});
+  const [medicalInformation, setMedicalInformation] = useState({});
+  const [parentsInformation, setParentsInformation] = useState({});
 
+  const [validationErrors, setValidationErrors] = useState({
+    firstName: false,
+    lastName: false,
+    birthdate: false,
+    currentSportInstitution: false,
+    trainer: false,
+    entryDate: false
+  });
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(file);
+      
+      const previewURL = URL.createObjectURL(file);
+      setPhotoPreview(previewURL);
+      
+      return () => URL.revokeObjectURL(previewURL);
+    }
+  };
   
   useEffect(() => {
     setTitle("Створення нового спортсмена");
-  }, [setTitle]);
-  
-    const handleKeyDown = (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        const fileInput = document.getElementById('photo-upload');
-        if (fileInput) {
-          fileInput.click();
-        }
+    
+    return () => {
+      if (photoPreview) {
+        URL.revokeObjectURL(photoPreview);
       }
     };
-
+  }, [setTitle]);
   
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const fileInput = document.getElementById('photo-upload');
+      if (fileInput) {
+        fileInput.click();
+      }
+    }
+  };
+  
+  const validateForm = () => {
+    const errors = {
+      firstName: !firstName.trim(),
+      lastName: !lastName.trim(),
+      birthdate: !birthdate,
+      currentSportInstitution: !currentSportInstitution.trim(),
+      trainer: !trainer.trim(),
+      entryDate: !entryDate
+    };
+    
+    setValidationErrors(errors);
+    
+    return !Object.values(errors).some(error => error);
+  };
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      const hasSportsFacilityErrors = validationErrors.currentSportInstitution || 
+                                    validationErrors.trainer || 
+                                    validationErrors.entryDate;
+      
+      if (hasSportsFacilityErrors) {
+        if (sportsFacilitySectionRef.current) {
+          sportsFacilitySectionRef.current.open();
+          
+          setTimeout(() => {
+            sportsFacilitySectionRef.current.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }, 100);
+        }
+      } else {
+        setTimeout(() => {
+          topOfTheFormRef.current.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }, 100);
+      }
+      
+      toast.error("Будь ласка, заповніть всі обов'язкові поля", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      return;
+    }
+    
+    const formData = new FormData();
+    
+    if (photo) {
+      formData.append('athlete-avatar', photo);
+    }
+    formData.append('firstName', firstName);
+    formData.append('lastName', lastName);
+    formData.append('patronymic', patronymic);
+    formData.append('birthdate', birthdate);
+    
+    formData.append('gender', gender || '');
+    formData.append('address', address || '');
+    
+
+    
+   formData.append('phone', phone || '');
+  formData.append('email', email || '');
+  formData.append('socialMedia', socialMedia || '');
+
+    
+    // if (height) formData.append('height', height);
+    // if (weight) formData.append('weight', weight);
+    // if (dateOfMeasurement) formData.append('dateOfMeasurement', dateOfMeasurement);
+    
+  formData.append('role', role || '');
+  formData.append('sportCategory', sportCategory || '');
+  formData.append('notes', notes || '');
+  // formData.append('team', selectedTeam || '');
+
+  formData.append('school', school || '');
+  formData.append('university', university || '');
+    
+  formData.append('currentSportInstitution', currentSportInstitution || '');
+  formData.append('trainer', trainer || '');
+  formData.append('trainerContacts', trainerContacts || '');
+  formData.append('entryDate', entryDate || '');
+    
+  formData.append('previousEstablishments', JSON.stringify(establishmentsData || {}));
+  formData.append('medicalInformation', JSON.stringify(medicalInformation || {}));
+  formData.append('parentsInformation', JSON.stringify(parentsInformation || {}));
+    
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+      
+    dispatch(createAthlete(formData))
+      .unwrap()
+      .then((athlete) => {
+        toast.success('Спортсмена успішно створено!');
+      })
+      .catch((error) => {
+        toast.error(`Помилка: ${error}`);
+      });
+  };
+
   return (
     <>
     <Container>
       <Card>
         <ContentWrapper>
-                    <PhotoSection>
+          <PhotoSection>
             <PhotoWrapper>
               <PhotoCircle>
-                <ProfileImage src={profilePlaceholder} alt="Фото спортсмена" />
+                <ProfileImage 
+                  src={photoPreview || profilePlaceholder} 
+                  alt="Фото спортсмена" 
+                />
               </PhotoCircle>
-              <PhotoUploadButton htmlFor="photo-upload" tabIndex={0}   onKeyDown={handleKeyDown} >
+              <PhotoUploadButton htmlFor="photo-upload" tabIndex={0} onKeyDown={handleKeyDown}>
                 <CameraIcon />
               </PhotoUploadButton>
               <HiddenInput
                 id="photo-upload"
                 type="file"
                 accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handleFileChange}
               />
             </PhotoWrapper>
           </PhotoSection>
           
-          <InfoSection>
+          <InfoSection ref={topOfTheFormRef}>
             <InfoTitle>Особиста інформація</InfoTitle>
             <InputsContainer>
               <InputGroup>
                 <Label htmlFor="firstName">Ім'я *</Label>
                 <Input 
                   id="firstName"
-                    type="text" 
-                     placeholder="Введіть ім'я"
+                  type="text" 
+                  placeholder="Введіть ім'я"
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    if (e.target.value.trim()) {
+                      setValidationErrors(prev => ({ ...prev, firstName: false }));
+                    }
+                  }}
+                  isError={validationErrors.firstName}
                 />
               </InputGroup>
               
@@ -140,7 +291,13 @@ const AthleteCreate = () => {
                   type="text" 
                   placeholder="Введіть прізвище"
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    if (e.target.value.trim()) {
+                      setValidationErrors(prev => ({ ...prev, lastName: false }));
+                    }
+                  }}
+                  isError={validationErrors.lastName}
                 />
               </InputGroup>
               
@@ -158,16 +315,23 @@ const AthleteCreate = () => {
           </InfoSection>
         </ContentWrapper>
         
+        {/* Rest of the JSX remains the same... */}
         <TwoColumnLayout>
           <FormBlock>
-            <InputRows >
+            <InputRows>
               <InputRow>
                 <InputGroup>
                   <Label htmlFor="birthdate">Дата народження *</Label>
                   <WrapperInput>
                     <CustomDatePicker 
                       selectedDate={birthdate} 
-                      onDateChange={setBirthdate} 
+                      onDateChange={(date) => {
+                        setBirthdate(date);
+                        if (date) {
+                          setValidationErrors(prev => ({ ...prev, birthdate: false }));
+                        }
+                      }}
+                      isError={validationErrors.birthdate}
                     />
                   </WrapperInput>
                 </InputGroup>
@@ -196,7 +360,7 @@ const AthleteCreate = () => {
             </InputRows>
           </FormBlock>
           
-          < SecondBlock>
+          <SecondBlock>
             <ContactsTitle>Контакти</ContactsTitle>
             <InputRows>
               <InputRow>
@@ -238,7 +402,7 @@ const AthleteCreate = () => {
                 </InputGroup>
               </InputRow>
             </InputRows>
-          </ SecondBlock>
+          </SecondBlock>
         </TwoColumnLayout>
 
         <CollapsibleSection helpTooltiptitle={"Ці параметри не є обов'язковими, але вони допомагають отримати детальнішу статистику 📊"} helpTooltip={"Додайте перший замір щоб відстежувати зміни спортсмена. Після створення профілю спортсмена ви зможете додавати нові заміри та повністю керувати ними 😊"}  title={'Фізичні дані'}>
@@ -327,9 +491,9 @@ const AthleteCreate = () => {
               </InputRows>
             </FormBlock>
 
-          <SecondBlock $hasSportInfo>
-              <TeamsList />
-            </ SecondBlock>
+            <SecondBlock $hasSportInfo>
+                <TeamsList />
+            </SecondBlock>
           </TwoColumnLayout>
         </CollapsibleSection>
 
@@ -360,53 +524,71 @@ const AthleteCreate = () => {
           </EducationalInstitutionsContainer> 
         </CollapsibleSection>
           
-        <CollapsibleSection title={'Спортивний заклад'}>
+        <CollapsibleSection title={'Спортивний заклад'} ref={sportsFacilitySectionRef}>
           <Card $isSportsFacility>
-      <CoachInfoContainer >
-        <ColumnSection $isSportsFacility>
-          <InputGroup>
-            <Label>Поточний спортивний заклад</Label>
-            <Input 
-              type="text"
-              value={currentSportInstitution}
-              onChange={(e) => setCurrentSportInstitution(e.target.value)}
-              placeholder="Введіть назву закладу"
-            />
-          </InputGroup>
-          <InputGroup>
-            <Label>Тренер</Label>
-            <Input 
-              type="text"
-              value={trainer}
-              onChange={(e) => setTrainer(e.target.value)}
-              placeholder="Введіть ім'я тренера"
-            />
-          </InputGroup>
-        </ColumnSection>
-        
-        <ColumnSection $isSportsFacility>
-          <InputGroup>
-            <Label>Контакти тренера</Label>
-            <Input 
-              type="text"
-              value={trainerContacts}
-              onChange={(e) => setTrainerContacts(e.target.value)}
-              placeholder="Введіть контакти"
-            />
-          </InputGroup>
-          <InputGroup>
-            <Label>Дата вступу</Label>
-            <WrapperInput>
-              <CustomDatePicker 
-                selectedDate={entryDate} 
-                onDateChange={setEntryDate} 
-              />
-            </WrapperInput>
-          </InputGroup>
-        </ColumnSection>
-      </CoachInfoContainer>
-    </Card>
-      </CollapsibleSection>
+            <CoachInfoContainer>
+              <ColumnSection $isSportsFacility>
+                <InputGroup>
+                  <Label>Поточний спортивний заклад *</Label>
+                  <Input 
+                    type="text"
+                    value={currentSportInstitution}
+                    onChange={(e) => {
+                      setCurrentSportInstitution(e.target.value);
+                      if (e.target.value.trim()) {
+                        setValidationErrors(prev => ({ ...prev, currentSportInstitution: false }));
+                      }
+                    }}
+                    placeholder="Введіть назву закладу"
+                    isError={validationErrors.currentSportInstitution}
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label>Тренер *</Label>
+                  <Input 
+                    type="text"
+                    value={trainer}
+                    onChange={(e) => {
+                      setTrainer(e.target.value);
+                      if (e.target.value.trim()) {
+                        setValidationErrors(prev => ({ ...prev, trainer: false }));
+                      }
+                    }}
+                    placeholder="Введіть ім'я тренера"
+                    isError={validationErrors.trainer}
+                  />
+                </InputGroup>
+              </ColumnSection>
+              
+              <ColumnSection $isSportsFacility>
+                <InputGroup>
+                  <Label>Контакти тренера</Label>
+                  <Input 
+                    type="text"
+                    value={trainerContacts}
+                    onChange={(e) => setTrainerContacts(e.target.value)}
+                    placeholder="Введіть контакти"
+                  />
+                </InputGroup>
+                <InputGroup>
+                  <Label>Дата вступу *</Label>
+                  <WrapperInput>
+                    <CustomDatePicker 
+                      selectedDate={entryDate} 
+                      onDateChange={(date) => {
+                        setEntryDate(date);
+                        if (date) {
+                          setValidationErrors(prev => ({ ...prev, entryDate: false }));
+                        }
+                      }}
+                      isError={validationErrors.entryDate}
+                    />
+                  </WrapperInput>
+                </InputGroup>
+              </ColumnSection>
+            </CoachInfoContainer>
+          </Card>
+        </CollapsibleSection>
           
         <CollapsibleSection title={'Минулі спортивні заклади'}>
           <PreviousEstablishments 
@@ -415,15 +597,15 @@ const AthleteCreate = () => {
         </CollapsibleSection>
           
         <CollapsibleSection title={'Медична інформація'}>
-            <MedicalInformation onDataUpdate={setMedicalInformation} medicalData={medicalData} setMedicalData={setMedicalData}  />
+          <MedicalInformation onDataUpdate={setMedicalInformation} medicalData={medicalData} setMedicalData={setMedicalData} />
         </CollapsibleSection>
 
         <CollapsibleSection title={'Родичи спортсмена'}>
-          <ParentsSection  onDataUpdate={setParentsInformation}/>
+          <ParentsSection onDataUpdate={setParentsInformation}/>
         </CollapsibleSection>
           
         <ButtonWrapper>
-          <Button type="submit">
+          <Button type="button" onClick={handleSubmit}>
             Створити
           </Button>
         </ButtonWrapper>

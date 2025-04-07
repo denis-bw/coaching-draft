@@ -1,6 +1,7 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { themeReducer } from './theme/themeSlice.js';
 import { authReducer } from './auth/authSlice.js';
+import { athletesReducer } from './athletes/athletesSlice.js';
 import {
   persistStore,
   persistReducer,
@@ -39,6 +40,7 @@ const authTransform = createTransform(
 const rootReducer = combineReducers({
   theme: themeReducer,
   auth: authReducer,
+  athletes: athletesReducer,
 });
 
 const persistConfig = {

@@ -18,7 +18,7 @@ const range = (start, end, step = 1) => {
   return arr;
 };
 
-export const CustomDatePicker = ({ selectedDate, onDateChange }) => {
+export const CustomDatePicker = ({ selectedDate, onDateChange, isError=false }) => {
   const currentDate = new Date();
   const [startDate, setStartDate] = useState(() => {
     try {
@@ -71,6 +71,7 @@ export const CustomDatePicker = ({ selectedDate, onDateChange }) => {
   return (
     <CalendarContainer>
       <StyledDatePicker
+        isError={isError}
         selected={startDate}
         onChange={handleDateChange}
         dateFormat="dd.MM.yyyy"

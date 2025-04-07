@@ -211,8 +211,8 @@ export const Label = styled.label`
 export const Input = styled.input`
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1.6px solid ${({ theme, $isEmpty, name }) => 
-    ($isEmpty && name === 'username') ? theme.red : theme.borderColor};
+  border: 1.6px solid ${({ theme, isError}) => 
+    (isError) ? theme.red : theme.borderColor};
   border-radius: 0.5rem;
   font-size: 1rem;
   background-color: ${({ theme }) => theme.ContainerBGColor};

@@ -132,7 +132,7 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
       const timeDiff = exitDate.getTime() - entryDate.getTime();
       const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       
-      if (diffDays < 0) { // Змінено з <= 0 на < 0, щоб дозволити однакові дати
+      if (diffDays < 0) { 
         setErrors(prev => ({
           ...prev,
           exitDate: "Дата виходу з закладу має бути не раніше дати вступу"
@@ -159,7 +159,7 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
       return dateString;
     }
   };
-
+  
   return (
      <Container>
       {institutions.length === 0 ? (

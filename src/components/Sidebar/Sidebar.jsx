@@ -86,9 +86,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       name: 'Мої команди', 
       icon: <SidebarIcon><TeamIcon /></SidebarIcon>, 
       submenu: [
-        { name: 'Teams', path: '/teams' },
-        { name: 'Athletes', path: '/athletes' },
-        { name: 'Measurements', path: '/measurements' }
+        { name: 'Команди', path: '/teams' },
+        { name: 'Спортсмени', path: '/athletes' },
+        { name: 'Заміри', path: '/measurements' }
       ]
     },
     { 
