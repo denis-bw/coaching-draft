@@ -18,7 +18,7 @@ import {
 import { fetchForgotPassword } from '../../redux/auth/authOperations';
 import { useDispatch,useSelector } from 'react-redux';
 import { clearError, clearMessage } from '../../redux/auth/authSlice';
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 
 const ForgotPassword = () => {
     const dispatch = useDispatch();
@@ -68,7 +68,6 @@ const ForgotPassword = () => {
 
     return (
     <>
-        <ToastContainer />
         <HeaderForUnlogged />
         <Container>
         <FormCard>

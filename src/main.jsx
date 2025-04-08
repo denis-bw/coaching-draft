@@ -10,6 +10,7 @@ import { selectTheme } from './redux/theme/themeSlice.js';
 import { ThemeProvider } from 'styled-components';
 import GlobalStyles from './styles/GlobalStyles';
 import { lightTheme, darkTheme } from './styles/theme';
+import { ToastContainer} from "react-toastify";
 
 function AppWrapper() {
   const theme = useSelector(selectTheme);
@@ -17,6 +18,7 @@ function AppWrapper() {
   return (
     <ThemeProvider theme={theme === 'light' ? lightTheme : darkTheme}>
       <GlobalStyles />
+      <ToastContainer/>
         <App />
     </ThemeProvider>
   )

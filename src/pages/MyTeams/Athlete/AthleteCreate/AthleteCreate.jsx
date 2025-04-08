@@ -130,59 +130,74 @@ const AthleteCreate = () => {
     }
   };
   
-  const validateForm = () => {
-    const errors = {
-      firstName: !firstName.trim(),
-      lastName: !lastName.trim(),
-      birthdate: !birthdate,
-      currentSportInstitution: !currentSportInstitution.trim(),
-      trainer: !trainer.trim(),
-      entryDate: !entryDate
-    };
-    
-    setValidationErrors(errors);
-    
-    return !Object.values(errors).some(error => error);
+  
+  
+const handleSubmit = (e) => {
+  e.preventDefault();
+  
+
+  const errors = {
+    firstName: !firstName.trim(),
+    lastName: !lastName.trim(),
+    birthdate: !birthdate,
+    currentSportInstitution: !currentSportInstitution.trim(),
+    trainer: !trainer.trim(),
+    entryDate: !entryDate
   };
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      const hasSportsFacilityErrors = validationErrors.currentSportInstitution || 
-                                    validationErrors.trainer || 
-                                    validationErrors.entryDate;
-      
-      if (hasSportsFacilityErrors) {
-        if (sportsFacilitySectionRef.current) {
-          sportsFacilitySectionRef.current.open();
-          
-          setTimeout(() => {
-            sportsFacilitySectionRef.current.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'center' 
-            });
-          }, 100);
-        }
-      } else {
+
+  const isValid = !Object.values(errors).some(error => error);
+  
+ 
+  setValidationErrors(errors);
+  
+  if (!isValid) {
+   
+    const hasSportsFacilityErrors = errors.currentSportInstitution || 
+                                  errors.trainer || 
+                                  errors.entryDate;
+     
+    if (hasSportsFacilityErrors) {
+      console.log('Has sports facility errors, scrolling to that section');
+      if (sportsFacilitySectionRef.current) {
+        sportsFacilitySectionRef.current.open();
+        
         setTimeout(() => {
-          topOfTheFormRef.current.scrollIntoView({ 
+          toast.error("Будь ласка, заповніть всі обов'язкові поля", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+          sportsFacilitySectionRef.current.scrollIntoView({ 
             behavior: 'smooth', 
             block: 'center' 
           });
-        }, 100);
+        }, 300); 
       }
-      
-      toast.error("Будь ласка, заповніть всі обов'язкові поля", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      return;
+    } else {
+      console.log('No sports facility errors, scrolling to top');
+      setTimeout(() => {
+        toast.error("Будь ласка, заповніть всі обов'язкові поля", {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        topOfTheFormRef.current.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }, 100);
     }
+    
+
+    return;
+  }
     
     const formData = new FormData();
     

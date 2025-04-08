@@ -24,7 +24,7 @@ import {
 } from "./MyAccount.styled";
 import { CustomDatePicker } from "../../components/CustomDatePicker/CustomDatePicker";
 import profilePlaceholder from "../../assets/PlaceholderProfileCoach.jpg";
-import { ToastContainer, toast } from "react-toastify";
+import {toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
 const MyAccount = () => {
@@ -200,7 +200,7 @@ const handleFileChange = (e) => {
         onConfirm={confirmNavigation}
         onCancel={cancelNavigation}
       />
-      <ToastContainer />
+ 
       <Container onSubmit={handleSubmit}>
         <Card>
           <PhotoContainer>

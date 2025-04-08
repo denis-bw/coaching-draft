@@ -3,7 +3,7 @@ import HeaderForUnlogged from '../../components/HeaderForUnlogged/HeaderForUnlog
 import ErrorImg from "../../assets/error.png"; 
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import {  toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 
 const ErrorPage = () => {
@@ -20,7 +20,6 @@ const ErrorPage = () => {
 
   return (
   <>
-    <ToastContainer />
     
     <ContainerErrPage>
     < HeaderForUnlogged/>

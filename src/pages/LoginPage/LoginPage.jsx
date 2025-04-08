@@ -22,7 +22,7 @@ import {
 } from './LoginPage.styled';
 
 import HeaderForUnlogged from '../../components/HeaderForUnlogged/HeaderForUnlogged';
-import { ToastContainer,toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { setIsErrorAuthorized } from '../../redux/auth/authSlice';
 import { useLocation } from 'react-router-dom';
 
@@ -92,7 +92,6 @@ const LoginPage = () => {
 
   return (
     <>
-      <ToastContainer />
       <HeaderForUnlogged/>
 
       <Container>

@@ -8,7 +8,7 @@ import { ReactComponent as PaymentsIcon } from '../../assets/PaymentsIcon.svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLogout } from '../../redux/auth/authOperations';
 
-import { ToastContainer, toast } from 'react-toastify';
+import {  toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
   
@@ -123,7 +123,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   };
 
   return (
-    <><ToastContainer />
+    <>
     <SidebarContainer isOpen={isOpen}>
       <LogoContainer>
         <Logo onClick={handleMenuItemClick} to={"/my-account"}>Coach's Sketch</Logo>
