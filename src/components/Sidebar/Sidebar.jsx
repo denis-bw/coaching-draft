@@ -37,7 +37,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   useEffect(() => {
     if (error) {
       toast.error(error);
-      console.log("errrrrrrrrrrrrrror")
     }
   }, [error]);
   

@@ -41,13 +41,20 @@ import {
   EducationalInstitutionsContainer,
   CoachInfoContainer,
   ColumnSection,
+  LoaderWrapper,
 } from './AthleteCreate.styled';
+
+import Loader from '../../../../components/Loader/Loader';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const AthleteCreate = () => {
   const sportsFacilitySectionRef = useRef(null);
   const topOfTheFormRef = useRef(null);
   const dispatch = useDispatch();
-  
+  const { loading } = useSelector((state) => state.athletes);
+  const navigate = useNavigate();
+ 
   const { setTitle } = useOutletContext();
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -120,6 +127,8 @@ const AthleteCreate = () => {
       }
     };
   }, [setTitle]);
+  
+
   
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -240,14 +249,16 @@ const handleSubmit = (e) => {
   formData.append('medicalInformation', JSON.stringify(medicalInformation || {}));
   formData.append('parentsInformation', JSON.stringify(parentsInformation || {}));
     
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
-    }
+    // for (let pair of formData.entries()) {
+    //   console.log(pair[0] + ': ' + pair[1]);
+    // }
       
     dispatch(createAthlete(formData))
       .unwrap()
       .then((athlete) => {
         toast.success('Спортсмена успішно створено!');
+        // console.log(athlete)
+        navigate(`/athletes/${athlete.id}`); 
       })
       .catch((error) => {
         toast.error(`Помилка: ${error}`);
@@ -256,7 +267,12 @@ const handleSubmit = (e) => {
 
   return (
     <>
-    <Container>
+    {loading && (
+        <LoaderWrapper>
+          <Loader />
+      </LoaderWrapper>
+      )}
+    <Container blurred={loading}>
       <Card>
         <ContentWrapper>
           <PhotoSection>
@@ -624,8 +640,10 @@ const handleSubmit = (e) => {
             Створити
           </Button>
         </ButtonWrapper>
-      </Card>
-    </Container>
+        </Card>
+
+      </Container>
+
     </>
   );
 };

@@ -21,7 +21,7 @@ const athletesSlice = createSlice({
       .addCase(createAthlete.fulfilled, (state, action) => {
         state.loading = false;
         const newAthlete = action.payload;
-       state.entities[newAthlete.id] = {
+        state.entities[newAthlete.id] = {
                 id: newAthlete.id,
                 firstName: newAthlete.firstName,
                 lastName: newAthlete.lastName,

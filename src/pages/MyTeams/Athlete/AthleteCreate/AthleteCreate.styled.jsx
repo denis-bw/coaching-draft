@@ -8,12 +8,34 @@ const breakpoints = {
   desktop: '1024px'
 };
 
+export const LoaderWrapper = styled.div`
+  position: sticky; 
+  left: 0; 
+  right: 0;
+  top: 50%;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 0;
+`;
+
 export const Container = styled.div`
+  position: relative;
   padding: 10px;
   display: flex;
   justify-content: center;
   width: 100%;
   min-height: 100%;
+  
+  background: ${({ blurred }) => (blurred ? 'rgba(255, 255, 255, 0.2)' : 'transparent')};
+  backdrop-filter: ${({ blurred }) => (blurred ? 'blur(10px)' : 'none')};
+  -webkit-backdrop-filter: ${({ blurred }) => (blurred ? 'blur(10px)' : 'none')};
+  filter: ${({ blurred }) => (blurred ? 'blur(3px)' : 'none')};
+  pointer-events: ${({ blurred }) => (blurred ? 'none' : 'auto')};
+  border-radius: 16px;
+  box-shadow: ${({ blurred }) => (blurred ? '0 4px 30px rgba(0, 0, 0, 0.1)' : 'none')};
+
   @media (min-width: ${breakpoints.tablet}) {
     align-items: flex-start;
     height: 100%;
