@@ -456,3 +456,13 @@ export const AthleteItemStyled = styled(AthleteItem)`
     background-color: ${({ theme }) => `${theme.lightGreen}40`};
   }
 `;
+
+export const LoaderContainer = styled.div`
+  height: 80px; 
+  width: 80px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; 
+  margin: 0 auto;
+`;

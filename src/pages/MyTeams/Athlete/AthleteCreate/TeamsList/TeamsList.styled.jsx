@@ -238,3 +238,13 @@ export const ProfileImageTeams = styled.img`
   border-radius: 50%;
   object-fit: cover;
 `;
+
+export const LoaderContainer = styled.div`
+  height: 80px; 
+  width: 80px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; 
+  margin: 0 auto;
+`;

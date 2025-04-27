@@ -79,7 +79,6 @@ const AthleteCreate = () => {
   const [notes, setNotes] = useState('');
 
   const [selectedTeam, setSelectedTeam] = useState(null);
-
   const [university, setUniversity] = useState("");
   const [school, setSchool] = useState("");
 
@@ -235,8 +234,8 @@ const handleSubmit = (e) => {
   formData.append('role', role || '');
   formData.append('sportCategory', sportCategory || '');
   formData.append('notes', notes || '');
-  // formData.append('team', selectedTeam || '');
-
+ 
+  formData.append('teamId', selectedTeam || '');
   formData.append('school', school || '');
   formData.append('university', university || '');
     
@@ -257,7 +256,6 @@ const handleSubmit = (e) => {
       .unwrap()
       .then((athlete) => {
         toast.success('Спортсмена успішно створено!');
-        // console.log(athlete)
         navigate(`/athletes/${athlete.id}`); 
       })
       .catch((error) => {
@@ -523,7 +521,7 @@ const handleSubmit = (e) => {
             </FormBlock>
 
             <SecondBlock $hasSportInfo>
-                <TeamsList />
+                <TeamsList onTeamSelect={setSelectedTeam} />
             </SecondBlock>
           </TwoColumnLayout>
         </CollapsibleSection>

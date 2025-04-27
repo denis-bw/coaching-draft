@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   TeamInfo,
   TeamName,
@@ -12,13 +12,43 @@ import {
 import PlaceholderTeam from "../../../assets/PlaceholderTeam.jpg";
 
 const TeamListItem = ({ team }) => {
+  const [imageStatus, setImageStatus] = useState({ loaded: false, error: false });
+  
+  useEffect(() => {
+    if (team.logo) {
+      const img = new Image();
+      img.src = team.logo;
+      
+      img.onload = () => {
+        setImageStatus({ loaded: true, error: false });
+      };
+      
+      img.onerror = () => {
+        setImageStatus({ loaded: true, error: true });
+        console.log(`Зображення для команди ${team.id} не знайдено.`);
+      };
+    }
+  }, [team]);
+
+  const getImageSource = () => {
+    if (!team.logo) return PlaceholderTeam;
+    if (imageStatus.error) return PlaceholderTeam;
+    return team.logo;
+  };
+
+  const handleImageError = () => {
+    setImageStatus({ loaded: true, error: true });
+  };
+
   return (
     <TeamItemWrapper data-team-item>
       <TeamItemStyled to={`/teams/${team.id}`}>
         <TeamIconWrapper>
           <ProfileImageTeams
             loading="lazy"
-            src={PlaceholderTeam}
+            src={getImageSource()}
+            alt={`Логотип команди ${team.name}`}
+            onError={handleImageError}
           />
         </TeamIconWrapper>
         <TeamInfo>

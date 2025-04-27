@@ -2,6 +2,8 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { themeReducer } from './theme/themeSlice.js';
 import { authReducer } from './auth/authSlice.js';
 import { athletesReducer } from './athletes/athletesSlice.js';
+import teamsReducer from './teams/teamsSlice.js';
+
 import {
   persistStore,
   persistReducer,
@@ -16,7 +18,6 @@ import storage from 'redux-persist/lib/storage';
 import { createTransform } from 'redux-persist';
 
 const authTransform = createTransform(
-  
   (inboundState) => {
     const { successMessage, isLoading, isLoggedIn, error, isErrorAuthorized, user, ...persistedState } = inboundState;
     return persistedState;
@@ -41,12 +42,14 @@ const rootReducer = combineReducers({
   theme: themeReducer,
   auth: authReducer,
   athletes: athletesReducer,
+  teams: teamsReducer,
 });
 
 const persistConfig = {
   key: 'root',
   storage,
   transforms: [authTransform],
+  whitelist: ['theme', 'auth'], 
 };
 
 export const store = configureStore({

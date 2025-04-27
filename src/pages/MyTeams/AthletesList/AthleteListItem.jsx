@@ -1,9 +1,9 @@
-import React from 'react'
-import { 
-  AthleteInfo, 
-  AthleteName, 
-  TeamName, 
-  ChevronWrapper, 
+import React from 'react';
+import {
+  AthleteInfo,
+  AthleteName,
+  TeamName,
+  ChevronWrapper,
   RoadSignPointingRightIcon,
   ProfileImageAthletes,
   AthleteIconWrapper,
@@ -15,18 +15,18 @@ import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
 const AthleteListItem = ({ athlete }) => {
   return (
     <AthleteItemWrapper className="athlete-item" id={`athlete-${athlete.id}`}>
-      <AthleteItemStyled 
+      <AthleteItemStyled
         to={`/athletes/${athlete.id}`}
       >
         <AthleteIconWrapper>
           <ProfileImageAthletes
             loading="lazy"
-            src={profilePlaceholder}
+            src={athlete.photo || profilePlaceholder}
           />
         </AthleteIconWrapper>
         <AthleteInfo>
           <AthleteName>{athlete.name}</AthleteName>
-          <TeamName>{athlete.team || '-'}</TeamName>
+          <TeamName>{athlete.teamName || '-'}</TeamName>
         </AthleteInfo>
         <ChevronWrapper>
           <RoadSignPointingRightIcon/>

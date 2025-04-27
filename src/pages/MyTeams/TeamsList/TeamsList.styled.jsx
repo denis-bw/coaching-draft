@@ -344,3 +344,14 @@ export const TeamItemStyled = styled(TeamItem)`
     background-color: ${({ theme }) => theme.greenMain};
   }
 `;
+
+export const LoaderContainer = styled.div`
+  height: 80px; 
+  width: 80px; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; 
+  margin: 0 auto;
+`;
+

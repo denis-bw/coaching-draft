@@ -1,5 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  setSearchQuery,
+  resetAthletes,
+  setFilterType,
+  filterLocalAthletes
+} from '../../../redux/athletes/athletesSlice';
+import { fetchAthletes, searchAthletes } from '../../../redux/athletes/athletesOperations';
+import Loader from '../../../components/Loader/Loader';
 import { 
   AthletesContainer, 
   AthletesHeader, 
@@ -15,53 +24,170 @@ import {
   SearchInput,
   HeaderRow, 
   CreateIcon,
+  LoaderContainer
 } from './AthletesList.styled';
 import AthleteListItem from './AthleteListItem';
 
 const AthletesList = () => {
   const { setTitle } = useOutletContext();
-  const [filterType, setFilterType] = useState('all');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const dispatch = useDispatch();
   
-  const dropdownRef = useRef(null);
+  const {
+    entities,
+    fullEntities,
+    list,
+    loading: isLoading,
+    hasMore,
+    currentPage,
+    searchQuery,
+    isSearchMode,
+    searchPage,
+    currentFilter,
+    isAllDataLoaded
+  } = useSelector(state => state.athletes);
+  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(searchQuery);
+
   const athletesListRef = useRef(null);
-  console.log("QQQ")
+  const dropdownRef = useRef(null);
+  const observerRef = useRef(null);
+  const loadingRef = useRef(false);
+  const searchTimeout = useRef(null);
+  const initialLoadDone = useRef(false);
+  const loadMoreAttempts = useRef(0);
+
+
   useEffect(() => {
     setTitle("Спортсмени");
   }, [setTitle]);
-  
-  const athletes = [
-    { id: 1, name: 'Олександр ІвановАААААААААААААААААААААААААААААААААffffffffffffААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААААА', team: 'ДинамоФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФФ' },
-    { id: 2, name: 'Марія Петренко', team: 'Шахтар' },
-    { id: 3, name: 'Ігор Коваленко', team: '-' },
-    { id: 4, name: 'Анна Сидоренко', team: 'Зоря' },
-    { id: 5, name: 'Володимир Бондаренко', team: '-' },
-    { id: 6, name: 'Олександр Іванов', team: 'Динамо' },
-    { id: 7, name: 'Марія Петренко', team: 'Шахтар' },
-    { id: 8, name: 'Ігор Коваленко', team: '-' },
-    { id: 9, name: 'Анна Сидоренко', team: 'Зоря' },
-    { id: 10, name: 'Володимир Бондаренко', team: '-' },
-    { id: 17, name: 'Марія Петренко', team: 'Шахтар' },
-    { id: 18, name: 'Ігор Коваленко', team: '-' },
-    { id: 19, name: 'Анна Сидоренко', team: 'Зоря' },
-    { id: 20, name: 'Володимир Бондаренко', team: '-' },
-  ];
-  
-  const filteredAthletes = athletes.filter(athlete => {
-    const matchesFilter = 
-      filterType === 'all' ? true :
-      filterType === 'withTeam' ? athlete.team && athlete.team !== '-' :
-      filterType === 'withoutTeam' ? !athlete.team || athlete.team === '-' :
-      true;
 
-    const matchesSearch = 
-      !searchQuery ? true :
-      athlete.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      athlete.team.toLowerCase().includes(searchQuery.toLowerCase());
+  useEffect(() => {
+    setInputValue(searchQuery);
+  }, [searchQuery]);
+
+
+  const loadMoreData = useCallback(() => {
+    if (!hasMore || isLoading || loadingRef.current) return;
     
-    return matchesFilter && matchesSearch;
-  });
+    loadingRef.current = true;
+    
+    const action = isSearchMode 
+      ? searchAthletes({ name: searchQuery, page: searchPage, filter: currentFilter })
+      : fetchAthletes(currentPage);
+      
+    dispatch(action).finally(() => {
+      loadingRef.current = false;
+    });
+  }, [dispatch, hasMore, isLoading, currentPage, searchQuery, isSearchMode, searchPage, currentFilter]);
+
+
+  useEffect(() => {
+    if (!initialLoadDone.current && !isLoading && list.length === 0) {
+      initialLoadDone.current = true;
+      
+      if (searchQuery) {
+        dispatch(setSearchQuery(searchQuery));
+        dispatch(searchAthletes({ name: searchQuery, page: 1, filter: currentFilter }));
+      } else {
+        dispatch(fetchAthletes(1));
+      }
+    }
+  }, [dispatch, searchQuery, currentFilter, list.length, isLoading]);
+
+ 
+  useEffect(() => {
+    if (!hasMore || isLoading || loadingRef.current) return;
+    
+
+    const checkForScroll = () => {
+      if (!athletesListRef.current) return;
+      
+      const containerHasScroll = athletesListRef.current.scrollHeight > athletesListRef.current.clientHeight;
+      
+    
+      if (!containerHasScroll && hasMore && !isLoading && loadMoreAttempts.current < 10) {
+        loadMoreAttempts.current++;
+        loadMoreData();
+      } else if (containerHasScroll || !hasMore || loadMoreAttempts.current >= 10) {
+
+        loadMoreAttempts.current = 0;
+      }
+    };
+
+
+    const timeoutId = setTimeout(checkForScroll, 200);
+    return () => clearTimeout(timeoutId);
+  }, [list, isLoading, hasMore, loadMoreData]);
+
+
+  useEffect(() => {
+    if (!athletesListRef.current) return;
+    
+    const options = {
+      root: athletesListRef.current,
+      rootMargin: '0px',
+      threshold: 0.5,
+    };
+    
+    const handleIntersection = (entries) => {
+      entries.forEach(entry => {
+        const element = entry.target;
+        if (entry.isIntersecting) {
+          element.style.opacity = '1';
+          element.style.transform = 'scale(1)';
+        } else {
+          element.style.opacity = '0.6';
+          element.style.transform = 'scale(0.9)';
+        }
+      });
+    };
+    
+    observerRef.current = new IntersectionObserver(handleIntersection, options);
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
+  
+
+  useEffect(() => {
+    if (!observerRef.current) return;
+    
+    observerRef.current.disconnect();
+
+    setTimeout(() => {
+      const athleteItems = document.querySelectorAll('[id^="athlete-"]');
+      athleteItems.forEach(item => {
+        observerRef.current.observe(item);
+      });
+    }, 0);
+  }, [list]);
+
+
+  const handleScroll = useCallback(() => {
+    if (loadingRef.current || !hasMore || isLoading) {
+      return;
+    }
+
+    if (athletesListRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = athletesListRef.current;
+      
+      if (scrollTop + clientHeight >= scrollHeight - 20 && hasMore) {
+        loadMoreData();
+      }
+    }
+  }, [hasMore, isLoading, loadMoreData]);
+
+  useEffect(() => {
+    const list = athletesListRef.current;
+    if (list) {
+      list.addEventListener('scroll', handleScroll);
+      return () => list.removeEventListener('scroll', handleScroll);
+    }
+  }, [handleScroll]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -75,55 +201,51 @@ const AthletesList = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
-  useEffect(() => {
-    if (!athletesListRef.current) return;
-    
-    const options = {
-      root: athletesListRef.current,
-      rootMargin: '0px',
-      threshold: 0.5,
-    };
-    
-    const handleIntersection = (entries) => {
-      entries.forEach(entry => {
-        if (entry.target.classList) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            entry.target.classList.remove('hidden');
-          } else {
-            entry.target.classList.add('hidden');
-            entry.target.classList.remove('visible');
-          }
-        }
-      });
-    };
-    
-    const observer = new IntersectionObserver(handleIntersection, options);
 
-    const athleteElements = document.querySelectorAll('[id^="athlete-"]');
-    athleteElements.forEach(element => {
-      observer.observe(element);
-      element.classList.add('hidden');
-    });
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setInputValue(value); 
     
-    return () => observer.disconnect();
-  }, [filteredAthletes]); 
-  
-  const handleFilterClick = (type) => {
-    setFilterType(type);
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    searchTimeout.current = setTimeout(() => {
+      performSearch(value);
+    }, 500);
+  };
+
+
+  const performSearch = (value) => {
+
+    loadMoreAttempts.current = 0;
+    
+    if (value && isAllDataLoaded) {
+     
+      dispatch(filterLocalAthletes(value));
+    } else {
+   
+      dispatch(setSearchQuery(value));
+      
+      if (athletesListRef.current) {
+        athletesListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      if (value) {
+        dispatch(searchAthletes({ name: value, page: 1, filter: currentFilter }));
+      } else if (!value) {
+        dispatch(resetAthletes());
+        dispatch(fetchAthletes(1));
+      }
+    }
+  };
+
+
+  const handleFilterClick = (filter) => {
+    dispatch(setFilterType(filter));
     setIsDropdownOpen(false);
 
-    if (athletesListRef.current) {
-      athletesListRef.current.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
-  };
-  
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
 
     if (athletesListRef.current) {
       athletesListRef.current.scrollTo({
@@ -131,7 +253,26 @@ const AthletesList = () => {
         behavior: 'smooth'
       });
     }
+    
+    if (!isAllDataLoaded && !isSearchMode) {
+      dispatch(resetAthletes());
+      dispatch(fetchAthletes(1));
+    } else if (!isAllDataLoaded && isSearchMode) {
+      dispatch(searchAthletes({ name: searchQuery, page: 1, filter }));
+    }
   };
+
+const athletesToDisplay = list.map(id => {
+  const athlete = entities[id];
+  if (!athlete) return null;
+  
+  return {
+    id: athlete.id,
+    name: `${athlete.lastName} ${athlete.firstName} ${athlete.patronymic || ''}`.trim(),
+    photo: athlete.photo,
+    teamName: athlete.teamName || '-'
+  };
+}).filter(Boolean);
 
   return (
     <AthletesWrapper>
@@ -141,19 +282,19 @@ const AthletesList = () => {
             <h2>Мої спортсмени</h2>
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               <FilterButton onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
-                {filterType === 'all' && 'Усі'}
-                {filterType === 'withTeam' && 'З командами'}
-                {filterType === 'withoutTeam' && 'Без команди'}
+                {currentFilter === 'all' && 'Усі'}
+                {currentFilter === 'withTeam' && 'З командами'}
+                {currentFilter === 'withoutTeam' && 'Без команди'}
               </FilterButton>
               {isDropdownOpen && (
                 <FilterDropdown>
-                  <DropdownOption active={filterType === 'all'} onClick={() => handleFilterClick('all')}>
+                  <DropdownOption active={currentFilter === 'all'} onClick={() => handleFilterClick('all')}>
                     Усі
                   </DropdownOption>
-                  <DropdownOption active={filterType === 'withTeam'} onClick={() => handleFilterClick('withTeam')}>
+                  <DropdownOption active={currentFilter === 'withTeam'} onClick={() => handleFilterClick('withTeam')}>
                     З командами
                   </DropdownOption>
-                  <DropdownOption active={filterType === 'withoutTeam'} onClick={() => handleFilterClick('withoutTeam')}>
+                  <DropdownOption active={currentFilter === 'withoutTeam'} onClick={() => handleFilterClick('withoutTeam')}>
                     Без команди
                   </DropdownOption>
                 </FilterDropdown>
@@ -164,24 +305,30 @@ const AthletesList = () => {
             <SearchInput 
               type="text" 
               placeholder="Пошук спортсменів..." 
-              value={searchQuery}
-              onChange={handleSearchChange}
+              value={inputValue}
+              onChange={handleInputChange}
             />
           </SearchContainer>
         </AthletesHeader>
 
         <AthletesListContainer ref={athletesListRef}>
-          {filteredAthletes.length > 0 ? (
-            filteredAthletes.map(athlete => (
+          {athletesToDisplay.length > 0 ? (
+            athletesToDisplay.map(athlete => (
               <AthleteListItem 
                 key={athlete.id}
                 athlete={athlete}
               />
             ))
-          ) : (
+          ) : !isLoading ? (
             <EmptyStateMessage>
               Спортсменів не знайдено
             </EmptyStateMessage>
+          ) : null}
+          
+          {isLoading && (
+            <LoaderContainer>
+              <Loader />
+            </LoaderContainer>
           )}
         </AthletesListContainer>
 
