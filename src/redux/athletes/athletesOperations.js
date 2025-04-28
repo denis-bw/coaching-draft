@@ -22,15 +22,16 @@ export const createAthlete = createAsyncThunk(
 
 export const fetchAthletes = createAsyncThunk(
   'athletes/fetchAthletes',
-  async (page, thunkApi) => {
+  async (params, thunkApi) => {
+    const page = typeof params === 'object' ? params.page : params;
+    const filter = typeof params === 'object' ? params.filter : thunkApi.getState().athletes.currentFilter;
+    
     try {
-      const { currentFilter } = thunkApi.getState().athletes;
-      
       const response = await requestWrapper(
-        () => axios.get(`athletes/search?page=${page}&filter=${currentFilter}`),
+        () => axios.get(`athletes/search?page=${page}&filter=${filter}`),
         thunkApi.dispatch
       );
-      return { ...response.data, page, filter: currentFilter };
+      return { ...response.data, page, filter };
     } catch (err) {
       if (err.response && err.response.status === 404) {
         return { athletes: [], noMorePages: true };
@@ -53,10 +54,10 @@ export const searchAthletes = createAsyncThunk(
       );
       
       return { 
-        ...response.data, 
-        page, 
-        query: name, 
-        filter 
+        ...response.data,
+        page,
+        query: name,
+        filter
       };
     } catch (err) {
       if (err.response && err.response.status === 404) {

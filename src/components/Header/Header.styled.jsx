@@ -50,10 +50,14 @@ export const Title = styled.h1`
   margin: 0;
   padding: 0;
 
+  @media (max-width: 1024px) {
+    font-size: 20px;
+     font-weight: 600;
+  }
+
   @media (max-width: 768px) {
     grid-column: 1 / -1; 
     text-align: center;
-    font-size: 20px;
      font-weight: 600;
      font-size: 18px
   }

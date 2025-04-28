@@ -4,6 +4,7 @@ import React, { useEffect, Suspense, lazy } from 'react';
 
 const MyAccount = lazy(() => import('./pages/MyAccount/MyAccount'));
 const TeamsList = lazy(() => import('./pages/MyTeams/TeamsList/TeamsList'));
+const TeamCreate = lazy(() => import('pages/MyTeams/TeamCreate/TeamCreate'));
 const TeamDetails = lazy(() => import('./pages/MyTeams/TeamDetails/TeamDetails'));
 const AthletesList = lazy(() => import('./pages/MyTeams/AthletesList/AthletesList'));
 
@@ -39,6 +40,7 @@ const HomePage = lazy(() => import('pages/HomePage/HomePage'));
 const ForgotPassword = lazy(() => import('pages/ForgotPassword/ForgotPassword'));
 const ResetPasswordPage = lazy(() => import('pages/ResetPasswordPage/ResetPasswordPage'));
 const VerificationPage = lazy(() => import('pages/VerificationPage/VerificationPage'));
+
 
 import RestrictedRoute from './components/RestrictedRoute.jsx'
 import PrivateRoute from './components/PrivateRoute.jsx'; 
@@ -78,7 +80,8 @@ function App() {
 
           <Route path="teams" element={<TeamsList />} />
           <Route path="teams/:teamId" element={<TeamDetails />} />
-
+          <Route path="teams/create" element={<TeamCreate />} />
+          
           <Route path="athletes" element={<AthletesList />} />
           <Route path="athletes/:athleteId" element={<AthleteDetails />} />
           <Route path="athletes/create" element={<AthleteCreate />} />
