@@ -51,7 +51,13 @@ export const searchAthletes = createAsyncThunk(
         () => axios.get(`athletes/search?page=${page}&query=${encodeURIComponent(name)}&filter=${filter}`),
         thunkApi.dispatch
       );
-      return { ...response.data, page, query: name, filter };
+      
+      return { 
+        ...response.data, 
+        page, 
+        query: name, 
+        filter 
+      };
     } catch (err) {
       if (err.response && err.response.status === 404) {
         return { athletes: [], noMorePages: true, page, query: name, filter };

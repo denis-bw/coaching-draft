@@ -56,39 +56,22 @@ const athletesSlice = createSlice({
       }
     },
     setFilterType: (state, action) => {
-      const filter = action.payload;
-      
-      if (state.currentFilter !== filter) {
-        state.currentFilter = filter;
-        state.list = [];
-        state.searchPage = 1;
-        state.hasMore = true;
-        
-        if (state.isAllDataLoaded) {
-          const athleteIds = Object.keys(state.entities);
-          const filteredAthletes = athleteIds.filter(id => {
-            const athlete = state.entities[id];
-            if (filter === 'all') return true;
-            if (filter === 'withTeam') return athlete.teamId && athlete.teamName !== '-';
-            if (filter === 'withoutTeam') return !athlete.teamId || athlete.teamName === '-';
-            return true;
-          });
-      
-          if (state.searchQuery) {
-            const query = state.searchQuery.toLowerCase();
-            state.list = filteredAthletes.filter(id => {
-              const athlete = state.entities[id];
-              const fullName = `${athlete.lastName} ${athlete.firstName} ${athlete.patronymic || ''}`.toLowerCase();
-              return fullName.includes(query);
-            });
-          } else {
-            state.list = filteredAthletes;
-          }
-          
-          state.hasMore = false;
-        }
-      }
-    },
+  const filter = action.payload;
+  
+  if (state.currentFilter !== filter) {
+    state.currentFilter = filter;
+    state.list = [];
+    state.searchPage = 1;
+    state.hasMore = true;
+    
+    if (state.searchQuery) {
+      state.isSearchMode = true;
+    } else {
+      state.currentPage = 1;
+    
+    }
+  }
+},
     filterLocalAthletes: (state, action) => {
       const query = action.payload.toLowerCase();
       const filter = state.currentFilter;
@@ -228,7 +211,13 @@ const athletesSlice = createSlice({
       .addCase(searchAthletes.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Помилка при пошуку спортсменів';
-      });
+      })
+      .addMatcher(
+      action => action.type === 'app/resetAllData',
+      (state) => {
+        return initialState;
+      }
+    );
   },
 });
 

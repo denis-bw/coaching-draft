@@ -218,49 +218,44 @@ const AthletesList = () => {
 
 
   const performSearch = (value) => {
+  loadMoreAttempts.current = 0;
+  
 
-    loadMoreAttempts.current = 0;
-    
-    if (value && isAllDataLoaded) {
-     
-      dispatch(filterLocalAthletes(value));
-    } else {
+  dispatch(setSearchQuery(value));
+  
+  if (athletesListRef.current) {
+    athletesListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  
+  if (value) {
    
-      dispatch(setSearchQuery(value));
-      
-      if (athletesListRef.current) {
-        athletesListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-      
-      if (value) {
-        dispatch(searchAthletes({ name: value, page: 1, filter: currentFilter }));
-      } else if (!value) {
-        dispatch(resetAthletes());
-        dispatch(fetchAthletes(1));
-      }
-    }
-  };
+    dispatch(searchAthletes({ name: value, page: 1, filter: currentFilter }));
+  } else {
+   
+    dispatch(resetAthletes());
+    dispatch(fetchAthletes(1));
+  }
+};
 
 
   const handleFilterClick = (filter) => {
-    dispatch(setFilterType(filter));
-    setIsDropdownOpen(false);
+  dispatch(setFilterType(filter));
+  setIsDropdownOpen(false);
 
-
-    if (athletesListRef.current) {
-      athletesListRef.current.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
-    
-    if (!isAllDataLoaded && !isSearchMode) {
-      dispatch(resetAthletes());
-      dispatch(fetchAthletes(1));
-    } else if (!isAllDataLoaded && isSearchMode) {
-      dispatch(searchAthletes({ name: searchQuery, page: 1, filter }));
-    }
-  };
+  if (athletesListRef.current) {
+    athletesListRef.current.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+  
+  if (searchQuery) {
+    dispatch(searchAthletes({ name: searchQuery, page: 1, filter }));
+  } else {
+    dispatch(resetAthletes());
+    dispatch(fetchAthletes(1));
+  }
+};
 
 const athletesToDisplay = list.map(id => {
   const athlete = entities[id];

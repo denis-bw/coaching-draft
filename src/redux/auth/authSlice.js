@@ -86,7 +86,7 @@ const authSlice = createSlice({
     .addCase(fetchLogout.rejected, (state, action) => {
       state.error = action.payload || 'Сталася непередбачена помилка при виході.';
       state.isLoading = false;
-      state.isLoggedIn = false;
+      state.isLoggedIn = false; 
     })
     .addCase(refreshUser.pending, (state) => {
       state.error = null;

@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {requestWrapper} from '../../utils/requestWrapper'
 import { axios,token } from '../../utils/api';
-
+import { resetAllData } from '../resetActions';
 
 export const fetchAuthorizationUser = createAsyncThunk(
   'userDetails/fetchAuthorizationUser',
@@ -58,25 +58,33 @@ export const fetchLoginUser = createAsyncThunk(
   }
 );
 
-export const fetchLogout = createAsyncThunk('userDetails/fetchLogIn',
-    async (_, thunkApi) => {
-        try {   
-            await axios.post('auth/users/logout');
-            token.unsetToken();
-        } catch (err) {  
-                if (err.response) {
-                    if (err.response.status === 401) {
-                    token.unsetToken();
-                    return thunkApi.rejectWithValue('Ви вже вийшли з акаунту.'); 
-                }
-                if (err.response.status === 404) {
-                    return thunkApi.rejectWithValue('Сервер не знайдено.');  
-                }
-            }
- 
-            return thunkApi.rejectWithValue('Помилка при виході з акаунту. Спробуйте ще раз.');
+export const fetchLogout = createAsyncThunk(
+  'auth/logout',
+  async (_, thunkApi) => {
+    try {   
+      await axios.post('auth/users/logout');
+      token.unsetToken();
+      thunkApi.dispatch(resetAllData());
+      persistor.purge();
+      return { success: true };
+    } catch (err) {  
+      
+      token.unsetToken();
+      thunkApi.dispatch(resetAllData());
+      persistor.purge(); 
+      
+      if (err.response) {
+        if (err.response.status === 401) {
+          return thunkApi.rejectWithValue('Ви вже вийшли з акаунту.'); 
         }
-});
+        if (err.response.status === 404) {
+          return thunkApi.rejectWithValue('Сервер не знайдено.');  
+        }
+      }
+      return thunkApi.rejectWithValue('Помилка при виході з акаунту. Спробуйте ще раз.');
+    }
+  }
+);
 
 export const refreshUser = createAsyncThunk(
   'userDetails/refreshUser',

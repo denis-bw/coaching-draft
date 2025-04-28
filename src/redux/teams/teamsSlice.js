@@ -156,7 +156,13 @@ const teamsSlice = createSlice({
       .addCase(searchTeams.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || 'Помилка при пошуку команд';
-      });
+      })
+      .addMatcher(
+        action => action.type === 'app/resetAllData',
+        (state) => {
+          return initialState;
+      }
+);
   },
 });
 

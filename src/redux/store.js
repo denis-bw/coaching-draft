@@ -3,6 +3,7 @@ import { themeReducer } from './theme/themeSlice.js';
 import { authReducer } from './auth/authSlice.js';
 import { athletesReducer } from './athletes/athletesSlice.js';
 import teamsReducer from './teams/teamsSlice.js';
+import { RESET_ALL_DATA } from './resetActions';
 
 import {
   persistStore,
@@ -38,12 +39,30 @@ const authTransform = createTransform(
   { whitelist: ['auth'] }
 );
 
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   theme: themeReducer,
   auth: authReducer,
   athletes: athletesReducer,
   teams: teamsReducer,
 });
+
+const rootReducer = (state, action) => {
+ 
+  if (
+    action.type === 'auth/logout/fulfilled' || 
+    action.type === RESET_ALL_DATA
+  ) {
+
+    return {
+      theme: state.theme,
+      auth: authReducer(undefined, action),
+      athletes: athletesReducer(undefined, action),
+      teams: teamsReducer(undefined, action)
+    };
+  }
+  
+  return appReducer(state, action);
+};
 
 const persistConfig = {
   key: 'root',
