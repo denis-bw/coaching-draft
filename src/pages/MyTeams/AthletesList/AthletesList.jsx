@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   setSearchQuery,
@@ -31,6 +31,7 @@ import AthleteListItem from './AthleteListItem';
 const AthletesList = () => {
   const { setTitle } = useOutletContext();
   const dispatch = useDispatch();
+  const location = useLocation();
   
   const {
     entities,
@@ -56,7 +57,7 @@ const AthletesList = () => {
   const searchTimeout = useRef(null);
   const initialLoadDone = useRef(false);
   const loadMoreAttempts = useRef(0);
-
+  const previousPath = useRef(location.pathname);
 
   useEffect(() => {
     setTitle("Спортсмени");
@@ -66,6 +67,17 @@ const AthletesList = () => {
     setInputValue(searchQuery);
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (previousPath.current !== location.pathname) {
+      previousPath.current = location.pathname;
+      initialLoadDone.current = false;
+      dispatch(resetAthletes());
+      
+      loadMoreAttempts.current = 0;
+      
+      dispatch(fetchAthletes({ page: 1, filter: currentFilter }));
+    }
+  }, [location.pathname, dispatch, currentFilter]);
 
   const loadMoreData = useCallback(() => {
     if (!hasMore || isLoading || loadingRef.current) return;
@@ -74,52 +86,44 @@ const AthletesList = () => {
     
     const action = isSearchMode 
       ? searchAthletes({ name: searchQuery, page: searchPage, filter: currentFilter })
-      : fetchAthletes(currentPage);
+      : fetchAthletes({ page: currentPage, filter: currentFilter });
       
     dispatch(action).finally(() => {
       loadingRef.current = false;
     });
   }, [dispatch, hasMore, isLoading, currentPage, searchQuery, isSearchMode, searchPage, currentFilter]);
 
-
   useEffect(() => {
-    if (!initialLoadDone.current && !isLoading && list.length === 0) {
+    if (!initialLoadDone.current) {
       initialLoadDone.current = true;
       
       if (searchQuery) {
-        dispatch(setSearchQuery(searchQuery));
         dispatch(searchAthletes({ name: searchQuery, page: 1, filter: currentFilter }));
       } else {
-        dispatch(fetchAthletes(1));
+        dispatch(fetchAthletes({ page: 1, filter: currentFilter }));
       }
     }
   }, [dispatch, searchQuery, currentFilter, list.length, isLoading]);
 
- 
   useEffect(() => {
     if (!hasMore || isLoading || loadingRef.current) return;
     
-
     const checkForScroll = () => {
       if (!athletesListRef.current) return;
       
       const containerHasScroll = athletesListRef.current.scrollHeight > athletesListRef.current.clientHeight;
       
-    
       if (!containerHasScroll && hasMore && !isLoading && loadMoreAttempts.current < 10) {
         loadMoreAttempts.current++;
         loadMoreData();
       } else if (containerHasScroll || !hasMore || loadMoreAttempts.current >= 10) {
-
         loadMoreAttempts.current = 0;
       }
     };
 
-
     const timeoutId = setTimeout(checkForScroll, 200);
     return () => clearTimeout(timeoutId);
   }, [list, isLoading, hasMore, loadMoreData]);
-
 
   useEffect(() => {
     if (!athletesListRef.current) return;
@@ -152,7 +156,6 @@ const AthletesList = () => {
     };
   }, []);
   
-
   useEffect(() => {
     if (!observerRef.current) return;
     
@@ -165,7 +168,6 @@ const AthletesList = () => {
       });
     }, 0);
   }, [list]);
-
 
   const handleScroll = useCallback(() => {
     if (loadingRef.current || !hasMore || isLoading) {
@@ -202,7 +204,6 @@ const AthletesList = () => {
     };
   }, []);
 
-
   const handleInputChange = (e) => {
     const value = e.target.value;
     setInputValue(value); 
@@ -216,58 +217,54 @@ const AthletesList = () => {
     }, 500);
   };
 
-
   const performSearch = (value) => {
-  loadMoreAttempts.current = 0;
-  
-
-  dispatch(setSearchQuery(value));
-  
-  if (athletesListRef.current) {
-    athletesListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  
-  if (value) {
-   
-    dispatch(searchAthletes({ name: value, page: 1, filter: currentFilter }));
-  } else {
-   
-    dispatch(resetAthletes());
-    dispatch(fetchAthletes(1));
-  }
-};
-
+    loadMoreAttempts.current = 0;
+    
+    dispatch(setSearchQuery(value));
+    
+    if (athletesListRef.current) {
+      athletesListRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    if (value) {
+      dispatch(searchAthletes({ name: value, page: 1, filter: currentFilter }));
+    } else {
+      dispatch(resetAthletes());
+      dispatch(fetchAthletes({ page: 1, filter: currentFilter }));
+    }
+  };
 
   const handleFilterClick = (filter) => {
-  dispatch(setFilterType(filter));
-  setIsDropdownOpen(false);
+    dispatch(setFilterType(filter));
+    setIsDropdownOpen(false);
 
-  if (athletesListRef.current) {
-    athletesListRef.current.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-  }
-  
-  if (searchQuery) {
-    dispatch(searchAthletes({ name: searchQuery, page: 1, filter }));
-  } else {
+    if (athletesListRef.current) {
+      athletesListRef.current.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+    
     dispatch(resetAthletes());
-    dispatch(fetchAthletes(1));
-  }
-};
-
-const athletesToDisplay = list.map(id => {
-  const athlete = entities[id];
-  if (!athlete) return null;
-  
-  return {
-    id: athlete.id,
-    name: `${athlete.lastName} ${athlete.firstName} ${athlete.patronymic || ''}`.trim(),
-    photo: athlete.photo,
-    teamName: athlete.teamName || '-'
+    
+    if (searchQuery) {
+      dispatch(searchAthletes({ name: searchQuery, page: 1, filter }));
+    } else {
+      dispatch(fetchAthletes({ page: 1, filter }));
+    }
   };
-}).filter(Boolean);
+
+  const athletesToDisplay = list.map(id => {
+    const athlete = entities[id];
+    if (!athlete) return null;
+    
+    return {
+      id: athlete.id,
+      name: `${athlete.lastName} ${athlete.firstName} ${athlete.patronymic || ''}`.trim(),
+      photo: athlete.photo,
+      teamName: athlete.teamName || '-'
+    };
+  }).filter(Boolean);
 
   return (
     <AthletesWrapper>

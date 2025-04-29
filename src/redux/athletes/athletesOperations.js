@@ -53,7 +53,7 @@ export const searchAthletes = createAsyncThunk(
         thunkApi.dispatch
       );
       
-      return { 
+      return {
         ...response.data,
         page,
         query: name,
