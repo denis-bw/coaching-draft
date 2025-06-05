@@ -154,7 +154,7 @@ const teamsSlice = createSlice({
       })
       .addCase(createTeam.fulfilled, (state, action) => {
         state.createTeamStatus = 'succeeded';
-        
+  
         const newTeam = action.payload.team;
         if (newTeam && newTeam.id) {
           state.allTeams[newTeam.id] = newTeam;

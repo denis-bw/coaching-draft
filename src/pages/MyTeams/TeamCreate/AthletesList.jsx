@@ -305,7 +305,7 @@ const AthleteItemStyled = styled(NavLink)`
   align-items: center;
   padding: 8px 12px;
   background-color: ${({ $isSelected, theme }) => 
-    $isSelected ? theme.greenMain : theme.lightGreen};
+    $isSelected ? theme.greenMain : theme.disabledBG};
   color: ${({ $isSelected, theme }) => 
     $isSelected ? theme.white : theme.textBlack};
   border-radius: 8px;

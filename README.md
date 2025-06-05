@@ -2,112 +2,77 @@
 
 # Coaching Draft
 
-### Topic:
+🚧 This application is currently under development 🚧
 
-Development of a comprehensive web application for sports coaches to effectively
-manage teams, athletes and the training process. A web application designed to
-facilitate the organization of coaches' work.
+After opening the site, you may need to wait a few minutes, as the free version
+of Render.com hosting is used, which automatically “wakes up” the server after a
+break in activity.
 
-### Objective:
+### Web application for managing the training process by specialists of sports institutions
 
-To create an intuitive and functional platform for coaches that will allow them
-to optimize their work, effectively manage information about athletes and their
-teams, and increase the efficiency of the training process through detailed
-progress tracking and data analysis.
+The web application is designed to automate the management of the training
+process in sports institutions. It provides coaches with convenient tools for
+keeping athletes, forming teams, planning schedules, monitoring physical
+indicators, analyzing the dynamics of progress and accounting for finances. The
+system allows you to reduce the administrative burden, increase the efficiency
+of coaching work and provide access to all the necessary data in a convenient
+digital format. The system is adapted for use in both large sports organizations
+and in small sections, regardless of the sport, providing flexibility and
+scalability to meet the needs of users. scalability to meet the needs of users.
 
-### Further tasks to achieve the goal:
+### Tasks to achieve the goal of the first version of the application
 
-1. Develop an authentication and authorization system for coaches
-2. Create a personal account for the trainer
-3. Development of a team management module
-4. Implementation of the athlete profile management system
-5. Creation of functionality for maintaining the history of the athlete (visits,
-   teams, statuses)
-6. Development of a module for conducting and tracking measurements
-7. Implementation of a calendar planning system
-8. Creating an analytical module for displaying statistics
-9. Development of a payment and financial management system
-10. Providing an intuitive user interface
-11. Implementation of a data filtering and search system
-12. Implementation of a system for creating and managing events (training,
-    meetings, competitions)
-13. Creating a module for managing sponsors and additional expenses
+1. Authentication and authorization systems for users
+2. Manage the data of the trainer's personal account
+3. Team management module
+4. Athlete profile management module
+5. Athlete history module
+6. Athlete measurement module
+7. Implementation of the calendar planning system
+8. Analytical module for displaying statistics
+9. Payment and financial management module
+10. Data filtering and search module
+11. Module for managing sponsor records and additional costs
+12. Providing an intuitive user interface
 
-### The value of the application compared to its analogs:
+### The value of the application
 
 1. Comprehensiveness: combining all the necessary functions in one application
 2. Flexibility: the ability to customize to the needs of different sports
-3. Detailed analysis: in-depth analytics of athletes' progress and training
-   effectiveness
-4. Centralized management: all data is available only to coaches, which provides
-   better control and confidentiality
+3. Detailed analysis: analytics of athletes' progress and training effectiveness
+4. Centralized management: all data is available only to the user of the account
+   account user, which provides better control and privacy
 5. Financial management: built-in tools for managing payments and financing
-6. History and tracking: the ability to view the full history of athlete and
-   team development
-
-### Future functionality
-
-###### Login and registration page
-
-- Login form
-- New coach registration form
-
-###### Coach's personal account
-
-- General information about the coach
-- Quick access to the main functions
-
-###### Team page
-
-- List of all teams
-- Detailed information about the team
-
-###### Athletes page
-
-- List of all athletes with filters
-- Detailed information about the athlete
-  - Parents' sifting
-  - Athlete history page
-    - Attendance history
-    - Team history
-    - History of statuses
-
-###### Measurements page
-
-- Selecting an athlete
-- Performing existing measurements
-- Creating new types of measurements
-
-###### Calendar
-
-- Display of all events (training, competitions)
-- Ability to add notes for the day
-- Detailed information about each event
-
-###### Statistics page
-
-- Annual statistics by athletes
-- athletes
-- Attendance (graphs)
-- Measurements (graphs)
-
-###### Payment page
-
-- Payment history for each athlete
-- All events for the selected period related to the athlete
-- details about the event
-- Sponsors and additional costs page
-
----
+6. History and tracking: the ability to view the full development history of of
+   the athlete and the team
 
 ### Where the application will develop
 
-1. Expansion to different sports and adaptation to their specifics
-2. Creating a mobile application for easy use by coaches on the go
-3. Creating a platform for the exchange of experience between coaches and the
-   development of training programs
-4. Create a social network for trenches with the ability to write messages and
-   offer joint training/competitions to other users.
+1. Creating a module - command gallery
+2. Creating a weather module for the selected location (tips for
+   planning/conducting events/activities)
+3. Creating a sports news module, with the possibility of customization
+   according to the selected location and preferred sports
+4. Creating a module for saving documents with the ability to edit and sort in
+   the (to make it easier - in the end, it should be a centralized repository in
+   where coaches can store important information for themselves, for example,
+   medical medical reports and certificates, permits to participate in
+   competitions, training plans and methodological materials, competition
+   results and analytical reports).
+5. Synchronization with Google Calendar
+6. Extensions for different sports and adaptation to their specifics (for
+   example, the ability to create tactical schemes for example, the ability to
+   create tactical schemes for different types of disputes)
+7. Creating a module with chats and user search (social network module) for for
+   different fields
+8. Creating a module for joint planning of events/activities between accounts
+   accounts
+9. Creating a module of accounts for athletes.
+10. Create a module for the exchange of experience between coaches, forums
+    (development of training programs, event planning, etc.)
+11. Creating a mobile application
+12. Creating a module for tracking athletes' nutrition
+13. Creating a video conferencing module between accounts
 
 #### resources
 

@@ -4,7 +4,7 @@ import { ReactComponent as CloseIcon } from '../../assets/CloseIcon.svg';
 import { ReactComponent as MyAccount } from '../../assets/MyAccount.svg';
 import { ReactComponent as TeamIcon } from '../../assets/TeamIcon.svg';
 import { ReactComponent as StatisticsIcon } from '../../assets/StatisticsIcon.svg';
-import { ReactComponent as PaymentsIcon } from '../../assets/PaymentsIcon.svg';
+import { ReactComponent as FileIcon} from '../../assets/FileIcon.svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLogout } from '../../redux/auth/authOperations';
 
@@ -108,8 +108,8 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       ]
     },
     { 
-      name: 'Платежі', 
-      icon:  <SidebarIcon><PaymentsIcon /></SidebarIcon>, 
+      name: 'Файли', 
+      icon:  <SidebarIcon><FileIcon /></SidebarIcon>, 
       submenu: [
         { name: 'Teams', path: '/payment-history' },
         { name: 'Sponsors & Additional-Expenses', path: '/sponsors-and-expensess-payments' }

@@ -35,6 +35,9 @@ const TeamCreate = () => {
   const navigate = useNavigate();
   
   const { createTeamStatus, createTeamError } = useSelector((state) => state.teams);
+  // Add this to get the newly created team directly from the redux store
+  const teamsState = useSelector((state) => state.teams);
+  
   const loading = createTeamStatus === 'loading';
   
   const [photo, setPhoto] = useState(null);
@@ -60,15 +63,22 @@ const TeamCreate = () => {
   }, [setTitle, dispatch, photoPreview]);
 
   useEffect(() => {
-    if (createTeamStatus === 'succeeded') {
+    if (createTeamStatus === 'succeeded' && teamsState.teams.length > 0) {
+      // Get the most recently created team (should be at the beginning of the array)
+      const newTeam = teamsState.teams[0];
+      
       toast.success('Команду успішно створено!');
+      
+      // Navigate to the team page
+      navigate(`/teams/${newTeam.id}`);
+      
       dispatch(resetCreateTeamStatus());
     }
     
     if (createTeamStatus === 'failed' && createTeamError) {
       toast.error(createTeamError);
     }
-  }, [createTeamStatus, createTeamError, navigate, dispatch]);
+  }, [createTeamStatus, createTeamError, navigate, dispatch, teamsState.teams]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
