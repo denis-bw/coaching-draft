@@ -234,25 +234,28 @@ const AthletesList = () => {
     }
   };
 
-  const handleFilterClick = (filter) => {
-    dispatch(setFilterType(filter));
-    setIsDropdownOpen(false);
+const handleFilterClick = (filter) => {
+  dispatch(setFilterType(filter));
+  setIsDropdownOpen(false);
 
-    if (athletesListRef.current) {
-      athletesListRef.current.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
-    
-    dispatch(resetAthletes());
-    
-    if (searchQuery) {
-      dispatch(searchAthletes({ name: searchQuery, page: 1, filter }));
-    } else {
-      dispatch(fetchAthletes({ page: 1, filter }));
-    }
-  };
+  if (athletesListRef.current) {
+    athletesListRef.current.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }
+  
+  const currentSearchQuery = searchQuery;
+  
+  dispatch(resetAthletes());
+  
+  if (currentSearchQuery) {
+    dispatch(setSearchQuery(currentSearchQuery));
+    dispatch(searchAthletes({ name: currentSearchQuery, page: 1, filter }));
+  } else {
+    dispatch(fetchAthletes({ page: 1, filter }));
+  }
+};
 
   const athletesToDisplay = list.map(id => {
     const athlete = entities[id];

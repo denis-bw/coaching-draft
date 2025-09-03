@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchTeams, searchTeams, createTeam } from './teamsOperations';
+import { fetchTeams, searchTeams, createTeam, fetchTeamDetails, updateTeam, deleteTeam } from './teamsOperations';
 
 const initialState = {
   teams: [],
@@ -13,8 +13,16 @@ const initialState = {
   isSearchMode: false,
   searchPage: 1,
   isAllDataLoaded: false,
+  
   createTeamStatus: 'idle', 
-  createTeamError: null
+  createTeamError: null,
+  teamDetails: null,
+  fetchTeamDetailsStatus: 'idle',
+  fetchTeamDetailsError: null,
+  updateTeamStatus: 'idle',
+  updateTeamError: null,
+  deleteTeamStatus: 'idle',
+  deleteTeamError: null
 };
 
 const teamsSlice = createSlice({
@@ -67,11 +75,23 @@ const teamsSlice = createSlice({
     resetCreateTeamStatus: (state) => {
       state.createTeamStatus = 'idle';
       state.createTeamError = null;
+    },
+    resetFetchTeamDetailsStatus: (state) => {
+      state.fetchTeamDetailsStatus = 'idle';
+      state.fetchTeamDetailsError = null;
+      state.teamDetails = null;
+    },
+    resetUpdateTeamStatus: (state) => {
+      state.updateTeamStatus = 'idle';
+      state.updateTeamError = null;
+    },
+    resetDeleteTeamStatus: (state) => {
+      state.deleteTeamStatus = 'idle';
+      state.deleteTeamError = null;
     }
   },
   extraReducers: (builder) => {
     builder
-   
       .addCase(fetchTeams.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -113,6 +133,7 @@ const teamsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || 'Помилка при завантаженні команд';
       })
+      
       .addCase(searchTeams.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -148,6 +169,7 @@ const teamsSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || 'Помилка при пошуку команд';
       })
+      
       .addCase(createTeam.pending, (state) => {
         state.createTeamStatus = 'loading';
         state.createTeamError = null;
@@ -167,6 +189,84 @@ const teamsSlice = createSlice({
         state.createTeamError = action.payload || 'Помилка при створенні команди';
       })
       
+      .addCase(fetchTeamDetails.pending, (state) => {
+        state.fetchTeamDetailsStatus = 'loading';
+        state.fetchTeamDetailsError = null;
+      })
+      .addCase(fetchTeamDetails.fulfilled, (state, action) => {
+        state.fetchTeamDetailsStatus = 'succeeded';
+        state.teamDetails = action.payload;
+        
+        if (action.payload && action.payload.id) {
+          state.allTeams[action.payload.id] = {
+            id: action.payload.id,
+            name: action.payload.name,
+            logo: action.payload.logo
+          };
+        }
+      })
+      .addCase(fetchTeamDetails.rejected, (state, action) => {
+        state.fetchTeamDetailsStatus = 'failed';
+        state.fetchTeamDetailsError = action.payload || 'Помилка при завантаженні деталей команди';
+      })
+      
+      .addCase(updateTeam.pending, (state) => {
+        state.updateTeamStatus = 'loading';
+        state.updateTeamError = null;
+      })
+      .addCase(updateTeam.fulfilled, (state, action) => {
+        state.updateTeamStatus = 'succeeded';
+        const updatedTeam = action.payload;
+        
+        if (state.teamDetails && state.teamDetails.id === updatedTeam.id) {
+          state.teamDetails = { ...state.teamDetails, ...updatedTeam };
+        }
+        
+        if (state.allTeams[updatedTeam.id]) {
+          state.allTeams[updatedTeam.id] = {
+            ...state.allTeams[updatedTeam.id],
+            name: updatedTeam.name,
+            logo: updatedTeam.logo
+          };
+        }
+        
+        const teamIndex = state.teams.findIndex(team => team.id === updatedTeam.id);
+        if (teamIndex !== -1) {
+          state.teams[teamIndex] = {
+            ...state.teams[teamIndex],
+            name: updatedTeam.name,
+            logo: updatedTeam.logo
+          };
+        }
+      })
+      .addCase(updateTeam.rejected, (state, action) => {
+        state.updateTeamStatus = 'failed';
+        state.updateTeamError = action.payload || 'Помилка при оновленні команди';
+      })
+      
+      .addCase(deleteTeam.pending, (state) => {
+        state.deleteTeamStatus = 'loading';
+        state.deleteTeamError = null;
+      })
+      .addCase(deleteTeam.fulfilled, (state, action) => {
+        state.deleteTeamStatus = 'succeeded';
+        const deletedTeamId = action.payload.deletedTeamId;
+        
+        state.teams = state.teams.filter(team => team.id !== deletedTeamId);
+        
+        if (state.allTeams[deletedTeamId]) {
+          delete state.allTeams[deletedTeamId];
+        }
+        
+        if (state.teamDetails && state.teamDetails.id === deletedTeamId) {
+          state.teamDetails = null;
+        }
+      })
+      .addCase(deleteTeam.rejected, (state, action) => {
+        state.deleteTeamStatus = 'failed';
+        state.deleteTeamError = action.payload || 'Помилка при видаленні команди';
+      })
+      
       .addMatcher(
         action => action.type === 'app/resetAllData',
         (state) => {
@@ -176,5 +276,14 @@ const teamsSlice = createSlice({
   },
 });
 
-export const { resetTeams, setSearchQuery, filterLocalTeams, resetCreateTeamStatus } = teamsSlice.actions;
+export const { 
+  resetTeams, 
+  setSearchQuery, 
+  filterLocalTeams, 
+  resetCreateTeamStatus,
+  resetFetchTeamDetailsStatus,
+  resetUpdateTeamStatus,
+  resetDeleteTeamStatus
+} = teamsSlice.actions;
+
 export default teamsSlice.reducer;

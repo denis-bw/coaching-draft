@@ -70,3 +70,59 @@ export const searchAthletes = createAsyncThunk(
     }
   }
 );
+
+export const searchTeamAthletes = createAsyncThunk(
+  'teamAthletes/searchTeamAthletes',
+  async ({ teamId, query = '', page = 1 }, thunkApi) => {
+    try {
+      const response = await requestWrapper(
+        () => axios.get(`athletes/team/${teamId}/search?page=${page}&query=${encodeURIComponent(query)}`),
+        thunkApi.dispatch
+      );
+      
+      return {
+        ...response.data,
+        page,
+        query,
+        teamId
+      };
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        return { athletes: [], noMorePages: true, page, query, teamId };
+      }
+      if (!err.response) {
+        return thunkApi.rejectWithValue('Сервер не відповідає. Спробуйте пізніше.');
+      }
+      return thunkApi.rejectWithValue(err.response.data.message || 'Помилка при пошуку спортсменів команди');
+    }
+  }
+);
+
+export const updateTeamAthletes = createAsyncThunk(
+  'teamAthletes/updateTeamAthletes',
+  async ({ teamId, operation, athleteIds }, thunkApi) => {
+    try {
+      const endpoint = operation === 'add' 
+        ? `teams/${teamId}/athletes/add`
+        : `teams/${teamId}/athletes/remove`;
+      
+      const response = await requestWrapper(
+        () => axios.patch(endpoint, { athleteIds }),
+        thunkApi.dispatch
+      );
+      
+      return {
+        ...response.data,
+        operation,
+        athleteIds,
+        teamId
+      };
+    } catch (err) {
+      if (!err.response) {
+        return thunkApi.rejectWithValue('Сервер не відповідає. Спробуйте пізніше.');
+      }
+      const action = operation === 'add' ? 'додаванні до команди' : 'видаленні з команди';
+      return thunkApi.rejectWithValue(err.response.data.message || `Помилка при ${action} спортсменів`);
+    }
+  }
+);

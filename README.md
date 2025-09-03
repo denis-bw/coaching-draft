@@ -73,6 +73,8 @@ scalability to meet the needs of users. scalability to meet the needs of users.
 11. Creating a mobile application
 12. Creating a module for tracking athletes' nutrition
 13. Creating a video conferencing module between accounts
+14. Creating vacancies by institutions/coaches (attracting new athletes for
+    athletes' sections, new employees in institutions)
 
 #### resources
 
