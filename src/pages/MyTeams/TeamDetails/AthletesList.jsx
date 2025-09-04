@@ -5,6 +5,9 @@ import { resetAthletes, resetTeamAthletes } from '../../../redux/athletes/athlet
 import Loader from '../../../components/Loader/Loader';
 import styled from 'styled-components';
 import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
+import { ReactComponent as PlusIcon } from "../../../assets/plus.svg";
+import { ReactComponent as MinusIcon } from "../../../assets/minus.svg";
+import { ReactComponent as CloseIcon } from "../../../assets/CloseIcon.svg";
 
 const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
   const dispatch = useDispatch();
@@ -205,42 +208,40 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
 
   return (
     <>
-      {showConfirmModal && pendingAction && (
-        <ModalOverlay>
-          <ModalContent>
-            <ModalHeader>
-              Підтвердження дії
-            </ModalHeader>
-            <ModalBody>
-              <ModalText>
-                Ви впевнені, що хочете {pendingAction.type === 'add' ? 'додати до команди' : 'видалити з команди'} 
-                {' '}{pendingAction.count} спортсмен{pendingAction.count > 1 ? 'ів' : ''}?
-              </ModalText>
-              
-              {pendingAction.count <= 5 && (
-                <AthletesListItem>
-                  {getSelectedAthletesNames().map((name, index) => (
-                    <AthleteNameItem key={index}>• {name}</AthleteNameItem>
-                  ))}
-                </AthletesListItem>
-              )}
-            </ModalBody>
-            <ModalActions>
-              <ConfirmButton 
-                onClick={confirmAction}
-                $actionType={pendingAction.type}
-              >
-                {pendingAction.type === 'add' ? 'Додати' : 'Видалити'}
-              </ConfirmButton>
-              <CancelButton onClick={cancelAction}>
-                Скасувати
-              </CancelButton>
-            </ModalActions>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+     {showConfirmModal && pendingAction && (
+  <ModalOverlay>
+    <ModalContent>
+      <ModalHeader>
+        Підтвердження дії
+      </ModalHeader>
+      <ModalBody>
+        <ModalText>
+          Ви впевнені, що хочете {pendingAction.type === 'add' ? 'додати до команди' : 'видалити з команди'} 
+          {' '}{pendingAction.count} спортсмен{pendingAction.count > 1 ? 'ів' : 'а'}?
+        </ModalText>
+        
+        <AthletesListItem>
+          {getSelectedAthletesNames().map((name, index) => (
+            <AthleteNameItem key={index}>• {name}</AthleteNameItem>
+          ))}
+        </AthletesListItem>
+      </ModalBody>
+      <ModalActions>
+        <ConfirmButton 
+          onClick={confirmAction}
+          $actionType={pendingAction.type}
+        >
+          {pendingAction.type === 'add' ? 'Додати' : 'Видалити'}
+        </ConfirmButton>
+        <CancelButton onClick={cancelAction}>
+          Скасувати
+        </CancelButton>
+      </ModalActions>
+    </ModalContent>
+  </ModalOverlay>
+)}
 
-      <AthletesContainer $hasSelectedAthletes={selectedAthletes.size > 0}>
+      <AthletesContainer>
         <AthletesHeader>
           <TabsContainer>
             <TabButton 
@@ -261,6 +262,7 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
         <AthletesListContainer>
           <AthletesScrollContainer 
             ref={activeTab === 'add' ? athletesListRef : teamAthletesListRef}
+            $hasSelectedAthletes={selectedAthletes.size > 0}
           >
             {athletesToDisplay.length > 0 ? (
               athletesToDisplay.map(athlete => (
@@ -285,14 +287,22 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
                     </AthleteInfo>
                     <ActionIconWrapper>
                       {selectedAthletes.has(athlete.id) ? (
-                        <CancelIcon 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAthleteSelect(athlete.id);
-                          }}
-                        />
+                        <IconCircle $iconType="close">
+                          <StyledCloseIcon
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAthleteSelect(athlete.id);
+                            }}
+                          />
+                        </IconCircle>
+                      ) : activeTab === 'add' ? (
+                        <IconCircle $iconType="add">
+                          <StyledPlusIcon />
+                        </IconCircle>
                       ) : (
-                        <ActionIcon $actionType={activeTab} />
+                        <IconCircle $iconType="remove">
+                          <StyledMinusIcon />
+                        </IconCircle>
                       )}
                     </ActionIconWrapper>
                   </AthleteItemStyled>
@@ -311,26 +321,25 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
               </LoaderContainer>
             )}
           </AthletesScrollContainer>
-        </AthletesListContainer>
 
-        {/* Панель дій для вибраних спортсменів */}
-        {selectedAthletes.size > 0 && (
-          <ActionsPanel>
-            <ActionsPanelContent>
-              <SelectedCount>
-                Обрано: {selectedAthletes.size} спортсмен{selectedAthletes.size > 1 ? 'ів' : ''}
-              </SelectedCount>
-              <ActionButtons>
-                <ConfirmActionButton onClick={handleConfirmAction}>
-                  {activeTab === 'add' ? 'Додати' : 'Видалити'}
-                </ConfirmActionButton>
-                <CancelActionButton onClick={handleCancelSelection}>
-                  Скасувати
-                </CancelActionButton>
-              </ActionButtons>
-            </ActionsPanelContent>
-          </ActionsPanel>
-        )}
+          {selectedAthletes.size > 0 && (
+            <ActionsPanel>
+              <ActionsPanelContent>
+                <SelectedCount>
+                  Обрано: {selectedAthletes.size} спортсмен{selectedAthletes.size > 1 ? 'ів' : 'а'}
+                </SelectedCount>
+                <ActionButtons>
+                  <ConfirmActionButton onClick={handleConfirmAction}>
+                    {activeTab === 'add' ? 'Додати' : 'Видалити'}
+                  </ConfirmActionButton>
+                  <CancelActionButton onClick={handleCancelSelection}>
+                    Скасувати
+                  </CancelActionButton>
+                </ActionButtons>
+              </ActionsPanelContent>
+            </ActionsPanel>
+          )}
+        </AthletesListContainer>
       </AthletesContainer>
     </>
   );
@@ -352,7 +361,7 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background-color: ${({ theme }) => theme.white};
+  background-color: ${({ theme }) => theme.ContainerBGColor};
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   max-width: 480px;
@@ -387,8 +396,27 @@ const AthletesListItem = styled.div`
   border-radius: 8px;
   padding: 12px 16px;
   margin-top: 16px;
-  max-height: 150px;
+  max-height: 120px; 
   overflow-y: auto;
+  border: 1px solid ${({ theme }) => theme.lightGreen};
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.white};
+    border-radius: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.greenMain};
+    border-radius: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: ${({ theme }) => theme.darkGreen};
+  }
 `;
 
 const AthleteNameItem = styled.div`
@@ -448,7 +476,7 @@ const CancelButton = styled.button`
 const AthletesContainer = styled.div`
   width: 100%;
   max-width: 100%;
-  height: ${({ $hasSelectedAthletes }) => $hasSelectedAthletes ? '360px' : '320px'};
+  height: 330px;
   display: flex;
   flex-direction: column;
   background-color: ${({ theme }) => theme.ContainerBGColor};
@@ -456,7 +484,6 @@ const AthletesContainer = styled.div`
   border: 1px solid ${({ theme }) => theme.greenMain};
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: height 0.2s ease-in-out;
 `;
 
 const AthletesHeader = styled.div`
@@ -466,7 +493,7 @@ const AthletesHeader = styled.div`
 
 const TabsContainer = styled.div`
   display: flex;
-  border-radius: 10px 10px 0 0;
+  border-radius: 6px 10px 0 0;
   overflow: hidden;
 `;
 
@@ -474,9 +501,9 @@ const TabButton = styled.button`
   flex: 1;
   padding: 12px 16px;
   background-color: ${({ $isActive, theme }) => 
-    $isActive ? theme.greenMain : theme.white};
+    $isActive ? theme.greenMain : theme.ContainerBGColor};
   color: ${({ $isActive, theme }) => 
-    $isActive ? theme.white : theme.greenMain};
+    $isActive ? theme.white : theme.textBlack};
   border: none;
   cursor: pointer;
   font-size: 14px;
@@ -493,6 +520,10 @@ const TabButton = styled.button`
     color: ${({ $isActive, theme }) => 
       $isActive ? theme.white : theme.white};
   }
+
+  @media (max-width: 390px) { 
+     font-size: 12px;
+  }
 `;
 
 const AthletesListContainer = styled.div`
@@ -503,12 +534,18 @@ const AthletesListContainer = styled.div`
 
 const AthletesScrollContainer = styled.div`
   height: 100%;
-  max-height: 240px;
+  max-height: ${({ $hasSelectedAthletes }) => $hasSelectedAthletes ? '218px' : '270px'};
   overflow-y: auto;
-  padding: 12px;
+  padding: 0 12px 12px 12px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;
+  transition: max-height 0.2s ease-in-out;
+
+  @media (max-width: 768px) {
+    max-height: ${({ $hasSelectedAthletes }) => $hasSelectedAthletes ? '190px' : '270px'};
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -595,87 +632,90 @@ const ActionIconWrapper = styled.div`
   flex-shrink: 0;
 `;
 
-const ActionIcon = styled.div`
-  width: 18px;
-  height: 18px;
+const IconCircle = styled.div`
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background-color: ${({ $actionType, theme }) => 
-    $actionType === 'add' ? theme.greenMain : theme.red};
+  background-color: ${({ $iconType, theme }) => {
+    switch ($iconType) {
+      case 'add':
+        return theme.greenMain;
+      case 'remove':
+        return theme.red;
+      case 'close':
+        return theme.gray;
+      default:
+        return theme.gray;
+    }
+  }};
   cursor: pointer;
-  transition: transform 0.2s;
-  position: relative;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   
   &:hover {
     transform: scale(1.1);
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 10px;
-    height: 2px;
-    background-color: white;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 2px;
-    height: 10px;
-    background-color: white;
-    display: ${({ $actionType }) => $actionType === 'add' ? 'block' : 'none'};
+    background-color: ${({ $iconType, theme }) => {
+      switch ($iconType) {
+        case 'add':
+          return theme.darkGreen;
+        case 'remove':
+          return theme.redDark;
+        case 'close':
+          return theme.textGray;
+        default:
+          return theme.textGray;
+      }
+    }};
   }
 `;
 
-const CancelIcon = styled.div`
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background-color: ${({ theme }) => theme.gray};
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  flex-shrink: 0;
-  
-  &:hover {
-    transform: scale(1.1);
-    background-color: ${({ theme }) => theme.textGray};
-  }
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(45deg);
-    width: 10px;
-    height: 2px;
-    background-color: white;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-45deg);
-    width: 10px;
-    height: 2px;
-    background-color: white;
-  }
+const StyledPlusIcon = styled(PlusIcon)`
+  width: 15px;
+  height: 15px;
+  fill: ${({ theme }) => theme.white};
+  stroke: ${({ theme }) => theme.white};
+  stroke-width: 3px;
+`;
+
+const StyledMinusIcon = styled(MinusIcon)`
+  width: 15px;
+  height: 15px;
+  fill: ${({ theme }) => theme.white};
+  stroke: ${({ theme }) => theme.white};
+  stroke-width: 1px;
+`;
+
+const StyledCloseIcon = styled(CloseIcon)`
+  width: 15px;
+  height: 15px;
+  fill: ${({ theme }) => theme.white};
+    stroke: ${({ theme }) => theme.white};
+  stroke-width: 0.4px;
 `;
 
 const ActionsPanel = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background-color: ${({ theme }) => theme.lightGreen};
   border-top: 1px solid ${({ theme }) => theme.greenMain};
   padding: 8px 12px;
+  z-index: 10;
+  transform: translateY(100%);
+  animation: slideUp 0.3s ease-out forwards;
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
 `;
 
 const ActionsPanelContent = styled.div`
@@ -694,12 +734,17 @@ const SelectedCount = styled.div`
   font-size: 14px;
   font-weight: 500;
   color: ${({ theme }) => theme.textBlack};
-  flex-shrink: 0;
-  
+  flex-shrink: 1; 
+  min-width: 0; 
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
   @media (max-width: 768px) {
     font-size: 13px;
   }
 `;
+
 
 const ActionButtons = styled.div`
   display: flex;

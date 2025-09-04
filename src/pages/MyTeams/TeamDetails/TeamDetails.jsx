@@ -32,7 +32,14 @@ import {
   LoaderWrapper,
   TwoColumnLayout,
   FirstSection,
-  SecondSection
+  SecondSection,
+  DeleteConfirmModal,
+  DeleteConfirmContent,
+  DeleteConfirmTitle,
+  DeleteConfirmText,
+  DeleteConfirmActions,
+  DeleteConfirmButton,
+  DeleteCancelButton
 } from './TeamDetails.styled';
 import Loader from '../../../components/Loader/Loader';
 
@@ -273,8 +280,8 @@ const TeamDetails = () => {
     return (
       <Container>
         <Card style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2>Помилка завантаження</h2>
-          <p>{fetchTeamDetailsError}</p>
+          <h2 style={{ color: 'inherit' }}>Помилка завантаження</h2>
+          <p style={{ color: 'inherit' }}>{fetchTeamDetailsError}</p>
           <Button onClick={() => navigate('/teams')}>
             Повернутися до списку команд
           </Button>
@@ -287,7 +294,7 @@ const TeamDetails = () => {
     return (
       <Container>
         <Card style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2>Команду не знайдено</h2>
+          <h2 style={{ color: 'inherit' }}>Команду не знайдено</h2>
           <Button onClick={() => navigate('/teams')}>
             Повернутися до списку команд
           </Button>
@@ -305,62 +312,22 @@ const TeamDetails = () => {
       )}
       
       {showDeleteConfirm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            textAlign: 'center',
-            maxWidth: '400px',
-            margin: '20px'
-          }}>
-            <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Підтвердження видалення</h3>
-            <p style={{ marginBottom: '2rem' }}>
+        <DeleteConfirmModal>
+          <DeleteConfirmContent>
+            <DeleteConfirmTitle>Підтвердження видалення</DeleteConfirmTitle>
+            <DeleteConfirmText>
               Ви впевнені, що хочете видалити команду "{teamDetails.name}"?
-            </p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button 
-                onClick={confirmDelete}
-                style={{ 
-                  backgroundColor: '#f44336', 
-                  color: 'white', 
-                  border: 'none', 
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
-              >
+            </DeleteConfirmText>
+            <DeleteConfirmActions>
+              <DeleteConfirmButton onClick={confirmDelete}>
                 Видалити
-              </button>
-              <button 
-                onClick={cancelDelete}
-                style={{ 
-                  backgroundColor: '#e0e0e0', 
-                  color: '#333', 
-                  border: 'none', 
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
-              >
+              </DeleteConfirmButton>
+              <DeleteCancelButton onClick={cancelDelete}>
                 Скасувати
-              </button>
-            </div>
-          </div>
-        </div>
+              </DeleteCancelButton>
+            </DeleteConfirmActions>
+          </DeleteConfirmContent>
+        </DeleteConfirmModal>
       )}
 
       <Container blurred={updating || deleting || updatingAthletes}>
@@ -439,11 +406,7 @@ const TeamDetails = () => {
                 type="button" 
                 onClick={handleUpdate}
                 disabled={updating || !hasChanges}
-                style={{ 
-                  flex: 1,
-                  backgroundColor: hasChanges ? '#27913a' : '#e0e0e0',
-                  color: hasChanges ? 'white' : '#999'
-                }}
+                $hasChanges={hasChanges}
               >
                 {updating ? 'Збереження...' : 'Зберегти дані команди'}
               </Button>
@@ -451,12 +414,9 @@ const TeamDetails = () => {
                 type="button" 
                 onClick={handleDelete}
                 disabled={deleting}
-                style={{ 
-                  flex: 1,
-                  backgroundColor: '#f44336'
-                }}
+                $isDelete={true}
               >
-                {deleting ? 'Видалення...' : 'Видалити'}
+                {deleting ? 'Видалення...' : 'Видалити команду'}
               </Button>
             </div>
           </ButtonWrapper>

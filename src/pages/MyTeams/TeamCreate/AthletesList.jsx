@@ -5,7 +5,7 @@ import { fetchAthletes } from '../../../redux/athletes/athletesOperations';
 import { resetAthletes } from '../../../redux/athletes/athletesSlice';
 import Loader from '../../../components/Loader/Loader';
 import styled from 'styled-components';
-import { ReactComponent as OriginalRoadSignPointingRight } from '../../../assets/RoadSignPointingRight.svg';
+import { ReactComponent as OriginalCreateIcon } from '../../../assets/CreateIcon.svg';
 import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
 
 const AthletesList = ({ onAthletesSelect }) => {
@@ -154,7 +154,7 @@ const AthletesList = ({ onAthletesSelect }) => {
 
 export default AthletesList;
 
-const RoadSignPointingRightIcon = styled(OriginalRoadSignPointingRight)`
+const RoadSignPointingRightIcon = styled(OriginalCreateIcon)`
   width: 18px;
   height: 18px;
   fill: ${(p) => p.theme.iconColor};
@@ -221,7 +221,8 @@ const AthletesScrollContainer = styled.div`
   height: 100%;
   max-height: 350px;
   overflow-y: auto;
-  padding: 12px;
+  padding: 0 12px 12px 12px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
   gap: 6px;

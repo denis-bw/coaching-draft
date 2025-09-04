@@ -26,7 +26,7 @@ export const Container = styled.div`
   width: 100%;
   min-height: 100%;
   
-  background: ${({ blurred }) => (blurred ? 'rgba(255, 255, 255, 0.2)' : 'transparent')};
+  background: ${({ blurred, theme }) => (blurred ? `rgba(${theme.ContainerBGColor === '#ffffff' ? '255, 255, 255' : '77, 77, 77'}, 0.2)` : 'transparent')};
   backdrop-filter: ${({ blurred }) => (blurred ? 'blur(10px)' : 'none')};
   -webkit-backdrop-filter: ${({ blurred }) => (blurred ? 'blur(10px)' : 'none')};
   filter: ${({ blurred }) => (blurred ? 'blur(3px)' : 'none')};
@@ -268,22 +268,38 @@ export const Button = styled.button`
   max-width: 500px;
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: ${({ theme }) => theme.greenMain};
-  color: ${({ theme }) => theme.white};
+  background-color: ${({ theme, $hasChanges, $isDelete }) => {
+    if ($isDelete) return theme.red;
+    if ($hasChanges) return theme.greenMain;
+    return theme.disabledBG;
+  }};
+  color: ${({ theme, $hasChanges, $isDelete }) => {
+    if ($isDelete) return theme.white;
+    if ($hasChanges) return theme.white;
+    return theme.textGray;
+  }};
   border: none;
   border-radius: 0.5rem;
   font-size: 1rem;
   font-weight: 500;
-  cursor: pointer;
+  cursor: ${({ $hasChanges, $isDelete }) => ($hasChanges || $isDelete) ? 'pointer' : 'not-allowed'};
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    background-color: ${({ theme }) => theme.darkGreen};
+    background-color: ${({ theme, $hasChanges, $isDelete }) => {
+      if ($isDelete) return theme.redDark;
+      if ($hasChanges) return theme.darkGreen;
+      return theme.disabledBG;
+    }};
   }
 
   &:focus {
     outline: none;
-    background-color: ${({ theme }) => theme.darkGreen};
+    background-color: ${({ theme, $hasChanges, $isDelete }) => {
+      if ($isDelete) return theme.redDark;
+      if ($hasChanges) return theme.darkGreen;
+      return theme.disabledBG;
+    }};
   }
 
   &:disabled {
@@ -291,10 +307,100 @@ export const Button = styled.button`
     color: ${({ theme }) => theme.textGray};
     cursor: not-allowed;
   }
+
+  @media (max-width: ${breakpoints.desktop}) {
+    font-size: 0.8rem;
+  }
+
+`;
+
+export const DeleteConfirmModal = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+export const DeleteConfirmContent = styled.div`
+  background-color: ${({ theme }) => theme.ContainerBGColor};
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 400px;
+  margin: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+`;
+
+export const DeleteConfirmTitle = styled.h3`
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: ${({ theme }) => theme.textBlack};
+  font-size: 1.25rem;
+  font-weight: 600;
+`;
+
+export const DeleteConfirmText = styled.p`
+  margin-bottom: 2rem;
+  color: ${({ theme }) => theme.textBlack};
+  line-height: 1.5;
+`;
+
+export const DeleteConfirmActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+export const DeleteConfirmButton = styled.button`
+  background-color: ${({ theme }) => theme.red};
+  color: ${({ theme }) => theme.white};
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.redDark};
+  }
+
+  &:focus {
+    outline: 2px solid ${({ theme }) => theme.red};
+    outline-offset: 2px;
+  }
+`;
+
+export const DeleteCancelButton = styled.button`
+  background-color: ${({ theme }) => theme.gray};
+  color: ${({ theme }) => theme.white};
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: ${({ theme }) => theme.textGray};
+  }
+
+  &:focus {
+    outline: 2px solid ${({ theme }) => theme.gray};
+    outline-offset: 2px;
+  }
 `;
 
 export const CameraIcon = styled(OriginalCameraIcon)`
-  fill: ${(p) => p.theme.white};
+  fill: ${({ theme }) => theme.white};
   width: 14px;
   height: 14px;
   display: flex;
