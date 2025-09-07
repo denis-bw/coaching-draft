@@ -8,6 +8,8 @@ import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
 import { ReactComponent as PlusIcon } from "../../../assets/plus.svg";
 import { ReactComponent as MinusIcon } from "../../../assets/minus.svg";
 import { ReactComponent as CloseIcon } from "../../../assets/CloseIcon.svg";
+import { Link } from 'react-router-dom';
+
 
 const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
   const dispatch = useDispatch();

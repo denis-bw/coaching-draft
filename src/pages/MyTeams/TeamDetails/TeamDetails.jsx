@@ -42,6 +42,7 @@ import {
   DeleteCancelButton
 } from './TeamDetails.styled';
 import Loader from '../../../components/Loader/Loader';
+import TeamGallery from './TeamGallery';
 
 const TeamDetails = () => {
   const { teamId } = useParams();
@@ -400,6 +401,7 @@ const TeamDetails = () => {
             </SecondSection>
           </TwoColumnLayout>
           
+            <TeamGallery teamId={teamId} />
           <ButtonWrapper>
             <div style={{ display: 'flex', gap: '1rem', width: '100%', maxWidth: '500px' }}>
               <Button 
