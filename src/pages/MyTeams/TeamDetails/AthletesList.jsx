@@ -276,17 +276,28 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
                     $actionType={activeTab}
                   >
                     <AthleteIconWrapper>
+                    <ProfileLink
+                      to={`/athletes/${athlete.id}`}
+                      title={`Перейти до профілю спортсмена ${athlete.name}`}
+                      aria-label={`Перейти до профілю спортсмена ${athlete.name}`}
+                    >
                       <ProfileImageAthletes
                         loading="lazy"
                         src={athlete.photo || profilePlaceholder}
                         alt={athlete.name}
                       />
+                    </ProfileLink>
                     </AthleteIconWrapper>
-                    <AthleteInfo>
-                      <AthleteName $isSelected={selectedAthletes.has(athlete.id)}>
-                        {athlete.name}
-                      </AthleteName>
-                    </AthleteInfo>
+                      <AthleteInfo>
+                        <AthleteName
+                          $isSelected={selectedAthletes.has(athlete.id)}
+                          title={`Перейти до профілю спортсмена ${athlete.name}`} 
+                          aria-label={`Перейти до профілю спортсмена ${athlete.name}`} 
+                        >
+                          {athlete.name}
+                        </AthleteName>
+                      </AthleteInfo>
+
                     <ActionIconWrapper>
                       {selectedAthletes.has(athlete.id) ? (
                         <IconCircle $iconType="close">
@@ -582,7 +593,7 @@ const AthleteItemStyled = styled.div`
   color: ${({ theme, $isSelected }) => 
     $isSelected ? theme.white : theme.textBlack};
   border-radius: 8px;
-  cursor: pointer;
+  cursor: default;
   transition: all 0.2s;
   box-sizing: border-box;
 
@@ -612,6 +623,18 @@ const ProfileImageAthletes = styled.img`
   height: 100%;
   object-fit: cover;
 `;
+
+const ProfileLink = styled(Link)`
+
+  &:hover {
+  display: inline-block;
+  border: 2px solid black; 
+  border-radius: 50%;     
+  overflow: hidden;
+  border-color: black;  
+  }
+`;
+
 
 const AthleteInfo = styled.div`
   padding: 0 10px;
@@ -822,3 +845,4 @@ const LoaderContainer = styled.div`
   overflow: hidden; 
   margin: 0 auto;
 `;
+

@@ -224,9 +224,9 @@ const TeamGallery = ({ teamId }) => {
 
   // Видалення фото
   const handleDeletePhoto = (photoId) => {
-    if (window.confirm('Ви впевнені, що хочете видалити це фото?')) {
+    
       dispatch(deleteTeamPhoto({ teamId, photoId }));
-    }
+    
   };
 
   // Завантаження фото
@@ -321,6 +321,7 @@ const TeamGallery = ({ teamId }) => {
 
   return (
     <>
+      
       
       <GalleryContainer>
         <GalleryImageContainer onClick={handleOpenModal}>
@@ -463,12 +464,12 @@ const TeamGallery = ({ teamId }) => {
               </UploadProgress>
             )}
 
-            {deleting && (
-  <UploadProgress>
-    <Loader />
-  </UploadProgress>
+          
+              {deleting && (
+                  <UploadProgress>
+                    <Loader />
+                  </UploadProgress>
             )}
-            
             {/* Секція завантаження внизу, не блокує перегляд при завантаженні */}
             <UploadSection>
            
@@ -560,6 +561,12 @@ const TeamGallery = ({ teamId }) => {
           onClick={(e) => e.stopPropagation()} // блокуємо клік на фото
         />
 
+              
+        {deleting && (
+            <UploadProgress>
+              <Loader />
+            </UploadProgress>
+      )}
         <PhotoViewActions onClick={(e) => e.stopPropagation()}>
           <DownloadPhotoButton
             onClick={() =>
