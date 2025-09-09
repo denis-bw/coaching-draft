@@ -54,7 +54,7 @@ export const NavigationPrompt = ({ isOpen, onConfirm, onCancel }) => {
             Залишити сторінку
           </ConfirmButton>
           <CancelButton onClick={handleCancel}>
-            Продовжити роботу
+            Продовжити редагування
           </CancelButton>
         </ModalFooter>
       </ModalContent>

@@ -43,6 +43,9 @@ import {
 } from './TeamDetails.styled';
 import Loader from '../../../components/Loader/Loader';
 import TeamGallery from './TeamGallery';
+import { useNavigationPrompt } from '../../../hooks/useNavigationPrompt';
+import { NavigationPrompt } from '../../../components/NavigationPrompt/NavigationPrompt';
+
 
 const TeamDetails = () => {
   const { teamId } = useParams();
@@ -50,6 +53,7 @@ const TeamDetails = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
+
   const { 
     teamDetails, 
     fetchTeamDetailsStatus, 
@@ -77,7 +81,8 @@ const TeamDetails = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   const [hasChanges, setHasChanges] = useState(false);
-  
+
+  const [showPrompt, confirmNavigation, cancelNavigation] = useNavigationPrompt(hasChanges);
   const [validationErrors, setValidationErrors] = useState({
     teamName: false,
     ageCategory: false
@@ -123,7 +128,7 @@ const TeamDetails = () => {
       setHasChanges(false);
     }
   }, [teamDetails, setTitle]);
-
+  
   useEffect(() => {
     const nameChanged = teamName !== initialValues.teamName;
     const categoryChanged = ageCategory !== initialValues.ageCategory;
@@ -201,6 +206,7 @@ const TeamDetails = () => {
   };
 
   const handleAthletesChange = async ({ addedAthletes = [], removedAthletes = [] }) => {
+
     try {
       if (addedAthletes.length > 0) {
         await dispatch(updateTeamAthletes({
@@ -397,11 +403,15 @@ const TeamDetails = () => {
                 teamAthletes={teamDetails.athletes || []}
                 teamId={teamId} 
                 onAthletesChange={handleAthletesChange}
+                onSelectionChange={setHasChanges} 
               />
             </SecondSection>
           </TwoColumnLayout>
           
-            <TeamGallery teamId={teamId} />
+          <TeamGallery
+            teamId={teamId}
+            onSelectionChange={setHasChanges}
+          />
           <ButtonWrapper>
             <div style={{ display: 'flex', gap: '1rem', width: '100%', maxWidth: '500px' }}>
               <Button 
@@ -424,6 +434,12 @@ const TeamDetails = () => {
           </ButtonWrapper>
         </Card>
       </Container>
+
+      <NavigationPrompt 
+        isOpen={showPrompt}
+        onConfirm={confirmNavigation}
+        onCancel={cancelNavigation}
+    />
     </>
   );
 };

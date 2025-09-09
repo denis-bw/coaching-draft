@@ -36,7 +36,6 @@ import {
   CloseButton,
   PhotoGrid,
   PhotoItem,
-  PhotoImage,
   PhotoActions,      
   DownloadPhotoButton,
   DeletePhotoButton,
@@ -50,19 +49,19 @@ import {
   PhotoViewModal,
   PhotoViewOverlay,
   PhotoViewContent,
-  FullscreenPhoto,
   PhotoViewActions,
   ErrorImage,
   UploadProgress
 } from './TeamGallery.styled';
 import Loader from '../../../components/Loader/Loader';
+import ProgressiveImage from './ProgressiveImage';
 import imageNotFound from "../../../assets/ImageNotFound.png";
 import { ReactComponent as DeleteIcon } from '../../../assets/DeleteIcon.svg';
 import { ReactComponent as DownloadIcon } from '../../../assets/Download.svg';
 import { ReactComponent as CloseIcon } from '../../../assets/CloseIcon.svg';
+import PhotoZoom from './PhotoZoom';
 
-
-const TeamGallery = ({ teamId }) => {
+const TeamGallery = ({ teamId, onSelectionChange }) => {
   const dispatch = useDispatch();
   const { 
     teamGallery, 
@@ -72,7 +71,8 @@ const TeamGallery = ({ teamId }) => {
     uploadTeamPhotoStatus,
     deleteTeamPhotoStatus,
     storageInfo,
-    teamDetails
+    teamDetails,
+    uploadTeamPhotoError
   } = useSelector((state) => state.teams);
 
   const [showModal, setShowModal] = useState(false);
@@ -81,6 +81,7 @@ const TeamGallery = ({ teamId }) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [imageErrors, setImageErrors] = useState(new Set());
+  const [showImageErrorToast, setShowImageErrorToast] = useState(true); 
   
   const scrollContainerRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -89,7 +90,6 @@ const TeamGallery = ({ teamId }) => {
   const uploading = uploadTeamPhotoStatus === 'loading';
   const deleting = deleteTeamPhotoStatus === 'loading';
 
-  // Завантажуємо перші фото галереї при монтуванні
   useEffect(() => {
     if (teamId) {
       dispatch(resetTeamGallery());
@@ -101,10 +101,16 @@ const TeamGallery = ({ teamId }) => {
       dispatch(resetTeamGalleryStatus());
       setSelectedFile(null);
       setImageErrors(new Set());
+      setShowImageErrorToast(true); 
     };
   }, [teamId, dispatch]);
 
-  // Обробка результатів завантаження - галерея НЕ закривається
+   useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange(selectedFile !== null);
+    }
+   }, [selectedFile, onSelectionChange]);
+  
   useEffect(() => {
     if (uploadTeamPhotoStatus === 'succeeded') {
       toast.success('Фото успішно завантажено!');
@@ -114,25 +120,37 @@ const TeamGallery = ({ teamId }) => {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      // Галерея залишається відкритою
     }
 
     if (uploadTeamPhotoStatus === 'failed') {
-      toast.error('Помилка при завантаженні фото');
+      if (uploadTeamPhotoError) {
+        if (uploadTeamPhotoError.includes('File too large') || uploadTeamPhotoError.includes('max file size') || uploadTeamPhotoError.includes('size')) {
+          toast.error('Файл занадто великий (макс. 5MB)');
+        } else if (uploadTeamPhotoError.includes('Insufficient storage') || uploadTeamPhotoError.includes('not enough space') || uploadTeamPhotoError.includes('storage')) {
+          toast.error('Недостатньо місця в сховищі');
+        } else if (uploadTeamPhotoError.includes('Server not responding') || uploadTeamPhotoError.includes('network error') || uploadTeamPhotoError.includes('server')) {
+          toast.error('Сервер не відповідає');
+        } else if (uploadTeamPhotoError.includes('Invalid file type') || uploadTeamPhotoError.includes('file type') || uploadTeamPhotoError.includes('format')) {
+          toast.error('Файл не того формату');
+        } else {
+          toast.error('Помилка при завантаженні фото');
+        }
+      } else {
+        toast.error('Помилка при завантаженні фото');
+      }
+      
       dispatch(resetTeamGalleryStatus());
       
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
-  }, [uploadTeamPhotoStatus, dispatch]);
+  }, [uploadTeamPhotoStatus, uploadTeamPhotoError, dispatch]);
 
-  // Обробка результатів видалення
   useEffect(() => {
     if (deleteTeamPhotoStatus === 'succeeded') {
       toast.success('Фото успішно видалено!');
       dispatch(resetTeamGalleryStatus());
-      // Закриваємо перегляд фото якщо воно було видалено
       if (showPhotoView && selectedPhoto && !teamGallery.find(photo => photo.id === selectedPhoto.id)) {
         setShowPhotoView(false);
         setSelectedPhoto(null);
@@ -145,7 +163,6 @@ const TeamGallery = ({ teamId }) => {
     }
   }, [deleteTeamPhotoStatus, dispatch, showPhotoView, selectedPhoto, teamGallery]);
 
-  // Скрол для підвантаження фото
   const handleScroll = useCallback(() => {
     if (!scrollContainerRef.current || isLoadingMore || !galleryHasMore) return;
 
@@ -157,7 +174,11 @@ const TeamGallery = ({ teamId }) => {
       dispatch(fetchTeamGallery({ 
         teamId, 
         page: galleryCurrentPage + 1 
-      })).finally(() => {
+      })).unwrap().catch((error) => {
+        if (error.message && error.message.includes('Server not responding')) {
+          toast.error('Сервер не відповідає');
+        }
+      }).finally(() => {
         setIsLoadingMore(false);
       });
     }
@@ -171,23 +192,21 @@ const TeamGallery = ({ teamId }) => {
     }
   }, [handleScroll, showModal]);
 
-  // Обробка помилок завантаження зображень
   const handleImageError = (photoId) => {
     setImageErrors(prev => new Set([...prev, photoId]));
   };
 
-  // Обробка вибору файлу
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     
     if (file) {
       if (!file.type.startsWith('image/')) {
-        toast.warning('Можна завантажувати тільки зображення');
+        toast.error('Файл не того формату');
         return;
       }
       
       if (file.size > 5 * 1024 * 1024) {
-        toast.warning('Максимальний розмір файлу: 5MB');
+        toast.error('Файл занадто великий (макс. 5MB)');
         return;
       }
       
@@ -195,7 +214,6 @@ const TeamGallery = ({ teamId }) => {
     }
   };
 
-  // Скасування вибору файлу
   const handleClearFile = () => {
     setSelectedFile(null);
     if (fileInputRef.current) {
@@ -203,7 +221,6 @@ const TeamGallery = ({ teamId }) => {
     }
   };
 
-  // Завантаження вибраного файлу
   const handleUpload = async () => {
     if (!selectedFile) {
       toast.warning('Оберіть файл для завантаження');
@@ -214,25 +231,37 @@ const TeamGallery = ({ teamId }) => {
       if (storageInfo.remainingBytes < selectedFile.size) {
         const remainingMB = Math.round(storageInfo.remainingBytes / (1024 * 1024));
         const neededMB = Math.round(selectedFile.size / (1024 * 1024));
-        toast.error(`Недостатньо місця в сховищі. Залишилось: ${remainingMB}MB, потрібно: ${neededMB}MB`);
+        toast.error('Недостатньо місця в сховищі');
         return;
       }
     }
 
-    dispatch(uploadTeamPhoto({ teamId, photo: selectedFile }));
+    dispatch(uploadTeamPhoto({ teamId, photo: selectedFile })).unwrap().catch((error) => {
+     
+      if (error.message) {
+        if (error.message.includes('File too large')) {
+          toast.error('Файл занадто великий (макс. 5MB)');
+        } else if (error.message.includes('Insufficient storage')) {
+          toast.error('Недостатньо місця в сховищі');
+        } else if (error.message.includes('Server not responding')) {
+          toast.error('Сервер не відповідає');
+        } else if (error.message.includes('Invalid file type')) {
+          toast.error('Файл не того формату');
+        }
+      }
+    });
   };
 
-  // Видалення фото
   const handleDeletePhoto = (photoId) => {
-    
-      dispatch(deleteTeamPhoto({ teamId, photoId }));
-    
+    dispatch(deleteTeamPhoto({ teamId, photoId }));
   };
 
-  // Завантаження фото
   const handleDownloadPhoto = async (url, photoId) => {
     try {
       const res = await fetch(url, { mode: 'cors' });
+      if (!res.ok) {
+        throw new Error('Server not responding');
+      }
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
@@ -242,20 +271,27 @@ const TeamGallery = ({ teamId }) => {
       a.remove();
       URL.revokeObjectURL(a.href);
     } catch (e) {
-      toast.error('Не вдалося завантажити фото');
+      if (e.message.includes('Server not responding') || e.message.includes('Failed to fetch')) {
+        toast.error('Сервер не відповідає');
+      } else {
+        toast.error('Помилка завантаження фото');
+      }
       console.error(e);
     }
   };
 
-  // Відкриття галереї
   const handleOpenModal = () => {
     setShowModal(true);
+    setShowImageErrorToast(true); 
     if (teamGallery.length === 0) {
-      dispatch(fetchTeamGallery({ teamId, page: 1 }));
+      dispatch(fetchTeamGallery({ teamId, page: 1 })).unwrap().catch((error) => {
+        if (error.message && error.message.includes('Server not responding')) {
+          toast.error('Сервер не відповідає');
+        }
+      });
     }
   };
 
-  // Закриття галереї
   const handleCloseModal = () => {
     setShowModal(false);
     setShowPhotoView(false);
@@ -268,45 +304,26 @@ const TeamGallery = ({ teamId }) => {
     }
   };
 
-  // Відкриття фото на весь екран
   const handleOpenPhotoView = (photo) => {
-  
+    if (imageErrors.has(photo.id)) {
+      toast.error('Помилка завантаження фото');
+      return;
+    }
     setSelectedPhoto(photo);
     setShowPhotoView(true);
   };
 
-  // Закриття перегляду фото - повертаємося до галереї
   const handleClosePhotoView = () => {
     setShowPhotoView(false);
     setSelectedPhoto(null);
   };
 
-  // Обробка кліків в основній модалці галереї
   const handleModalOverlayClick = (e) => {
-    // Закриваємо галерею при кліку на прозорий фон
     if (e.target === e.currentTarget) {
       handleCloseModal();
     }
   };
 
-  // Запобігання закриттю при кліку на контент
-  const handleModalContentClick = (e) => {
-    e.stopPropagation();
-  };
-
-  // Обробка кліків в модалці перегляду фото
-  const handlePhotoViewOverlayClick = (e) => {
-    // Повертаємося до галереї при кліку на прозорий фон
-    if (e.target === e.currentTarget) {
-      handleClosePhotoView();
-    }
-  };
-
-  const handlePhotoViewContentClick = (e) => {
-    e.stopPropagation();
-  };
-
-  // Форматування розміру файлів
   const formatBytes = (bytes) => {
     if (bytes === 0) return '0 MB';
     const k = 1024;
@@ -318,11 +335,8 @@ const TeamGallery = ({ teamId }) => {
   const lastPhoto = teamGallery && teamGallery.length > 0 ? teamGallery[0] : null;
   const totalPhotos = teamDetails?.galleryCount || teamGallery.length || 0;
 
-
   return (
     <>
-      
-      
       <GalleryContainer>
         <GalleryImageContainer onClick={handleOpenModal}>
           <BackgroundImage 
@@ -331,52 +345,52 @@ const TeamGallery = ({ teamId }) => {
             onError={() => lastPhoto && handleImageError(lastPhoto.id)}
           />
           <GalleryOverlay>
-<GalleryInfo>
-  <GalleryTitle>Галерея команди</GalleryTitle>
-  <div style={{ 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '1rem', 
-    justifyContent: 'center',   
-    flexWrap: 'wrap',
-    marginBottom: '1rem'        
-  }}>
-    {totalPhotos > 0 ? (
-      <PhotoCounter>{totalPhotos} фото</PhotoCounter>
-    ) : (
-      <PhotoCounter>Поки що немає фото</PhotoCounter>
-    )}
+            <GalleryInfo>
+              <GalleryTitle>Галерея команди</GalleryTitle>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '1rem', 
+                justifyContent: 'center',   
+                flexWrap: 'wrap',
+                marginBottom: '1rem'        
+              }}>
+                {totalPhotos > 0 ? (
+                  <PhotoCounter>{totalPhotos} фото</PhotoCounter>
+                ) : (
+                  <PhotoCounter>Поки що немає фото</PhotoCounter>
+                )}
 
-    {storageInfo && (
-      <StorageInfo>
-        <StorageText>
-          {formatBytes(storageInfo.usedBytes)} / {formatBytes(storageInfo.limitBytes)}
-        </StorageText>
-        <StorageBar>
-          <StorageBarFilled 
-            style={{ 
-              width: `${Math.min(storageInfo.usedPercentage, 100)}%`,
-              backgroundColor: storageInfo.usedPercentage > 90 ? '#ef4444' : 
-                              storageInfo.usedPercentage > 70 ? '#f59e0b' : '#10b981'
-            }} 
-          />
-        </StorageBar>
-      </StorageInfo>
-    )}
-  </div>
+                {storageInfo && (
+                  <StorageInfo>
+                    <StorageText>
+                      {formatBytes(storageInfo.usedBytes)} / {formatBytes(storageInfo.limitBytes)}
+                    </StorageText>
+                    <StorageBar>
+                      <StorageBarFilled 
+                        style={{ 
+                          width: `${Math.min(storageInfo.usedPercentage, 100)}%`,
+                          backgroundColor: storageInfo.usedPercentage > 90 ? '#ef4444' : 
+                                          storageInfo.usedPercentage > 70 ? '#f59e0b' : '#10b981'
+                        }} 
+                      />
+                    </StorageBar>
+                  </StorageInfo>
+                )}
+              </div>
 
-  <div style={{ display: 'flex', justifyContent: 'center' }}>
-    <ViewAllButton>
-      {totalPhotos > 0 ? 'Переглянути всі фото' : 'Додати фото'}
-    </ViewAllButton>
-  </div>
-</GalleryInfo>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <ViewAllButton>
+                  {totalPhotos > 0 ? 'Переглянути всі фото' : 'Додати фото'}
+                </ViewAllButton>
+              </div>
+            </GalleryInfo>
           </GalleryOverlay>
         </GalleryImageContainer>
       </GalleryContainer>
 
       {showModal && (
-        <Modal >
+        <Modal>
           <ModalOverlay onClick={handleModalOverlayClick}/>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
@@ -410,35 +424,38 @@ const TeamGallery = ({ teamId }) => {
                             onClick={() => handleOpenPhotoView(photo)}
                           />
                         ) : (
-                          <PhotoImage 
+                          <ProgressiveImage 
                             src={photo.url} 
                             alt={`Фото команди ${photo.id}`}
                             onClick={() => handleOpenPhotoView(photo)}
                             onError={() => handleImageError(photo.id)}
+                            loading="lazy"
+                            $borderRadius="8px"
+                            $objectFit="cover"
+                            $cursor="pointer"
                           />
                         )}
                         <PhotoActions className="photo-actions">
-          <DownloadPhotoButton 
-  onClick={(e) => {
-    e.stopPropagation();
-    handleDownloadPhoto(photo.url, photo.id);
-  }}
-  disabled={deleting || uploading || imageErrors.has(photo.id)}
-  title={imageErrors.has(photo.id) ? "Фото недоступне для завантаження" : "Завантажити фото"}
->
-  <DownloadIcon style={{ width: '1.2rem', height: '1.2rem' }} />
-</DownloadPhotoButton>
-<DeletePhotoButton 
-  onClick={(e) => {
-    e.stopPropagation();
-    handleDeletePhoto(photo.id);
-  }}
-  disabled={deleting || uploading}
-  title={deleting || uploading ? "Не можна видалити фото зараз" : "Видалити фото"}
->
-  <DeleteIcon />
-</DeletePhotoButton>
-
+                          <DownloadPhotoButton 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadPhoto(photo.url, photo.id);
+                            }}
+                            disabled={deleting || uploading || imageErrors.has(photo.id)}
+                            title={imageErrors.has(photo.id) ? "Фото недоступне для завантаження" : "Завантажити фото"}
+                          >
+                            <DownloadIcon style={{ width: '1.2rem', height: '1.2rem' }} />
+                          </DownloadPhotoButton>
+                          <DeletePhotoButton 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePhoto(photo.id);
+                            }}
+                            disabled={deleting || uploading}
+                            title={deleting || uploading ? "Не можна видалити фото зараз" : "Видалити фото"}
+                          >
+                            <DeleteIcon />
+                          </DeletePhotoButton>
                         </PhotoActions>
                       </PhotoItem>
                     ))}
@@ -449,31 +466,27 @@ const TeamGallery = ({ teamId }) => {
                       <Loader />
                     </ScrollLoader>
                   )}
-          
                 </>
               ) : (
                 <EmptyState>
-                  < NoPhotosMessage>Поки що немає фотографій</ NoPhotosMessage>
+                  <NoPhotosMessage>Поки що немає фотографій</NoPhotosMessage>
                 </EmptyState>
               )}
             </div>
                
-                {uploading && (
+            {uploading && (
               <UploadProgress>
                 <Loader />
               </UploadProgress>
             )}
 
-          
-              {deleting && (
-                  <UploadProgress>
-                    <Loader />
-                  </UploadProgress>
+            {deleting && (
+              <UploadProgress>
+                <Loader />
+              </UploadProgress>
             )}
-            {/* Секція завантаження внизу, не блокує перегляд при завантаженні */}
+
             <UploadSection>
-           
-              
               {selectedFile && (
                 <div style={{
                   background: 'rgba(255, 255, 255, 0.9)',
@@ -504,13 +517,13 @@ const TeamGallery = ({ teamId }) => {
                     }}
                   >
                      <CloseIcon 
-    style={{ 
-      width: '1rem', 
-      height: '1rem', 
-      color: '#ef4444', 
-      fill: '#ef4444' 
-    }} 
-  />
+                      style={{ 
+                        width: '1rem', 
+                        height: '1rem', 
+                        color: '#ef4444', 
+                        fill: '#ef4444' 
+                      }} 
+                    />
                   </button>
                 </div>
               )}
@@ -539,34 +552,42 @@ const TeamGallery = ({ teamId }) => {
                   </UploadButton>
                 )}
               </div>
-
-              
             </UploadSection>
           </ModalContent>
         </Modal>
       )}
 
-      {/* Модалка повноекранного перегляду фото */}
-{showPhotoView && (
-  <PhotoViewModal   onClick={(e) => {
-            e.stopPropagation();
-            setShowPhotoView(false);
-            setSelectedPhoto(null);
-          }}>
-    <PhotoViewWrapper>
-      <PhotoViewContent>
-        <FullscreenPhoto
+      {showPhotoView && (
+        <PhotoViewModal onClick={(e) => {
+          e.stopPropagation();
+          setShowPhotoView(false);
+          setSelectedPhoto(null);
+        }}>
+          <PhotoViewWrapper>
+            <PhotoViewContent>
+              <PhotoZoom
           src={selectedPhoto?.url}
           alt="Перегляд фото"
-          onClick={(e) => e.stopPropagation()} // блокуємо клік на фото
+          onClick={(e) => e.stopPropagation()}
+          onError={() => {
+            toast.error('Помилка завантаження фото');
+            setShowPhotoView(false);
+          }}
+          style={{ 
+            width: '100%', 
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
         />
-
-              
+        
         {deleting && (
-            <UploadProgress>
-              <Loader />
-            </UploadProgress>
-      )}
+          <UploadProgress>
+            <Loader />
+          </UploadProgress>
+        )}
+        
         <PhotoViewActions onClick={(e) => e.stopPropagation()}>
           <DownloadPhotoButton
             onClick={() =>
@@ -577,13 +598,11 @@ const TeamGallery = ({ teamId }) => {
             <DownloadIcon style={{ width: '1.2rem', height: '1.2rem' }} />
           </DownloadPhotoButton>
 
-
-
-        <DeletePhotoButton
-          onClick={() => handleDeletePhoto(selectedPhoto?.id)}
-        >
-          <DeleteIcon style={{ width: '1.2rem', height: '1.2rem' }} />
-        </DeletePhotoButton>
+          <DeletePhotoButton
+            onClick={() => handleDeletePhoto(selectedPhoto?.id)}
+          >
+            <DeleteIcon style={{ width: '1.2rem', height: '1.2rem' }} />
+          </DeletePhotoButton>
         </PhotoViewActions>
 
         <CloseButton
@@ -598,9 +617,7 @@ const TeamGallery = ({ teamId }) => {
       </PhotoViewContent>
     </PhotoViewWrapper>
   </PhotoViewModal>
-)}
-
-
+      )}
     </>
   );
 };

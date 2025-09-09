@@ -310,24 +310,46 @@ export const Value = styled.p`
 `;
 
 export const RemoveButton = styled.button`
-
-  width: 20px;
-  height: 20px;
+  background: none;
   border-radius: 50%;
-  background-color: ${({ theme }) => theme.mainBGColor};
-  display: flex;
+  border: 2px solid  ${({ theme }) => theme.red};
+  padding: 2px;
+  cursor: pointer;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  font-size: 10px;
   transition: all 0.2s;
+
+  svg {
+    stroke: ${({ theme }) => theme.red};
+    fill: none; /* важливо */
+    width: 1.2rem;  /* залишаємо розмір як у тебе */
+    height: 1.2rem;
+    transition: stroke 0.2s;
+  }
+
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.red};
+
+    svg {
+      stroke: ${({ theme }) => theme.white};
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    svg {
+      stroke: ${({ theme }) => theme.red};
+    }
+  }
 
   &:focus {
     outline: none;
   }
 
   &:focus-within svg {
-    stroke: ${(p) => p.theme.redDark};
+    stroke: ${({ theme }) => theme.redDark};
   }
-
 `;

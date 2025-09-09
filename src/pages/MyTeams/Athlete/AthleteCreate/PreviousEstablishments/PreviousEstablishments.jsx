@@ -72,7 +72,7 @@ const PreviousEstablishments = ({ onDataUpdate }) => {
       const timeDiff = exitDate.getTime() - entryDate.getTime();
       const diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
       
-      if (diffDays < 0) { // Змінено з <= 0 на < 0, щоб дозволити однакові дати
+      if (diffDays < 0) { 
         newErrors.exitDate = "Дата виходу має бути не раніше дати вступу";
       }
     }

@@ -190,7 +190,6 @@ export const ViewAllButton = styled.button`
   }
 `;
 
-// ВИПРАВЛЕНА модалка з матовим фоном та правильним закриттям
 export const Modal = styled.div`
   position: fixed;
   top: 0;
@@ -202,7 +201,6 @@ export const Modal = styled.div`
   align-items: center;
   justify-content: center;
   
-  // Матовий фон тільки там, де немає контенту
   &::before {
     content: '';
     position: absolute;
@@ -219,18 +217,17 @@ export const Modal = styled.div`
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4); // затемнення фону
+  background: rgba(0,0,0,0.4); 
   z-index: 10;
 `;
 
 export const ModalContent = styled.div`
   position: relative;
-  /* max-width: 900px; */
   width: 90%;
   height: 96vh;
   display: flex;
   flex-direction: column;
-  background: rgba(254, 254, 254, 0.1); // прозорий фон
+  background: rgba(254, 254, 254, 0.1);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 10px;
@@ -244,7 +241,7 @@ export const ModalHeader = styled.div`
   align-items: center;
   padding: 0.9rem;
 
-  background: rgba(255,255,255,0.1); // прозорий
+  background: rgba(255,255,255,0.1); 
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
   z-index: 2;
@@ -293,8 +290,8 @@ export const CloseButton = styled.button`
   position: absolute;
   top: 0.9rem;
   right: 1.5rem;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
+  background:  ${({ theme }) => theme.white};
+  border: 3px solid ${({ theme }) => theme.greenMain};
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 50%;
@@ -313,14 +310,6 @@ export const CloseButton = styled.button`
     transition: stroke 0.2s ease;
   }
 
-  &:hover {
-    background: ${({ theme }) => theme.white};
-    
-    svg {
-      stroke: ${({ theme }) => theme.textBlack}; 
-    }
-
-  }
 
   @media (max-width: 768px) {
     top: 0.6rem;
@@ -411,6 +400,7 @@ export const PhotoActions = styled.div`
   gap: 0.5rem;
   opacity: 0;
   transition: opacity 0.2s ease;
+  z-index: 10; 
 
   @media (max-width: 768px) {
     opacity: 1;
@@ -456,7 +446,7 @@ export const DeletePhotoButton = styled(PhotoActionButton)`
 
 svg {
   stroke: ${({ theme }) => theme.red};
-  fill: none; // <- важливо
+  fill: none;
   width: 1.2rem;
   height: 1.2rem;
   transition: stroke 0.2s;
@@ -468,7 +458,7 @@ svg {
 
     svg {
       stroke: ${({ theme }) => theme.white};
-      fill: none; // <- важливо
+      fill: none; 
       width: 1.2rem;
       height: 1.2rem;
       transition: stroke 0.2s;
@@ -525,8 +515,8 @@ export const UploadSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  background: rgba(255, 255, 255, 0.5);   // більш матово
-  backdrop-filter: blur(30px);            // сильніший blur
+  background: rgba(255, 255, 255, 0.5);   
+  backdrop-filter: blur(30px);           
   position: sticky;
   bottom: 0;
 
@@ -609,8 +599,8 @@ export const UploadButton = styled.button`
 @media (max-width: 768px) {
   padding: 0.75rem 1.25rem;
   font-size: 0.85rem;
-  min-width: 100%;  // займає всю ширину контейнера
-  display: block;   // щоб точно була під одною
+  min-width: 100%;  
+  display: block;   
 
 }
 
@@ -640,12 +630,12 @@ export const EmptyState = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; // центрує по вертикалі
+  justify-content: center; 
   text-align: center;
   margin: 3rem 2rem;
   color: ${({ theme }) => theme.textGray};
   flex: 1;
-  min-height: 70%; // додаємо мінімальну висоту, щоб центр працював
+  min-height: 70%; 
 
   p {
     margin: 0 0 1rem 0;
@@ -671,42 +661,49 @@ export const EmptyGalleryIcon = styled.div`
 export const NoPhotosMessage = styled.p`
   text-align: center;
   font-size: 1rem;
-  color: ${({ theme }) => theme.textGray};
+  color: ${({ theme }) => theme.white};
   margin: 2rem auto;
   width: 100%;
 `;
 
-// ВИПРАВЛЕНА модалка повноекранного перегляду
 export const PhotoViewModal = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1500;
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.95);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 10000;
+  cursor: pointer;
+
+  body& {
+    overflow: hidden;
+  }
 `;
 
 export const PhotoViewOverlay = styled.div`
-  display: none; // Не потрібен окремий оверлей
+  display: none; 
 `;
 
 export const PhotoViewContent = styled.div`
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1501;
+  width: 90vw;
+  height: 90vh;
+  max-width: 1200px;
+  max-height: 800px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
 
   @media (max-width: 768px) {
-    padding: 1rem;
+    width: 95vw;
+    height: 85vh;
   }
 `;
 
@@ -742,3 +739,4 @@ export const PhotoViewActions = styled.div`
     gap: 0.5rem;
   }
 `;
+

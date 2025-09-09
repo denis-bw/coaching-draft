@@ -170,7 +170,7 @@ export const PhotoUploadButton = styled.label`
     background-color: ${({ theme }) => theme.darkGreen || '#388E3C'};
     box-shadow: 0 0 0 4px ${({ theme }) => theme.greenMain || '#4CAF50'}, 0 0 0 6px ${({ theme }) => theme.white || '#fff'};
   }
-
+  
   @media (min-width: ${breakpoints.desktop}) {
     width: 2.5rem;
     height: 2.5rem;
@@ -252,10 +252,12 @@ export const Input = styled.input`
       ${parseInt((theme.red || '#F44336').slice(5, 7), 16)}, 0.5)`};
   }
   
-  &:disabled {
-    background-color: ${({ theme }) => theme.disabledBG || '#e0e0e0'};
-    cursor: not-allowed;
-  }
+&:disabled {
+  background-color: ${({ theme }) => theme.disabledBG};
+  color: ${({ theme }) => theme.textGray};
+  cursor: not-allowed;
+}
+
 `;
 
 export const ButtonWrapper = styled.div`

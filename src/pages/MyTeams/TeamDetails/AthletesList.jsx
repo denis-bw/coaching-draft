@@ -11,8 +11,9 @@ import { ReactComponent as CloseIcon } from "../../../assets/CloseIcon.svg";
 import { Link } from 'react-router-dom';
 
 
-const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
+const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId, onSelectionChange  }) => {
   const dispatch = useDispatch();
+  
   
   const {
     entities,
@@ -46,6 +47,12 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId }) => {
   const loadingRef = useRef(false);
   const teamLoadingRef = useRef(false);
 
+    useEffect(() => {
+    if (onSelectionChange) {
+      onSelectionChange(selectedAthletes.size > 0);
+    }
+    }, [selectedAthletes, onSelectionChange]);
+  
   useEffect(() => {
     setSelectedAthletes(new Set());
   }, [activeTab]);

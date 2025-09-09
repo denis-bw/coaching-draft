@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -28,14 +28,15 @@ import {
   SecondSection
 } from './TeamCreate.styled';
 import Loader from '../../../components/Loader/Loader';
+import { useNavigationPrompt } from '../../../hooks/useNavigationPrompt';
+import { NavigationPrompt } from '../../../components/NavigationPrompt/NavigationPrompt';
 
 const TeamCreate = () => {
   const { setTitle } = useOutletContext();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
+
   const { createTeamStatus, createTeamError } = useSelector((state) => state.teams);
-  // Add this to get the newly created team directly from the redux store
   const teamsState = useSelector((state) => state.teams);
   
   const loading = createTeamStatus === 'loading';
@@ -45,12 +46,36 @@ const TeamCreate = () => {
   const [teamName, setTeamName] = useState("");
   const [ageCategory, setAgeCategory] = useState("");
   const [selectedAthletes, setSelectedAthletes] = useState([]);
-  
+
   const [validationErrors, setValidationErrors] = useState({
     teamName: false,
     ageCategory: false
   });
 
+  const [hasChanges, setHasChanges] = useState(false); 
+  const [showPrompt, confirmNavigation, cancelNavigation] = useNavigationPrompt(hasChanges);
+  
+  const isProgrammaticNavigation = useRef(false);
+  
+  const isSubmitDisabled = Object.values(validationErrors).some(Boolean) || 
+  !teamName.trim() || 
+  !ageCategory.trim();
+  
+  useEffect(() => {
+    const hasPhotoChanged = photo !== null;
+    const hasPhotoPreviewChanged = photoPreview !== null;
+    const hasTeamNameChanged = teamName !== "";
+    const hasAgeCategoryChanged = ageCategory !== "";
+    const hasAthletesChanged = selectedAthletes.length > 0;
+    
+    if (hasPhotoChanged || hasPhotoPreviewChanged || hasTeamNameChanged || 
+        hasAgeCategoryChanged || hasAthletesChanged) {
+      setHasChanges(true);
+    } else {
+      setHasChanges(false);
+    }
+  }, [photo, photoPreview, teamName, ageCategory, selectedAthletes]);
+  
   useEffect(() => {
     setTitle("Створення команди");
     
@@ -64,12 +89,19 @@ const TeamCreate = () => {
 
   useEffect(() => {
     if (createTeamStatus === 'succeeded' && teamsState.teams.length > 0) {
-      // Get the most recently created team (should be at the beginning of the array)
       const newTeam = teamsState.teams[0];
       
       toast.success('Команду успішно створено!');
       
-      // Navigate to the team page
+      isProgrammaticNavigation.current = true;
+      
+      setHasChanges(false);
+      setPhoto(null);
+      setPhotoPreview(null);
+      setTeamName('');
+      setAgeCategory('');
+      setSelectedAthletes([]);
+      
       navigate(`/teams/${newTeam.id}`);
       
       dispatch(resetCreateTeamStatus());
@@ -79,6 +111,13 @@ const TeamCreate = () => {
       toast.error(createTeamError);
     }
   }, [createTeamStatus, createTeamError, navigate, dispatch, teamsState.teams]);
+
+  useEffect(() => {
+    if (isProgrammaticNavigation.current && showPrompt) {
+      confirmNavigation();
+      isProgrammaticNavigation.current = false;
+    }
+  }, [showPrompt, confirmNavigation]);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -209,17 +248,29 @@ const TeamCreate = () => {
             </SecondSection>
           </TwoColumnLayout>
           
-          <ButtonWrapper>
-            <Button 
-              type="button" 
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? 'Створення...' : 'Створити команду'}
-            </Button>
-          </ButtonWrapper>
+         <ButtonWrapper>
+          <Button 
+            type="button" 
+            onClick={handleSubmit}
+            disabled={loading || isSubmitDisabled}
+          >
+            {loading 
+              ? 'Створення...' 
+              : isSubmitDisabled 
+                ? 'Заповніть обов\'язкові поля' 
+                : 'Створити команду'
+            }
+          </Button>
+        </ButtonWrapper>
+
         </Card>
       </Container>
+
+      <NavigationPrompt 
+        isOpen={showPrompt}
+        onConfirm={confirmNavigation}
+        onCancel={cancelNavigation}
+      />
     </>
   );
 };

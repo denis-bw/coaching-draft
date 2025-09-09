@@ -212,7 +212,7 @@ const FormDatePicker = ({
   let parsedMinDate = parseDate(minDate);
   
   if (parsedMinDate) {
-    parsedMinDate = addDays(parsedMinDate, 0); // Змінено з addDays(parsedMinDate, 1) на addDays(parsedMinDate, 0), щоб дозволити вибір однакової дати
+    parsedMinDate = addDays(parsedMinDate, 0);
   }
 
   return (

@@ -18,7 +18,7 @@ export const ModalOverlay = styled.div`
 export const ModalContent = styled.div`
   background: ${({ theme }) => theme.ContainerBGColor};  // Використовуємо тему
   padding: 24px;
-  border-radius: 8px;
+  border-radius: 14px;
   max-width: 400px;
   width: 90%;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -68,7 +68,7 @@ export const ModalFooter = styled.div`
 // Загальний стиль кнопки
 export const Button = styled.button`
   padding: 8px 16px;
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
@@ -87,12 +87,21 @@ export const Button = styled.button`
 
 
 export const CancelButton = styled(Button)`
-  background-color: ${({ theme }) => theme.greenMain};  
-  color: ${({ theme }) => theme.white}; 
+  
   width: 100%;
+  background-color: ${({ theme }) => theme.gray};
+  color: ${({ theme }) => theme.white};
+  cursor: pointer;
+  transition: background-color 0.2s;
+
   &:hover {
-    background-color: ${({ theme }) => theme.darkGreen};  
-    color: ${({ theme }) => theme.white};
+    background-color: ${({ theme }) => theme.black};
+  }
+
+  &:focus {
+    outline: 2px solid ${({ theme }) => theme.gray};
+    outline-offset: 2px;
+     background-color: ${({ theme }) => theme.black};
   }
 `;
 
@@ -103,5 +112,11 @@ export const ConfirmButton = styled(Button)`
   width: 100%;
   &:hover {
     background-color: ${({ theme }) => theme.redDark};  
+  }
+
+    &:focus {
+    outline: 2px solid ${({ theme }) => theme.gray};
+    outline-offset: 2px;
+     background-color: ${({ theme }) => theme.redDark};
   }
 `;
