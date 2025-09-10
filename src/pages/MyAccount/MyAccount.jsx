@@ -26,6 +26,7 @@ import { CustomDatePicker } from "../../components/CustomDatePicker/CustomDatePi
 import profilePlaceholder from "../../assets/PlaceholderProfileCoach.jpg";
 import {toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import imageNotFound from "../../assets/ImageNotFound.png";
 
 const MyAccount = () => {
   const { setTitle } = useOutletContext();
@@ -45,20 +46,7 @@ const MyAccount = () => {
   const MAX_FILE_SIZE = 5 * 1024 * 1024; 
   const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-  useEffect(() => {
-    if (user.avatar) {
-      const img = new Image();
-      img.src = user.avatar;
-
-      img.onload = () => {
-        setPreviewImage(user.avatar);
-      };
-      img.onerror = () => {
-        console.log("Зображення не знайдено.");
-        setPreviewImage(null); 
-      };
-    }
-  }, [user.avatar]);
+  
 
   const validateFile = (file) => {
     if (!file) return null;
@@ -188,10 +176,7 @@ const handleFileChange = (e) => {
       });
     }
   };
-  
-  const handleImageError = (e) => {
-    e.target.src = profilePlaceholder;
-  };
+
   
   return (
     <>
@@ -210,7 +195,10 @@ const handleFileChange = (e) => {
                   src={previewImage || profilePlaceholder}
                   alt="Фото профілю"
                   loading="lazy"
-                  onError={handleImageError}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = imageNotFound;
+                  }}
                 />
               </PhotoCircle>
               <PhotoUploadButton htmlFor="photo-upload"  tabIndex={0}  onKeyDown={handleKeyDown}>

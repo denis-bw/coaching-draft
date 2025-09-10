@@ -18,6 +18,7 @@ import {
   LoaderContainer
 } from './TeamsList.styled';
 import PlaceholderTeam from "../../../../../assets/PlaceholderTeam.jpg";
+import imageNotFound from "../../../../../assets/ImageNotFound.png"; 
 
 const TeamsList = ({ onTeamSelect }) => {
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -86,21 +87,21 @@ const TeamsList = ({ onTeamSelect }) => {
     }
   }, [selectedTeam, onTeamSelect]);
 
-  const handleImageError = (teamId) => {
-    setTeamImagesStatus(prev => ({
-      ...prev,
-      [teamId]: { loaded: true, error: true }
-    }));
-  };
+const handleImageError = (teamId) => {
+  setTeamImagesStatus(prev => ({
+    ...prev,
+    [teamId]: { loaded: true, error: true }
+  }));
+};
 
-  const getImageSource = (team) => {
-    if (!team.logo) return PlaceholderTeam;
-    
-    const status = teamImagesStatus[team.id];
-    if (status && status.error) return PlaceholderTeam;
-    
-    return team.logo;
-  };
+const getImageSource = (team) => {
+  if (!team.logo) return PlaceholderTeam;
+  
+  const status = teamImagesStatus[team.id];
+  if (status && status.error) return imageNotFound; 
+  
+  return team.logo;
+};
 
   const handleScroll = useCallback(() => {
     if (loadingRef.current || !hasMore) return;

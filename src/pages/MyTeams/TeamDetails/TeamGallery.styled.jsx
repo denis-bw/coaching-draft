@@ -52,15 +52,26 @@ export const GalleryOverlay = styled.div`
   bottom: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.7) 0%,
-    rgba(0, 0, 0, 0.3) 30%,
-    rgba(0, 0, 0, 0.3) 70%,
-    rgba(0, 0, 0, 0.8) 100%
+    ${({ theme }) => theme.mainBGColor === '#333' ? 
+     
+      `rgba(255, 255, 255, 0.1) 0%,
+       rgba(255, 255, 255, 0.05) 20%,
+       rgba(255, 255, 255, 0.02) 50%,
+       rgba(255, 255, 255, 0.08) 80%,
+       rgba(255, 255, 255, 0.15) 100%` : 
+      
+      `rgba(0, 0, 0, 0.6) 0%,
+       rgba(0, 0, 0, 0.25) 20%,
+       rgba(0, 0, 0, 0.15) 50%,
+       rgba(0, 0, 0, 0.25) 80%,
+       rgba(0, 0, 0, 0.6) 100%`
+    }
   );
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  transition: background 0.3s ease;
 
   @media (max-width: 768px) {
     padding: 1rem;

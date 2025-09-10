@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AthleteInfo,
   AthleteName,
@@ -11,8 +11,15 @@ import {
   AthleteItemStyled
 } from './AthletesList.styled';
 import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
+import imageNotFound from "../../../assets/ImageNotFound.png"; 
 
 const AthleteListItem = ({ athlete }) => {
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <AthleteItemWrapper className="athlete-item" id={`athlete-${athlete.id}`}>
       <AthleteItemStyled
@@ -21,7 +28,9 @@ const AthleteListItem = ({ athlete }) => {
         <AthleteIconWrapper>
           <ProfileImageAthletes
             loading="lazy"
-            src={athlete.photo || profilePlaceholder}
+            src={imageError ? imageNotFound : (athlete.photo || profilePlaceholder)}
+            onError={handleImageError}
+            alt={athlete.name}
           />
         </AthleteIconWrapper>
         <AthleteInfo>

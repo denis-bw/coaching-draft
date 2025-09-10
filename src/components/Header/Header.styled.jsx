@@ -38,7 +38,7 @@ export const HeaderContainer = styled.header`
     grid-template-columns: auto auto;
     grid-template-rows: auto auto; 
     gap: 5px;
-    padding: 16px 18px 0px 18px;
+    padding: 0px 18px 0px 18px;
   }
 `;
 

@@ -26,6 +26,8 @@ import {
   InputGroup,
   Label,
   Input,
+  CenteredPage,
+  CenteredCard,
   ButtonWrapper,
   Button,
   CameraIcon,
@@ -45,7 +47,7 @@ import Loader from '../../../components/Loader/Loader';
 import TeamGallery from './TeamGallery';
 import { useNavigationPrompt } from '../../../hooks/useNavigationPrompt';
 import { NavigationPrompt } from '../../../components/NavigationPrompt/NavigationPrompt';
-
+import imageNotFound from "../../../assets/ImageNotFound.png";
 
 const TeamDetails = () => {
   const { teamId } = useParams();
@@ -236,21 +238,8 @@ const TeamDetails = () => {
       ageCategory: !ageCategory.trim()
     };
     
-    const isValid = !Object.values(errors).some(error => error);
     
     setValidationErrors(errors);
-    
-    if (!isValid) {
-      toast.error("Будь ласка, заповніть всі обов'язкові поля", {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      return;
-    }
     
     dispatch(updateTeam({
       teamId,
@@ -284,31 +273,33 @@ const TeamDetails = () => {
   }
 
   if (fetchTeamDetailsStatus === 'failed') {
-    return (
-      <Container>
-        <Card style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2 style={{ color: 'inherit' }}>Помилка завантаження</h2>
-          <p style={{ color: 'inherit' }}>{fetchTeamDetailsError}</p>
-          <Button onClick={() => navigate('/teams')}>
-            Повернутися до списку команд
-          </Button>
-        </Card>
-      </Container>
-    );
-  }
+  return (
+    <CenteredPage>
+      <CenteredCard>
+        <h2>Помилка завантаження</h2>
+        <Button $hasChanges onClick={() => navigate('/teams')}>
+          Повернутися до списку команд
+        </Button>
+      </CenteredCard>
+    </CenteredPage>
+  );
+}
 
-  if (!teamDetails) {
-    return (
-      <Container>
-        <Card style={{ textAlign: 'center', padding: '2rem' }}>
-          <h2 style={{ color: 'inherit' }}>Команду не знайдено</h2>
-          <Button onClick={() => navigate('/teams')}>
-            Повернутися до списку команд
-          </Button>
-        </Card>
-      </Container>
-    );
-  }
+  if (!teamDetails)
+  {
+  return (
+    <CenteredPage>
+      <CenteredCard>
+        <h2>Команду не знайдено</h2>
+        <Button $hasChanges onClick={() => navigate('/teams')}>
+          Повернутися до списку команд
+        </Button>
+      </CenteredCard>
+    </CenteredPage>
+  );
+}
+
+
 
   return (
     <>
@@ -347,6 +338,10 @@ const TeamDetails = () => {
                     <ProfileImage 
                       src={photoPreview || teamPlaceholder} 
                       alt="Фото команди" 
+                      onError={(e) => {
+                        e.target.onerror = null; 
+                        e.target.src = imageNotFound; 
+                      }}
                     />
                   </PhotoCircle>
                   <PhotoUploadButton htmlFor="photo-upload" tabIndex={0} onKeyDown={handleKeyDown}>

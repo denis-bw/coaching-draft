@@ -11,7 +11,7 @@ export const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 20px;
+  padding: 10px 20px 20px 20px; 
    @media (max-width: 768px) {
      padding: 10px;
   }

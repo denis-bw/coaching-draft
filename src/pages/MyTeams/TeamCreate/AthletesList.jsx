@@ -7,6 +7,7 @@ import Loader from '../../../components/Loader/Loader';
 import styled from 'styled-components';
 import { ReactComponent as OriginalCreateIcon } from '../../../assets/CreateIcon.svg';
 import profilePlaceholder from "../../../assets/PlaceholderProfile.png";
+import imageNotFound from "../../../assets/ImageNotFound.png"; 
 
 const AthletesList = ({ onAthletesSelect }) => {
   const dispatch = useDispatch();
@@ -19,7 +20,8 @@ const AthletesList = ({ onAthletesSelect }) => {
     currentPage,
     isAllDataLoaded,
   } = useSelector(state => state.athletes);
-  
+
+  const [brokenImages, setBrokenImages] = useState(new Set());
   const [selectedAthletes, setSelectedAthletes] = useState([]);
   const athletesListRef = useRef(null);
   const initialLoadComplete = useRef(false);
@@ -92,6 +94,10 @@ const AthletesList = ({ onAthletesSelect }) => {
     };
   }).filter(Boolean);
 
+  const handleImageError = (athleteId) => {
+    setBrokenImages(prev => new Set(prev).add(athleteId));
+  };
+  
   return (
     <AthletesWrapper>
       <AthletesContainer>
@@ -122,7 +128,9 @@ const AthletesList = ({ onAthletesSelect }) => {
                     <AthleteIconWrapper>
                       <ProfileImageAthletes
                         loading="lazy"
-                        src={athlete.photo || profilePlaceholder}
+                        src={brokenImages.has(athlete.id) ? imageNotFound : (athlete.photo || profilePlaceholder)}
+                        onError={() => handleImageError(athlete.id)}
+                        alt={athlete.name}
                       />
                     </AthleteIconWrapper>
                     <AthleteInfo>

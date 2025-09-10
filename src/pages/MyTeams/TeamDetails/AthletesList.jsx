@@ -9,12 +9,12 @@ import { ReactComponent as PlusIcon } from "../../../assets/plus.svg";
 import { ReactComponent as MinusIcon } from "../../../assets/minus.svg";
 import { ReactComponent as CloseIcon } from "../../../assets/CloseIcon.svg";
 import { Link } from 'react-router-dom';
-
+import imageNotFound from "../../../assets/ImageNotFound.png"; 
 
 const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId, onSelectionChange  }) => {
   const dispatch = useDispatch();
   
-  
+  const [brokenImages, setBrokenImages] = useState(new Set());
   const {
     entities,
     list,
@@ -215,6 +215,10 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId, onSelection
     }).filter(Boolean);
   };
 
+const handleImageError = (athleteId) => {
+  setBrokenImages(prev => new Set(prev).add(athleteId));
+  };
+  
   return (
     <>
      {showConfirmModal && pendingAction && (
@@ -290,7 +294,8 @@ const AthletesList = ({ teamAthletes = [], onAthletesChange, teamId, onSelection
                     >
                       <ProfileImageAthletes
                         loading="lazy"
-                        src={athlete.photo || profilePlaceholder}
+                        src={brokenImages.has(athlete.id) ? imageNotFound : (athlete.photo || profilePlaceholder)}
+                        onError={() => handleImageError(athlete.id)}
                         alt={athlete.name}
                       />
                     </ProfileLink>
@@ -632,13 +637,9 @@ const ProfileImageAthletes = styled.img`
 `;
 
 const ProfileLink = styled(Link)`
-
   &:hover {
-  display: inline-block;
-  border: 2px solid black; 
-  border-radius: 50%;     
-  overflow: hidden;
-  border-color: black;  
+    opacity: 0.6;  
+    transition: all 0.2s ease;
   }
 `;
 

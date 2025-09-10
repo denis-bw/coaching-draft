@@ -6,6 +6,29 @@ const breakpoints = {
   desktop: '1024px'
 };
 
+export const CenteredPage = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+  width: 100%;
+  padding: 1rem;
+  box-sizing: border-box;
+`;
+
+export const CenteredCard = styled.div`
+  padding: 2rem 3rem;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  h2 {
+    margin-bottom: 10px;
+    color: ${({ theme }) => theme.red};
+  }
+`;
+
+
+
 export const LoaderWrapper = styled.div`
   position: sticky; 
   left: 0; 

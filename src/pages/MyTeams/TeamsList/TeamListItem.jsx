@@ -10,6 +10,7 @@ import {
   TeamItemStyled
 } from './TeamsList.styled';
 import PlaceholderTeam from "../../../assets/PlaceholderTeam.jpg";
+import imageNotFound from "../../../assets/ImageNotFound.png"; 
 
 const TeamListItem = ({ team }) => {
   const [imageStatus, setImageStatus] = useState({ loaded: false, error: false });
@@ -29,12 +30,12 @@ const TeamListItem = ({ team }) => {
       };
     }
   }, [team]);
-
-  const getImageSource = () => {
-    if (!team.logo) return PlaceholderTeam;
-    if (imageStatus.error) return PlaceholderTeam;
-    return team.logo;
-  };
+  
+const getImageSource = () => {
+  if (!team.logo) return PlaceholderTeam;
+  if (imageStatus.error) return imageNotFound; 
+  return team.logo;
+};
 
   const handleImageError = () => {
     setImageStatus({ loaded: true, error: true });
