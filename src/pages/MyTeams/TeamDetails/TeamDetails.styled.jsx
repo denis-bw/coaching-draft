@@ -1,5 +1,7 @@
 import styled, { css } from "styled-components";
 import { ReactComponent as OriginalCameraIcon } from "../../../assets/CameraIcon.svg";
+import { ReactComponent as MinusIcon } from "../../../assets/minus.svg";
+import { ReactComponent as DeleteIconOriginal } from '../../../assets/DeleteIcon.svg';
 
 const breakpoints = {
   mobile: '320px',
@@ -26,8 +28,6 @@ export const CenteredCard = styled.div`
     color: ${({ theme }) => theme.red};
   }
 `;
-
-
 
 export const LoaderWrapper = styled.div`
   position: sticky; 
@@ -197,6 +197,112 @@ export const PhotoUploadButton = styled.label`
   @media (min-width: ${breakpoints.desktop}) {
     width: 2.5rem;
     height: 2.5rem;
+  }
+`;
+
+export const PhotoActionButtonsContainer = styled.div`
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  @media (min-width: ${breakpoints.desktop}) {
+    top: -0.4rem;
+    right: -0.4rem;
+    gap: 0.4rem;
+  }
+`;
+
+export const DeleteButton = styled.button`
+  width: 1.8rem;
+  height: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ theme }) => theme.red};
+  color: ${({ theme }) => theme.white};
+  border-radius: 50%;
+  border: 2px solid ${({ theme }) => theme.white};
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out,
+            transform 0.2s ease-in-out;
+
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:hover {
+    background-color: ${({ theme }) => theme.redDark};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.red}, 0 2px 8px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
+  }
+
+  &:focus-visible {
+    background-color: ${({ theme }) => theme.redDark};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.red}, 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (min-width: ${breakpoints.desktop}) {
+    width: 2rem;
+    height: 2rem;
+  }
+`;
+
+export const CancelButton = styled.button`
+  width: 1.8rem;
+  height: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ theme }) =>
+    theme.mode === 'dark' ? '#e0e0e0' : '#343434'};
+  border: 2px solid
+    ${({ theme }) =>
+    theme.mode === 'dark' ? '#e0e0e0' : '#343434'};
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.2s ease;
+  will-change: transform;
+
+  &:hover {
+    background-color: ${({ theme }) =>
+      theme.mode === 'dark' ? '#ffffff' : '#555555'};
+    box-shadow: ${({ theme }) =>
+      theme.mode === 'dark'
+        ? '0 0 0 4px rgba(255, 255, 255, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3)'
+        : '0 0 0 4px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.35)'};
+    transform: scale(1.05);
+  }
+
+  @media (min-width: ${breakpoints.desktop}) {
+    width: 2rem;
+    height: 2rem;
+  }
+`;
+
+export const DeleteIcon = styled(DeleteIconOriginal)`
+  stroke: ${({ theme }) => theme.white};
+  fill: none; 
+  width: 12px;
+  height: 12px;
+
+  @media (min-width: ${breakpoints.desktop}) {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+export const CancelIcon = styled(MinusIcon)`
+  fill: ${({ theme }) =>
+    theme.mode === 'dark' ? '#343434' : '#ffffff'};
+  width: 12px;
+  height: 12px;
+  transform: rotate(180deg);
+
+  @media (min-width: ${breakpoints.desktop}) {
+    width: 14px;
+    height: 14px;
   }
 `;
 
@@ -476,5 +582,102 @@ export const TabButton = styled.button`
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6;
+  }
+`;
+
+export const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+`;
+
+export const ModalContent = styled.div`
+  background-color: ${({ theme }) => theme.ContainerBGColor};
+  padding: 2rem;
+  border-radius: 0.75rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border: 1px solid ${({ theme }) => theme.gray};
+  animation: slideIn 0.3s ease-out;
+
+  @keyframes slideIn {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+`;
+
+export const ModalTitle = styled.h3`
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.textBlack};
+  text-align: center;
+  margin-top: 0;
+`;
+
+export const ModalText = styled.p`
+  margin-bottom: 2rem;
+  color: ${({ theme }) => theme.textGray};
+  line-height: 1.5;
+  text-align: center;
+  margin-top: 0;
+`;
+
+export const ModalButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+export const ModalBaseButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out,
+            transform 0.2s ease-in-out;
+
+  font-size: 14px;
+  min-width: 100px;
+
+  &:focus {
+    outline: 2px solid ${({ theme }) => theme.lightGreen};
+    outline-offset: 2px;
+  }
+`;
+
+export const ModalCancelButton = styled(ModalBaseButton)`
+  border: 1px solid ${({ theme }) => theme.textBlack};
+  background-color: ${({ theme }) => theme.ContainerBGColor};
+  color: ${({ theme }) => theme.textBlack};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.black};
+    border-color: ${({ theme }) => theme.black};
+    color: ${({ theme }) => theme.white};
+  }
+`;
+
+export const ModalDeleteButton = styled(ModalBaseButton)`
+  border: none;
+  background-color: ${({ theme }) => theme.red};
+  color: ${({ theme }) => theme.white};
+
+  &:hover {
+    background-color: ${({ theme }) => theme.redDark};
   }
 `;

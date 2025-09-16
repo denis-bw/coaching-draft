@@ -22,6 +22,8 @@ import {
   PhotoUploadButton,
   HiddenInput,
   InfoSection,
+  CancelPhotoButton,
+  CancelIcon,
   InfoTitle,
   InputsContainer,
   InputGroup,
@@ -366,6 +368,27 @@ const AthleteCreate = () => {
       });
   };
 
+  const handleCancelPhotoUpload = () => {
+    if (photoPreview && photoPreview !== profilePlaceholder) {
+      URL.revokeObjectURL(photoPreview);
+    }
+    
+    setPhoto(null);
+    setPhotoPreview(null);
+    
+    const fileInput = document.getElementById('photo-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const handleCancelKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCancelPhotoUpload();
+    }
+  };
+  
   return (
     <>
       {loading && (
@@ -377,23 +400,36 @@ const AthleteCreate = () => {
         <Card>
           <ContentWrapper>
             <PhotoSection>
-              <PhotoWrapper>
-                <PhotoCircle>
-                  <ProfileImage 
-                    src={photoPreview || profilePlaceholder} 
-                    alt="Фото спортсмена" 
-                  />
-                </PhotoCircle>
-                <PhotoUploadButton htmlFor="photo-upload" tabIndex={0} onKeyDown={handleKeyDown}>
-                  <CameraIcon />
-                </PhotoUploadButton>
-                <HiddenInput
-                  id="photo-upload"
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleFileChange}
+            <PhotoWrapper>
+              <PhotoCircle>
+                <ProfileImage 
+                  src={photoPreview || profilePlaceholder} 
+                  alt="Фото спортсмена" 
                 />
-              </PhotoWrapper>
+              </PhotoCircle>
+              <PhotoUploadButton htmlFor="photo-upload" tabIndex={0} onKeyDown={handleKeyDown}>
+                <CameraIcon />
+              </PhotoUploadButton>
+              
+              {photoPreview && photoPreview !== profilePlaceholder && (
+                <CancelPhotoButton 
+                  type="button"
+                  tabIndex={0} 
+                  onKeyDown={handleCancelKeyDown}
+                  onClick={handleCancelPhotoUpload}
+                  title="Скасувати завантаження фото"
+                >
+                  <CancelIcon />
+                </CancelPhotoButton>
+              )}
+              
+              <HiddenInput
+                id="photo-upload"
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={handleFileChange}
+              />
+            </PhotoWrapper>
             </PhotoSection>
             
             <InfoSection ref={topOfTheFormRef}>
@@ -447,7 +483,6 @@ const AthleteCreate = () => {
             </InfoSection>
           </ContentWrapper>
           
-          {/* Rest of the JSX remains the same... */}
           <TwoColumnLayout>
             <FormBlock>
               <InputRows>

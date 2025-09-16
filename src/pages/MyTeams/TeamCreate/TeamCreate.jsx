@@ -11,6 +11,8 @@ import {
   Card,
   PhotoSection,
   PhotoWrapper,
+  CancelPhotoButton,
+  CancelIcon,
   PhotoCircle,
   ProfileImage,
   PhotoUploadButton,
@@ -173,6 +175,27 @@ const TeamCreate = () => {
     }));
   };
 
+  const handleCancelPhotoUpload = () => {
+    if (photoPreview && photoPreview !== teamPlaceholder) {
+      URL.revokeObjectURL(photoPreview);
+    }
+    
+    setPhoto(null);
+    setPhotoPreview(null);
+    
+    const fileInput = document.getElementById('photo-upload');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const handleCancelKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleCancelPhotoUpload();
+    }
+  };
+  
   return (
     <>
       {loading && (
@@ -185,23 +208,36 @@ const TeamCreate = () => {
           <TwoColumnLayout>
             <FirstSection>
               <PhotoSection>
-                <PhotoWrapper>
-                  <PhotoCircle>
-                    <ProfileImage 
-                      src={photoPreview || teamPlaceholder} 
-                      alt="Фото команди" 
+                  <PhotoWrapper>
+                    <PhotoCircle>
+                      <ProfileImage 
+                        src={photoPreview || teamPlaceholder} 
+                        alt="Фото команди" 
+                      />
+                    </PhotoCircle>
+                    <PhotoUploadButton htmlFor="photo-upload" tabIndex={0} onKeyDown={handleKeyDown}>
+                      <CameraIcon />
+                    </PhotoUploadButton>
+                    
+                    {photoPreview && photoPreview !== teamPlaceholder && (
+                      <CancelPhotoButton 
+                        type="button"
+                        tabIndex={0} 
+                        onKeyDown={handleCancelKeyDown}
+                        onClick={handleCancelPhotoUpload}
+                        title="Скасувати завантаження фото"
+                      >
+                        <CancelIcon />
+                      </CancelPhotoButton>
+                    )}
+                    
+                    <HiddenInput
+                      id="photo-upload"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleFileChange}
                     />
-                  </PhotoCircle>
-                  <PhotoUploadButton htmlFor="photo-upload" tabIndex={0} onKeyDown={handleKeyDown}>
-                    <CameraIcon />
-                  </PhotoUploadButton>
-                  <HiddenInput
-                    id="photo-upload"
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    onChange={handleFileChange}
-                  />
-                </PhotoWrapper>
+                  </PhotoWrapper>
               </PhotoSection>
               
               <InputsContainer>

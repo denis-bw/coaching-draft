@@ -139,8 +139,22 @@ const authSlice = createSlice({
       state.error = null;
     })
     .addCase(updateUserProfile.fulfilled, (state, action) => {
-      state.user = { ...state.user, ...action.payload.updatedFields };
-      state.isLoading = false;
+    const updatedFields = action.payload.updatedFields;
+    
+    if (updatedFields.hasOwnProperty('username')) {
+      state.user.username = updatedFields.username;
+    }
+    if (updatedFields.hasOwnProperty('location')) {
+      state.user.location = updatedFields.location;
+    }
+    if (updatedFields.hasOwnProperty('dateOfBirth')) {
+      state.user.dateOfBirth = updatedFields.dateOfBirth;
+    }
+    if (updatedFields.hasOwnProperty('avatar')) {
+      state.user.avatar = updatedFields.avatar; 
+    }
+    
+    state.isLoading = false;
     })
     .addCase(updateUserProfile.rejected, (state, action) => {
       state.isLoading = false;

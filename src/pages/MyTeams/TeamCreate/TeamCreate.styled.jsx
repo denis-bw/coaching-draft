@@ -1,10 +1,12 @@
 import styled, { css } from "styled-components";
 import { ReactComponent as OriginalCameraIcon } from "../../../assets/CameraIcon.svg";
+import { ReactComponent as MinusIcon } from "../../../assets/minus.svg";
 
 const breakpoints = {
   mobile: '320px',
   desktop: '1024px'
 };
+
 
 export const LoaderWrapper = styled.div`
   position: sticky; 
@@ -308,5 +310,53 @@ export const CameraIcon = styled(OriginalCameraIcon)`
   @media (min-width: ${breakpoints.desktop}) {
     width: 18px;
     height: 18px;
+  }
+`;
+
+export const CancelPhotoButton = styled.button`
+  position: absolute;
+  top: -0.3rem;
+  right: -0.3rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ theme }) =>
+    theme.mode === 'dark' ? '#e0e0e0' : '#343434'};
+  border: 2px solid
+    ${({ theme }) =>
+    theme.mode === 'dark' ? '#e0e0e0' : '#343434'};
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.2s ease;
+  will-change: transform;
+
+  &:hover {
+    background-color: ${({ theme }) =>
+      theme.mode === 'dark' ? '#ffffff' : '#555555'};
+    box-shadow: ${({ theme }) =>
+      theme.mode === 'dark'
+        ? '0 0 0 4px rgba(255, 255, 255, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3)'
+        : '0 0 0 4px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.35)'};
+    transform: scale(1.05);
+  }
+
+  @media (min-width: ${breakpoints.desktop}) {
+    width: 2rem;
+    height: 2rem;
+  }
+`;
+
+export const CancelIcon = styled(MinusIcon)`
+  fill: ${({ theme }) =>
+    theme.mode === 'dark' ? '#343434' : '#ffffff'};
+  width: 12px;
+  height: 12px;
+  transform: rotate(180deg);
+
+  @media (min-width: ${breakpoints.desktop}) {
+    width: 14px;
+    height: 14px;
   }
 `;

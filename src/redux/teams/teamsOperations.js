@@ -107,11 +107,15 @@ export const updateTeam = createAsyncThunk(
   'teams/updateTeam',
   async ({ teamId, teamData }, thunkApi) => {
     try {
-      const { name, ageCategory, photo, athleteIds } = teamData;
+      const { name, ageCategory, photo, athleteIds, deleteLogo } = teamData;
       
       const formData = new FormData();
       
-      if (photo) {
+      if (deleteLogo) {
+        console.log('Відправляємо запит на видалення логотипу');
+        formData.append('deleteLogo', 'true');
+      } else if (photo) {
+        console.log('Відправляємо нове фото');
         formData.append('team-logo', photo);
       }
       
@@ -133,12 +137,18 @@ export const updateTeam = createAsyncThunk(
         thunkApi.dispatch
       );
       
+      console.log('Відповідь від сервера:', response.data);
       return response.data.team;
+      
     } catch (err) {
+      console.error('Помилка при оновленні команди:', err);
       if (!err.response) {
         return thunkApi.rejectWithValue('Сервер не відповідає. Спробуйте пізніше.');
       }
-      return thunkApi.rejectWithValue(err.response.data.message || 'Помилка при оновленні команди');
+      
+      const errorMessage = err.response.data?.message || 'Помилка при оновленні команди';
+      console.error('Деталі помилки:', err.response.data);
+      return thunkApi.rejectWithValue(errorMessage);
     }
   }
 );

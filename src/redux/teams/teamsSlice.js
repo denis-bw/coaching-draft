@@ -24,7 +24,6 @@ const initialState = {
   deleteTeamStatus: 'idle',
   deleteTeamError: null,
   
-  // Галерея
   teamGallery: [],
   galleryCurrentPage: 1,
   galleryHasMore: true,
@@ -35,15 +34,12 @@ const initialState = {
   deleteTeamPhotoStatus: 'idle',
   deleteTeamPhotoError: null,
   
-  // Множинне завантаження
   uploadMultiplePhotosStatus: 'idle',
   uploadMultiplePhotosError: null,
   uploadProgress: null,
   
-  // Вибрані файли
   selectedFiles: [],
   
-  // Інформація про сховище
   storageInfo: null,
   fetchStorageInfoStatus: 'idle',
   fetchStorageInfoError: null
@@ -119,7 +115,6 @@ const teamsSlice = createSlice({
       }
     },
     
-    // Робота з вибраними файлами
     setSelectedFiles: (state, action) => {
       state.selectedFiles = action.payload;
     },
@@ -161,7 +156,6 @@ const teamsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Існуючі редюсери для команд...
       .addCase(fetchTeams.pending, (state) => {
         state.isLoading = true;
         state.error = null;
@@ -267,7 +261,6 @@ const teamsSlice = createSlice({
         state.fetchTeamDetailsStatus = 'succeeded';
         state.teamDetails = action.payload;
         
-        // Оновлюємо інформацію про сховище якщо є
         if (action.payload.storageInfo) {
           state.storageInfo = action.payload.storageInfo;
         }
@@ -290,33 +283,49 @@ const teamsSlice = createSlice({
         state.updateTeamStatus = 'loading';
         state.updateTeamError = null;
       })
-      .addCase(updateTeam.fulfilled, (state, action) => {
-        state.updateTeamStatus = 'succeeded';
-        const updatedTeam = action.payload;
-        
-        if (state.teamDetails && state.teamDetails.id === updatedTeam.id) {
-          state.teamDetails = { ...state.teamDetails, ...updatedTeam };
-        }
-        
-        if (state.allTeams[updatedTeam.id]) {
-          state.allTeams[updatedTeam.id] = {
-            ...state.allTeams[updatedTeam.id],
-            name: updatedTeam.name,
-            logo: updatedTeam.logo,
-            galleryCount: updatedTeam.galleryCount || state.allTeams[updatedTeam.id].galleryCount || 0
-          };
-        }
-        
-        const teamIndex = state.teams.findIndex(team => team.id === updatedTeam.id);
-        if (teamIndex !== -1) {
-          state.teams[teamIndex] = {
-            ...state.teams[teamIndex],
-            name: updatedTeam.name,
-            logo: updatedTeam.logo,
-            galleryCount: updatedTeam.galleryCount || state.teams[teamIndex].galleryCount || 0
-          };
-        }
-      })
+.addCase(updateTeam.fulfilled, (state, action) => {
+  state.updateTeamStatus = 'succeeded';
+  
+  if (!action.payload || !action.payload.id) {
+    console.error('Некоректні дані у відповіді:', action.payload);
+    return;
+  }
+  
+  const updatedTeam = action.payload;
+  
+  if (state.teamDetails && state.teamDetails.id === updatedTeam.id) {
+    state.teamDetails = { 
+      ...state.teamDetails, 
+      ...updatedTeam,
+      logo: updatedTeam.logo 
+    };
+  }
+  
+  if (state.allTeams[updatedTeam.id]) {
+    state.allTeams[updatedTeam.id] = {
+      ...state.allTeams[updatedTeam.id],
+      ...updatedTeam, 
+      name: updatedTeam.name,
+      logo: updatedTeam.logo, 
+      galleryCount: updatedTeam.galleryCount || state.allTeams[updatedTeam.id].galleryCount || 0
+    };
+  }
+  
+  const teamIndex = state.teams.findIndex(team => team && team.id === updatedTeam.id);
+  if (teamIndex !== -1) {
+    state.teams[teamIndex] = {
+      ...state.teams[teamIndex],
+      ...updatedTeam, 
+      name: updatedTeam.name,
+      logo: updatedTeam.logo, 
+      galleryCount: updatedTeam.galleryCount || state.teams[teamIndex].galleryCount || 0
+    };
+  }
+  
+  if (state.isSearchMode && state.searchQuery) {
+    console.log('Оновлення пошукових результатів після змін команди');
+  }
+})
       .addCase(updateTeam.rejected, (state, action) => {
         state.updateTeamStatus = 'failed';
         state.updateTeamError = action.payload || 'Помилка при оновленні команди';
@@ -345,7 +354,6 @@ const teamsSlice = createSlice({
         state.deleteTeamError = action.payload || 'Помилка при видаленні команди';
       })
       
-      // Галерея з пагінацією
       .addCase(fetchTeamGallery.pending, (state) => {
         state.fetchTeamGalleryStatus = 'loading';
         state.fetchTeamGalleryError = null;
@@ -355,10 +363,8 @@ const teamsSlice = createSlice({
         const { photos, pagination, storageInfo, isFirstPage, loadMore } = action.payload;
         
         if (isFirstPage && !loadMore) {
-          // Перша загрузка - повністю перезаписуємо галерею
           state.teamGallery = photos || [];
         } else {
-          // Додаткова загрузка - додаємо нові фото до існуючих
           const existingIds = new Set(state.teamGallery.map(photo => photo.id));
           const newPhotos = (photos || []).filter(photo => !existingIds.has(photo.id));
           state.teamGallery = [...state.teamGallery, ...newPhotos];
@@ -384,15 +390,12 @@ const teamsSlice = createSlice({
         state.uploadTeamPhotoStatus = 'succeeded';
         const { photo, storageInfo } = action.payload;
         
-        // Додаємо фото на початок галереї
         state.teamGallery = [photo, ...state.teamGallery];
         
-        // Оновлюємо інформацію про сховище
         if (storageInfo) {
           state.storageInfo = storageInfo;
         }
         
-        // Оновлюємо кількість фото в команді
         if (state.teamDetails) {
           state.teamDetails.galleryCount = (state.teamDetails.galleryCount || 0) + 1;
         }
@@ -410,15 +413,12 @@ const teamsSlice = createSlice({
         state.deleteTeamPhotoStatus = 'succeeded';
         const { deletedPhotoId, storageInfo } = action.payload;
         
-        // Видаляємо фото з галереї
         state.teamGallery = state.teamGallery.filter(photo => photo.id !== deletedPhotoId);
         
-        // Оновлюємо інформацію про сховище
         if (storageInfo) {
           state.storageInfo = storageInfo;
         }
         
-        // Оновлюємо кількість фото в команді
         if (state.teamDetails && state.teamDetails.galleryCount > 0) {
           state.teamDetails.galleryCount = state.teamDetails.galleryCount - 1;
         }
@@ -428,7 +428,6 @@ const teamsSlice = createSlice({
         state.deleteTeamPhotoError = action.payload || 'Помилка при видаленні фото';
       })
       
-      // Множинне завантаження фото
       .addCase(uploadMultipleTeamPhotos.pending, (state) => {
         state.uploadMultiplePhotosStatus = 'loading';
         state.uploadMultiplePhotosError = null;
@@ -438,17 +437,14 @@ const teamsSlice = createSlice({
         state.uploadMultiplePhotosStatus = 'succeeded';
         const { uploadedPhotos, storageInfo, successCount } = action.payload;
         
-        // Додаємо успішно завантажені фото на початок галереї
         if (uploadedPhotos && uploadedPhotos.length > 0) {
           state.teamGallery = [...uploadedPhotos.reverse(), ...state.teamGallery];
         }
         
-        // Оновлюємо інформацію про сховище
         if (storageInfo) {
           state.storageInfo = storageInfo;
         }
         
-        // Оновлюємо кількість фото в команді
         if (state.teamDetails && successCount > 0) {
           state.teamDetails.galleryCount = (state.teamDetails.galleryCount || 0) + successCount;
         }
@@ -461,7 +457,6 @@ const teamsSlice = createSlice({
         state.uploadProgress = null;
       })
       
-      // Інформація про сховище
       .addCase(fetchUserStorageInfo.pending, (state) => {
         state.fetchStorageInfoStatus = 'loading';
         state.fetchStorageInfoError = null;

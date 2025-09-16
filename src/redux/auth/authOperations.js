@@ -178,7 +178,11 @@ export const updateUserProfile = createAsyncThunk(
   async (updatedData, thunkAPI) => {
     try {
       const response = await requestWrapper(
-        () => axios.put('auth/users/updateprofile', updatedData),
+        () => axios.put('auth/users/updateprofile', updatedData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }),
         thunkAPI.dispatch 
       );
       return response.data;

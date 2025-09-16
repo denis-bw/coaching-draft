@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateUserProfile } from '../../redux/auth/authOperations'; 
-import { useOutletContext } from "react-router-dom";
 import { useNavigationPrompt } from '../../hooks/useNavigationPrompt'; 
 import { NavigationPrompt } from '../../components/NavigationPrompt/NavigationPrompt'; 
 import { 
@@ -21,15 +20,74 @@ import {
   ButtonWrapper,
   WrapperInput,
   CameraIcon,
+  DeleteButton,
+  CancelButton,
+  DeleteIcon,
+  CancelIcon,
+  PhotoActionButtonsContainer,
+  ModalOverlay,
+  ModalContent,
+  ModalTitle,
+  ModalText,
+  ModalButtonContainer,
+  ModalCancelButton,
+  ModalDeleteButton
 } from "./MyAccount.styled";
 import { CustomDatePicker } from "../../components/CustomDatePicker/CustomDatePicker";
 import profilePlaceholder from "../../assets/PlaceholderProfileCoach.jpg";
-import {toast } from "react-toastify";
+import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import imageNotFound from "../../assets/ImageNotFound.png";
 
+const DeletePhotoModal = ({ isOpen, onConfirm, onCancel }) => {
+  if (!isOpen) return null;
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') {
+      onCancel();
+    }
+    if (e.key === 'Enter') {
+      onConfirm();
+    }
+  };
+
+  const handleOverlayClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onCancel();
+    }
+  };
+
+  return (
+    <ModalOverlay 
+      onClick={handleOverlayClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={-1}
+    >
+      <ModalContent onClick={(e) => e.stopPropagation()}>
+        <ModalTitle>
+          Видалити фото профілю?
+        </ModalTitle>
+        
+        <ModalText>
+          Ви впевнені, що хочете видалити поточне фото профілю? Цю дію не можна буде скасувати.
+        </ModalText>
+        
+        <ModalButtonContainer>
+          <ModalDeleteButton onClick={onConfirm}>
+            Видалити
+          </ModalDeleteButton>
+          
+          <ModalCancelButton onClick={onCancel}>
+            Скасувати
+          </ModalCancelButton>
+        </ModalButtonContainer>
+      </ModalContent>
+    </ModalOverlay>
+  );
+};
+
 const MyAccount = () => {
-  const { setTitle } = useOutletContext();
+  const setTitle = () => {};  
   const { user, isLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
@@ -40,18 +98,17 @@ const MyAccount = () => {
   const [previewImage, setPreviewImage] = useState(user.avatar || null);
   const [isUsernameValid, setIsUsernameValid] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [pendingImageFile, setPendingImageFile] = useState(null);
   
   const [showPrompt, confirmNavigation, cancelNavigation] = useNavigationPrompt(hasUnsavedChanges);
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024; 
   const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-  
-
   const validateFile = (file) => {
     if (!file) return null;
 
-   
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       toast.error('Дозволені лише зображення (jpeg, jpg, png, webp)', {
         position: 'top-right',
@@ -71,29 +128,91 @@ const MyAccount = () => {
     return file;
   };
 
-const handleKeyDown = (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      const fileInput = document.getElementById('photo-upload');
+      if (fileInput) {
+        fileInput.click(); 
+      }
+    }
+  };
+
+  const handleDeleteKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (pendingImageFile) {
+        handleCancelImageUpload();
+      } else {
+        setShowDeleteModal(true);
+      }
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validatedFile = validateFile(file);
+      if (!validatedFile) {
+        e.target.value = ''; 
+        return;
+      }
+
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewImage(previewUrl);
+      setPendingImageFile(file);
+      setHasUnsavedChanges(true);
+    }
+  };
+
+  const handleCancelImageUpload = () => {
+    if (previewImage && previewImage !== user.avatar) {
+      URL.revokeObjectURL(previewImage);
+    }
+    
+    setPreviewImage(user.avatar || null);
+    setPendingImageFile(null);
+    
     const fileInput = document.getElementById('photo-upload');
     if (fileInput) {
-      fileInput.click(); 
+      fileInput.value = '';
     }
-  }
-};
+    
+    const hasOtherChanges = 
+      username !== (user.username || "") ||
+      location !== (user.location || "") ||
+      birthdate !== (user.dateOfBirth || "");
+    
+    setHasUnsavedChanges(hasOtherChanges);
+  };
 
-const handleFileChange = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    const validatedFile = validateFile(file);
-    if (!validatedFile) {
-      e.target.value = ''; 
-      return;
+  const handleDeletePhoto = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('deleteAvatar', 'true');
+      
+      const result = await dispatch(updateUserProfile(formData));
+      
+      if (!result.error) {
+        setPreviewImage(null);
+        setPendingImageFile(null);
+        
+        const fileInput = document.getElementById('photo-upload');
+        if (fileInput) {
+          fileInput.value = '';
+        }
+        
+        toast.success('Фото успішно видалено!');
+        setShowDeleteModal(false);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast.error('Помилка при видаленні фото', {
+        position: 'top-right',
+        autoClose: 3000,
+      });
     }
-
-    const previewUrl = URL.createObjectURL(file);
-    setPreviewImage(previewUrl);
-    setHasUnsavedChanges(true);
-  }
-};
+  };
 
   useEffect(() => {
     setTitle("Мій акаунт");
@@ -103,13 +222,13 @@ const handleFileChange = (e) => {
     const hasChanges = 
       username !== (user.username || "") ||
       location !== (user.location || "") ||
-      birthdate !== (user.dateOfBirth || "");
+      birthdate !== (user.dateOfBirth || "") ||
+      pendingImageFile !== null;
     
     setHasUnsavedChanges(hasChanges);
-  }, [username, location, birthdate, user]);
+  }, [username, location, birthdate, user, pendingImageFile]);
 
   useEffect(() => {
-
     return () => {
       if (previewImage && previewImage !== user.avatar) {
         URL.revokeObjectURL(previewImage);
@@ -137,11 +256,8 @@ const handleFileChange = (e) => {
     if (location !== user.location) updatedData.append("location", location || "");  
     if (birthdate !== user.dateOfBirth) updatedData.append("dateOfBirth", birthdate || null);  
 
-    const fileInput = document.getElementById("photo-upload");
-    const file = fileInput.files[0];
-    
-    if (file) {
-      const validatedFile = validateFile(file);
+    if (pendingImageFile) {
+      const validatedFile = validateFile(pendingImageFile);
       if (!validatedFile) {
         return; 
       }
@@ -154,9 +270,10 @@ const handleFileChange = (e) => {
         
         if (!result.error) {
           setHasUnsavedChanges(false);
+          setPendingImageFile(null);
           toast.success('Зміни успішно збережено!');
           
-        
+          const fileInput = document.getElementById("photo-upload");
           if (fileInput) {
             fileInput.value = '';
           }
@@ -177,13 +294,21 @@ const handleFileChange = (e) => {
     }
   };
 
-  
+  const hasExistingPhoto = user.avatar && !pendingImageFile;
+  const hasPendingPhoto = pendingImageFile !== null;
+
   return (
     <>
       <NavigationPrompt 
         isOpen={showPrompt}
         onConfirm={confirmNavigation}
         onCancel={cancelNavigation}
+      />
+
+      <DeletePhotoModal 
+        isOpen={showDeleteModal}
+        onConfirm={handleDeletePhoto}
+        onCancel={() => setShowDeleteModal(false)}
       />
  
       <Container onSubmit={handleSubmit}>
@@ -201,9 +326,39 @@ const handleFileChange = (e) => {
                   }}
                 />
               </PhotoCircle>
-              <PhotoUploadButton htmlFor="photo-upload"  tabIndex={0}  onKeyDown={handleKeyDown}>
+              
+              <PhotoUploadButton htmlFor="photo-upload" tabIndex={0} onKeyDown={handleKeyDown}>
                 <CameraIcon />
               </PhotoUploadButton>
+              
+              {(hasExistingPhoto || hasPendingPhoto) && (
+                <PhotoActionButtonsContainer>
+                  {hasExistingPhoto && (
+                    <DeleteButton 
+                      type="button"
+                      tabIndex={0} 
+                      onKeyDown={handleDeleteKeyDown}
+                      onClick={() => setShowDeleteModal(true)}
+                      title="Видалити фото"
+                    >
+                      <DeleteIcon />
+                    </DeleteButton>
+                  )}
+                  
+                  {hasPendingPhoto && (
+                    <CancelButton 
+                      type="button"
+                      tabIndex={0} 
+                      onKeyDown={handleDeleteKeyDown}
+                      onClick={handleCancelImageUpload}
+                      title="Скасувати завантаження"
+                    >
+                      <CancelIcon />
+                    </CancelButton>
+                  )}
+                </PhotoActionButtonsContainer>
+              )}
+              
               <HiddenInput 
                 id="photo-upload" 
                 type="file" 
@@ -272,7 +427,7 @@ const handleFileChange = (e) => {
           </FormRow>
 
           <ButtonWrapper>
-            <Button type="submit"  disabled={isLoading || !isUsernameValid}>
+            <Button type="submit" disabled={isLoading || !isUsernameValid}>
               {isLoading ? 'Збереження...' : 'Зберегти зміни'}
             </Button>
           </ButtonWrapper>
