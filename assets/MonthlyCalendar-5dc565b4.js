@@ -1,0 +1,1 @@
+import{c as r,r as n,j as e,N as s}from"./index-cec7cca9.js";const c=()=>{const{setTitle:t}=r();return n.useEffect(()=>{t("Календар")},[t]),e.jsxs("div",{children:[e.jsx("h1",{children:"Календар за місяць"}),e.jsx(s,{to:"/calendar/week",children:"Перейти до тижневого календаря/"}),e.jsx(s,{to:"/calendar/event",children:"Перейти до подій/"})]})};export{c as default};
