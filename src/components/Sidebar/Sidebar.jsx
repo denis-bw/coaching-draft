@@ -4,7 +4,8 @@ import { ReactComponent as CloseIcon } from '../../assets/CloseIcon.svg';
 import { ReactComponent as MyAccount } from '../../assets/MyAccount.svg';
 import { ReactComponent as TeamIcon } from '../../assets/TeamIcon.svg';
 import { ReactComponent as StatisticsIcon } from '../../assets/StatisticsIcon.svg';
-import { ReactComponent as FileIcon} from '../../assets/FileIcon.svg';
+import { ReactComponent as PaymentsIcon } from '../../assets/PaymentsIcon.svg';
+import { ReactComponent as TacticsIcon } from '../../assets/TacticsIcon.svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchLogout } from '../../redux/auth/authOperations';
 
@@ -23,6 +24,7 @@ import {
   SubMenuItem,
   SidebarToggleButton,
   LogoContainer,
+  FileIcon,
   NamedMenu,
   SidebarIcon,
   RightChevronIcon,
@@ -108,12 +110,23 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       ]
     },
     { 
-      name: 'Файли', 
-      icon:  <SidebarIcon><FileIcon /></SidebarIcon>, 
+      name: 'Платежі', 
+      icon:  <SidebarIcon><PaymentsIcon /></SidebarIcon>, 
       submenu: [
         { name: 'Teams', path: '/payment-history' },
         { name: 'Sponsors & Additional-Expenses', path: '/sponsors-and-expensess-payments' }
       ]
+    },
+        { 
+      name: 'Файли', 
+      icon:  <SidebarIcon><FileIcon /></SidebarIcon>, 
+      path: '/my-file' 
+    },
+        { 
+      name: 'Тактична дошка', 
+      icon:  <SidebarIcon><TacticsIcon /></SidebarIcon>, 
+      path: '/tactics-board' 
+  
     }
   ];
 

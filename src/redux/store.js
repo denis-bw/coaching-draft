@@ -3,6 +3,7 @@ import { themeReducer } from './theme/themeSlice.js';
 import { authReducer } from './auth/authSlice.js';
 import { athletesReducer } from './athletes/athletesSlice.js';
 import teamsReducer from './teams/teamsSlice.js';
+import TacticsBoardReducer  from './TacticsBoard/TacticsBoardSlice.js';
 import { RESET_ALL_DATA } from './resetActions';
 
 import {
@@ -44,6 +45,7 @@ const appReducer = combineReducers({
   auth: authReducer,
   athletes: athletesReducer,
   teams: teamsReducer,
+  tacticsBoard: TacticsBoardReducer,
 });
 
 const rootReducer = (state, action) => {
@@ -57,7 +59,8 @@ const rootReducer = (state, action) => {
       theme: state.theme,
       auth: authReducer(undefined, action),
       athletes: athletesReducer(undefined, action),
-      teams: teamsReducer(undefined, action)
+      teams: teamsReducer(undefined, action),
+      tacticsBoard: TacticsBoardReducer(undefined, action)
     };
   }
   

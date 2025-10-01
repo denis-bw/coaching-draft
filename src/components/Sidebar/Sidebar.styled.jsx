@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { ReactComponent as OriginalRightChevronIcon } from '../../assets/RightChevronIcon.svg';
 import { ReactComponent as OriginalLogoutIcon } from '../../assets/LogoutIcon.svg';
 import { ReactComponent as OriginalCalendarIcon } from '../../assets/CalendarIcon.svg';
+import { ReactComponent as FileIconOriginal } from '../../assets/FileIcon.svg';
 
 export const SidebarToggleButton = styled.button`
   background-color: transparent;
@@ -208,8 +209,13 @@ export const SidebarIcon = styled.div`
     height: 100%;
     fill: ${(p) => p.theme.textBlack };
   }
+
 `;
 
+export const FileIcon = styled(FileIconOriginal)`
+    stroke: ${({ theme }) => theme.textBlack};  
+`;
+  
 export const RightChevronIcon = styled(OriginalRightChevronIcon)`
   fill: ${(p) => p.theme.textBlack};
   width: 14px;

@@ -21,6 +21,9 @@ const MonthlyCalendar = lazy(() => import('./pages/Calendar/MonthlyCalendar/Mont
 const Event = lazy(() => import('./pages/Calendar/Event/Event'));
 const Draft = lazy(() => import('./pages/Calendar/Draft/Draft'));
 
+const MyFile = lazy(() => import('./pages/MyFile/MyFile'));
+const TacticsBoard = lazy(() => import('./pages/TacticsBoard/TacticsBoard'));
+
 const ChooseAthleteVisitsStatistics = lazy(() => import('./pages/Statistics/ChooseAthleteVisitsStatistics/ChooseAthleteVisitsStatistics'));
 const MeasurementsStatistics = lazy(() => import('./pages/Statistics/MeasurementsStatistics/MeasurementsStatistics'));
 const VisitsStatistics = lazy(() => import('./pages/Statistics/VisitsStatistics/VisitsStatistics'));
@@ -81,6 +84,10 @@ function App() {
           <Route path="teams" element={<TeamsList />} />
           <Route path="teams/:teamId" element={<TeamDetails />} />
           <Route path="teams/create" element={<TeamCreate />} />
+
+          <Route path="my-file" element={<MyFile />} />
+          <Route path="tactics-board" element={<TacticsBoard />} /> 
+          
           
           <Route path="athletes" element={<AthletesList />} />
           <Route path="athletes/:athleteId" element={<AthleteDetails />} />

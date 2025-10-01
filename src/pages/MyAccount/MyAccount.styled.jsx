@@ -90,8 +90,8 @@ export const ProfileImage = styled.img`
 
 export const PhotoUploadButton = styled.label`
   position: absolute;
-  bottom: -0.3rem;
-  right: -0.3rem;
+  bottom: 0;
+  right: 0;
   width: 2rem;
   height: 2rem;
   display: flex;
@@ -101,28 +101,23 @@ export const PhotoUploadButton = styled.label`
   color: ${({ theme }) => theme.white};
   border-radius: 50%;
   cursor: pointer;
-  transition: background-color 0.2s ease-in-out,
-            transform 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   border: 2px solid ${({ theme }) => theme.white};
   outline: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   &:hover {
     background-color: ${({ theme }) => theme.darkGreen};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.lightGreen}, 0 2px 8px rgba(0, 0, 0, 0.2);
-    transform: scale(1.05);
+    box-shadow: 0 0 0 4px ${({ theme }) => theme.greenMain}, 0 0 0 6px ${({ theme }) => theme.white};
   }
 
   &:focus-visible {
     background-color: ${({ theme }) => theme.darkGreen};
-    box-shadow: 0 0 0 3px ${({ theme }) => theme.lightGreen}, 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 0 4px ${({ theme }) => theme.greenMain}, 0 0 0 6px ${({ theme }) => theme.white};
   }
 
-  @media (min-width: ${breakpoints.tablet}) {
-    width: 2.2rem;
-    height: 2.2rem;
-    bottom: -0.4rem;
-    right: -0.4rem;
+  @media (min-width: ${breakpoints.desktop}) {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 `;
 
