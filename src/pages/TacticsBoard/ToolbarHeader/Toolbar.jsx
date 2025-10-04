@@ -3,9 +3,33 @@ import styled from 'styled-components';
 import { ReactComponent as FieldIcon } from '../../../assets/field.svg';
 import { ReactComponent as CursorIconBase } from '../../../assets/cursor.svg';
 import { ReactComponent as PencilIconBase } from '../../../assets/pencil.svg';
+import { ReactComponent as СancelIconBase } from '../../../assets/cancel.svg';
+import { ReactComponent as ForwardIconBase } from '../../../assets/forward.svg';
+
 import GeometricShapesTool from './GeometricShapesTool';
 import SportsFiguresTool from './SportsFiguresTool';
 import FieldSelectorModal from './FieldSelectorModal';
+import SettingsPanelComponent from './SettingsPanelComponent';
+
+const СancelIcon = styled(СancelIconBase)`
+width: 100%;
+height: 100%;
+  stroke: ${({ theme }) => theme.textBlack};
+`;
+
+const ForwardIcon = styled(ForwardIconBase)`
+width: 100%;
+height: 100%;
+  fill: ${({ theme }) => theme.textBlack};
+`;
+
+const BackIcon = styled(ForwardIconBase)`
+width: 100%;
+height: 100%;
+ transform: scaleX(-1);
+  fill: ${({ theme }) => theme.textBlack};
+`;
+
 
 const CursorIcon = styled(CursorIconBase)`
   width: 70%;  
@@ -60,6 +84,7 @@ const ToolButton = styled.button`
   &:hover {
     background: ${props => props.active ? props.theme.darkGreen : props.theme.lightGreen};
     border-color: ${({ theme }) => theme.textGray};
+
   }
   
   &:active {
@@ -319,12 +344,14 @@ const Toolbar = ({ currentField, onSelectField }) => {
         
           <Separator />
         
-          {/* Назад */}
-          <ToolButton title="Назад">↶</ToolButton>
+          <ToolButton title="Назад">< BackIcon/></ToolButton>
         
-          {/* Вперед */}
-          <ToolButton title="Вперед">↷</ToolButton>
+          <ToolButton title="Вперед"><ForwardIcon /></ToolButton>
+          
+            <ToolButton  title="Скасувати все"><СancelIcon  /></ToolButton>
         </ToolbarWrapper>
+
+   
       </ToolbarContainer>
 
       <FieldSelectorModal
