@@ -3,7 +3,6 @@ import styled from 'styled-components';
 import { ReactComponent as SettingsIcon } from '../../../assets/SettingsIcon.svg';
 import { ReactComponent as CloseIcon } from '../../../assets/CloseIcon.svg';
 
-// Стилізовані компоненти
 const SettingsContainer = styled.div`
   position: relative;
   display: inline-block;
@@ -270,7 +269,6 @@ const Overlay = styled.div`
   transition: all 0.3s ease;
 `;
 
-// Основний компонент
 const SettingsPanelComponent = ({ 
   brushSize = 3,
   brushColor = '#000000',
@@ -334,7 +332,6 @@ const SettingsPanelComponent = ({
     handleClose();
   };
 
-  // Закриття по ESC
   React.useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {

@@ -1,35 +1,55 @@
 import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { ReactComponent as FieldIcon } from '../../../assets/field.svg';
 import { ReactComponent as CursorIconBase } from '../../../assets/cursor.svg';
 import { ReactComponent as PencilIconBase } from '../../../assets/pencil.svg';
 import { ReactComponent as СancelIconBase } from '../../../assets/cancel.svg';
 import { ReactComponent as ForwardIconBase } from '../../../assets/forward.svg';
+import { ReactComponent as TextIconBase } from '../../../assets/text.svg';
 
 import GeometricShapesTool from './GeometricShapesTool';
 import SportsFiguresTool from './SportsFiguresTool';
 import FieldSelectorModal from './FieldSelectorModal';
-import SettingsPanelComponent from './SettingsPanelComponent';
+
+import {
+  setActiveTool,
+  setTeam1Count,
+  setTeam1Color,
+  setTeam2Count,
+  setTeam2Color,
+  undo,
+  redo,
+  clearAll,
+  initializePlayers
+} from '../../../redux/TacticsBoard/TacticsBoardSlice';
+
+
+const TextIcon = styled(TextIconBase)`
+  width: 80%;
+  height: 80%;
+  stroke: ${({ theme }) => theme.textBlack};
+   fill: ${({ theme }) => theme.textBlack};
+`;
 
 const СancelIcon = styled(СancelIconBase)`
-width: 100%;
-height: 100%;
+  width: 100%;
+  height: 100%;
   stroke: ${({ theme }) => theme.textBlack};
 `;
 
 const ForwardIcon = styled(ForwardIconBase)`
-width: 100%;
-height: 100%;
+  width: 100%;
+  height: 100%;
   fill: ${({ theme }) => theme.textBlack};
 `;
 
 const BackIcon = styled(ForwardIconBase)`
-width: 100%;
-height: 100%;
- transform: scaleX(-1);
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
   fill: ${({ theme }) => theme.textBlack};
 `;
-
 
 const CursorIcon = styled(CursorIconBase)`
   width: 70%;  
@@ -77,6 +97,7 @@ const ToolButton = styled.button`
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  font-weight: bold;
   border-radius: 4px;
   transition: all 0.2s;
   padding: 0;
@@ -84,11 +105,15 @@ const ToolButton = styled.button`
   &:hover {
     background: ${props => props.active ? props.theme.darkGreen : props.theme.lightGreen};
     border-color: ${({ theme }) => theme.textGray};
-
   }
   
   &:active {
     transform: scale(0.95);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
   
   @media (max-width: 768px) {
@@ -210,9 +235,14 @@ const ColorPicker = styled.input`
     height: 18px;
   }
 `;
+
 const Toolbar = ({ currentField, onSelectField }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTool, setActiveTool] = useState('drawing');
+  const dispatch = useDispatch();
+  
+  const { activeTool, team1, team2, historyIndex, history } = useSelector(
+    (state) => state.tacticsBoard
+  );
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -228,17 +258,51 @@ const Toolbar = ({ currentField, onSelectField }) => {
   };
 
   const handleToolClick = (toolName) => {
-    setActiveTool(toolName);
-    console.log('Активний інструмент:', toolName);
+    dispatch(setActiveTool(toolName));
   };
 
   const handleShapeSelect = (shape) => {
-    setActiveTool(`shape_${shape.id}`);
+    dispatch(setActiveTool(`shape_${shape.id}`));
   };
 
   const handleFigureSelect = (figure) => {
-    setActiveTool(`figure_${figure.id}`);
+    dispatch(setActiveTool(`figure_${figure.id}`));
   };
+
+  const handleTeam1CountChange = (e) => {
+    const value = parseInt(e.target.value) || 0;
+    dispatch(setTeam1Count(Math.max(0, Math.min(30, value))));
+  };
+
+  const handleTeam1ColorChange = (e) => {
+    dispatch(setTeam1Color(e.target.value));
+  };
+
+  const handleTeam2CountChange = (e) => {
+    const value = parseInt(e.target.value) || 0;
+    dispatch(setTeam2Count(Math.max(0, Math.min(30, value))));
+  };
+
+  const handleTeam2ColorChange = (e) => {
+    dispatch(setTeam2Color(e.target.value));
+  };
+
+  const handleUndo = () => {
+    dispatch(undo());
+  };
+
+  const handleRedo = () => {
+    dispatch(redo());
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm('Ви впевнені, що хочете очистити всю дошку?')) {
+      dispatch(clearAll());
+    }
+  };
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   return (
     <>
@@ -256,13 +320,21 @@ const Toolbar = ({ currentField, onSelectField }) => {
         
           {/* Курсор */}
           <ToolButton 
-            title="Курсор"
+            title="Курсор (виділення та переміщення)"
             active={activeTool === 'cursor'}
             onClick={() => handleToolClick('cursor')}
           >
             <CursorIcon/>
           </ToolButton>
-        
+
+          <ToolButton 
+            title="Додати текст"
+            active={activeTool === 'text'}
+            onClick={() => handleToolClick('text')}
+          >
+            <TextIcon/>
+          </ToolButton>
+
           {/* Малювання */}
           <ToolButton 
             title="Малювання"
@@ -295,12 +367,14 @@ const Toolbar = ({ currentField, onSelectField }) => {
               type="number" 
               min="0" 
               max="30" 
-              defaultValue="11"
+              value={team1.count}
+              onChange={handleTeam1CountChange}
               title="Кількість гравців команди 1"
             />
             <ColorPicker 
               type="color" 
-              defaultValue="#ff0000"
+              value={team1.color}
+              onChange={handleTeam1ColorChange}
               title="Колір команди 1"
             />
           </TeamGroup>
@@ -312,12 +386,14 @@ const Toolbar = ({ currentField, onSelectField }) => {
               type="number" 
               min="0" 
               max="30" 
-              defaultValue="11"
+              value={team2.count}
+              onChange={handleTeam2CountChange}
               title="Кількість гравців команди 2"
             />
             <ColorPicker 
               type="color" 
-              defaultValue="#0000ff"
+              value={team2.color}
+              onChange={handleTeam2ColorChange}
               title="Колір команди 2"
             />
           </TeamGroup>
@@ -344,14 +420,29 @@ const Toolbar = ({ currentField, onSelectField }) => {
         
           <Separator />
         
-          <ToolButton title="Назад">< BackIcon/></ToolButton>
+          <ToolButton 
+            title="Назад (Undo)"
+            onClick={handleUndo}
+            disabled={!canUndo}
+          >
+            <BackIcon/>
+          </ToolButton>
         
-          <ToolButton title="Вперед"><ForwardIcon /></ToolButton>
+          <ToolButton 
+            title="Вперед (Redo)"
+            onClick={handleRedo}
+            disabled={!canRedo}
+          >
+            <ForwardIcon />
+          </ToolButton>
           
-            <ToolButton  title="Скасувати все"><СancelIcon  /></ToolButton>
+          <ToolButton 
+            title="Скасувати все"
+            onClick={handleClearAll}
+          >
+            <СancelIcon />
+          </ToolButton>
         </ToolbarWrapper>
-
-   
       </ToolbarContainer>
 
       <FieldSelectorModal

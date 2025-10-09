@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { store } from '../../redux/store';
 import Canvas from './Canvas';
 import Toolbar from './ToolbarHeader/Toolbar';
 import styled from 'styled-components';
+import { useOutletContext } from "react-router-dom";
 
 const TacticsBoardContainer = styled.div`
   display: flex;
@@ -22,6 +23,8 @@ const TacticsBoardApp = styled.div`
 `;
 
 const TacticsBoard = ({ theme }) => {
+  const { setTitle } = useOutletContext();
+  
   const [currentField, setCurrentField] = useState({
     id: 'football_standard',
     name: 'Стандартне футбольне поле',
@@ -33,6 +36,10 @@ const TacticsBoard = ({ theme }) => {
     setCurrentField(field);
   };
 
+  useEffect(() => {
+    setTitle("Тактична дошка");
+  }, [setTitle]);
+  
   return (
       <Provider store={store}>
         <TacticsBoardContainer>

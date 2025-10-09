@@ -75,7 +75,6 @@ const SportsFiguresTool = ({ activeTool, onSelectFigure }) => {
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
 
-  // Визначаємо, чи обрана якась фігура з цієї групи
   const isFigureActive = activeTool.startsWith('figure_');
   const selectedFigureId = isFigureActive ? activeTool.replace('figure_', '') : null;
   const selectedFigure = figures.find(figure => figure.id === selectedFigureId);

@@ -274,13 +274,12 @@ const FieldPreview = styled.div`
 const FieldVisualization = styled.div`
   position: relative;
   width: ${props => {
-    // Фіксовані максимальні розміри для всіх екранів
+  
     const maxWidth = 100;
     const maxHeight = 80;
     const width = props.fieldWidth;
     const height = props.fieldHeight;
     
-    // Розраховуємо масштаб для збереження пропорцій
     const scaleByWidth = maxWidth / width;
     const scaleByHeight = maxHeight / height;
     const scale = Math.min(scaleByWidth, scaleByHeight);
@@ -288,13 +287,12 @@ const FieldVisualization = styled.div`
     return `${width * scale}px`;
   }};
   height: ${props => {
-    // Фіксовані максимальні розміри для всіх екранів
+  
     const maxWidth = 100;
     const maxHeight = 80;
     const width = props.fieldWidth;
     const height = props.fieldHeight;
     
-    // Розраховуємо масштаб для збереження пропорцій
     const scaleByWidth = maxWidth / width;
     const scaleByHeight = maxHeight / height;
     const scale = Math.min(scaleByWidth, scaleByHeight);
@@ -398,7 +396,6 @@ const FieldSelectorModal = ({ isOpen, onClose, onSelectField, currentFieldId }) 
     }
   };
 
-  // Функція для форматування розмірів
   const formatDimensions = (field, category) => {
     if (category === 'SHEET') {
       return `${field.width}см × ${field.height}см`;
@@ -406,7 +403,6 @@ const FieldSelectorModal = ({ isOpen, onClose, onSelectField, currentFieldId }) 
     return `${field.width}м × ${field.height}м`;
   };
 
-  // Функція для форматування міток на превью
   const formatDimensionLabel = (value, category) => {
     if (category === 'SHEET') {
       return `${value}см`;

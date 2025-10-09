@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateUserProfile } from '../../redux/auth/authOperations'; 
 import { useNavigationPrompt } from '../../hooks/useNavigationPrompt'; 
 import { NavigationPrompt } from '../../components/NavigationPrompt/NavigationPrompt'; 
+import { useOutletContext } from "react-router-dom";
 import { 
   Container, 
   Card, 
@@ -87,7 +88,7 @@ const DeletePhotoModal = ({ isOpen, onConfirm, onCancel }) => {
 };
 
 const MyAccount = () => {
-  const setTitle = () => {};  
+  const { setTitle } = useOutletContext();
   const { user, isLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 

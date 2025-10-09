@@ -112,7 +112,6 @@ const GeometricShapesTool = ({ activeTool, onSelectShape }) => {
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
 
-  // Визначаємо, чи обрана якась фігура з цієї групи
   const isShapeActive = activeTool.startsWith('shape_');
   const selectedShapeId = isShapeActive ? activeTool.replace('shape_', '') : null;
   const selectedShape = shapes.find(shape => shape.id === selectedShapeId);
@@ -147,7 +146,7 @@ const GeometricShapesTool = ({ activeTool, onSelectShape }) => {
   }, []);
 
   const getDisplayIcon = () => {
-    const shape = selectedShape || shapes[0]; // Якщо нічого не обрано, показуємо прямокутник
+    const shape = selectedShape || shapes[0]; 
     return (
       <StyledIcon>
         {React.cloneElement(shape.icon, shape.style)}
