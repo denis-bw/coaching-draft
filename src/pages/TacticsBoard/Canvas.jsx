@@ -8,10 +8,8 @@ import {
   selectObject,
   deselectObject,
   updateObject,
-  deleteObject,
   initializePlayers,
   updatePath,
-  deletePath,
   addText,
   updatePlayersPosition,
   setActiveTool
@@ -47,22 +45,28 @@ const StyledCanvas = styled.canvas`
   background: white;
 `;
 
-const TextInput = styled.input`
+const TextArea = styled.textarea`
   position: absolute;
   border: 2px solid #FFD700;
   background: white;
-  padding: 2px 4px;
+  padding: 4px 6px;
   transform: translateY(-50%);
-  min-width: 100px;
+  min-width: 150px;
+  min-height: auto;
   outline: none;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   font-family: Arial, sans-serif;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 `;
 
 const Canvas = ({ fieldSize, fieldType }) => {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
-  const textInputRef = useRef(null);
+  const textAreaRef = useRef(null);
   const initializedRef = useRef(false);
   const textIdRef = useRef(null);
   
@@ -80,7 +84,9 @@ const Canvas = ({ fieldSize, fieldType }) => {
     objects, 
     selectedObjectId,
     team1,
-    team2
+    team2,
+    textFontSize,
+    textColor
   } = useSelector((state) => state.tacticsBoard);
 
   const { 
@@ -119,7 +125,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
     continueDrawing,
     endDrawing,
     startShape,
-    getShapePreview,
     endShape,
     cancelDrawing
   } = useDrawingTools();
@@ -180,118 +185,119 @@ const Canvas = ({ fieldSize, fieldType }) => {
     };
   };
 
-const handleMouseDown = (e) => {
-  if (e.button !== 0) return;
-  
-  const pos = getMousePos(e);
-  const canvas = canvasRef.current;
-  
-  if (isTextInput) {
-    handleTextInputBlur();
-    return;
-  }
-  
-  if (activeTool === 'cursor') {
-
-    const selectedObj = selectedObjectId ? 
-      (selectedObjectId.startsWith('path_') ? 
-        { ...paths[parseInt(selectedObjectId.replace('path_', ''))], type: 'path', id: selectedObjectId } :
-        objects.find(o => o.id === selectedObjectId)) : 
-      null;
-
-    if (selectedObj) {
-      const bounds = getObjectBounds(selectedObj, canvas);
-      
-      if (bounds) {
-  
-        const handle = checkForHandle(pos, selectedObj, canvas);
-        
-        if (handle) {
-          startResize(handle, selectedObj, pos, bounds);
-          
-          if (selectedObj.type === 'path') {
-            tempPathDataRef.current = { ...selectedObj };
-          } else {
-            tempObjectDataRef.current = { ...selectedObj };
-          }
-          return;
-        }
-        
-        if (checkIfPointInSelectedBounds(pos, selectedObj, canvas)) {
-          startDrag(selectedObj, pos, canvas);
-          
-          if (selectedObj.type === 'path') {
-            tempPathDataRef.current = { ...selectedObj };
-          } else {
-            tempObjectDataRef.current = { ...selectedObj };
-          }
-          return;
-        }
-      }
+  const handleMouseDown = (e) => {
+    if (e.button !== 0) return;
+    
+    const pos = getMousePos(e);
+    const canvas = canvasRef.current;
+    
+    if (isTextInput) {
+      handleTextInputBlur();
+      return;
     }
     
-    const clickedObject = getObjectAtPosition(pos.x, pos.y, objects, paths, brushSize, canvas);
-    
-    if (clickedObject) {
-      dispatch(selectObject(clickedObject.id));
-      
-      const bounds = getObjectBounds(clickedObject, canvas);
-      if (bounds) {
-        startDrag(clickedObject, pos, canvas);
+    if (activeTool === 'cursor') {
+      const selectedObj = selectedObjectId ? 
+        (selectedObjectId.startsWith('path_') ? 
+          { ...paths[parseInt(selectedObjectId.replace('path_', ''))], type: 'path', id: selectedObjectId } :
+          objects.find(o => o.id === selectedObjectId)) : 
+        null;
+
+      if (selectedObj) {
+        const bounds = getObjectBounds(selectedObj, canvas);
         
-        if (clickedObject.type === 'path') {
-          tempPathDataRef.current = { ...clickedObject };
-        } else {
-          tempObjectDataRef.current = { ...clickedObject };
+        if (bounds) {
+          const handle = checkForHandle(pos, selectedObj, canvas);
+          
+          if (handle) {
+            startResize(handle, selectedObj, pos, bounds);
+            
+            if (selectedObj.type === 'path') {
+              tempPathDataRef.current = { ...selectedObj };
+            } else {
+              tempObjectDataRef.current = { ...selectedObj };
+            }
+            return;
+          }
+          
+          if (checkIfPointInSelectedBounds(pos, selectedObj, canvas)) {
+            startDrag(selectedObj, pos, canvas);
+            
+            if (selectedObj.type === 'path') {
+              tempPathDataRef.current = { ...selectedObj };
+            } else {
+              tempObjectDataRef.current = { ...selectedObj };
+            }
+            return;
+          }
         }
       }
-    } else {
-      dispatch(deselectObject());
+      
+      const clickedObject = getObjectAtPosition(pos.x, pos.y, objects, paths, brushSize, canvas);
+      
+      if (clickedObject) {
+        dispatch(selectObject(clickedObject.id));
+        
+        const bounds = getObjectBounds(clickedObject, canvas);
+        if (bounds) {
+          startDrag(clickedObject, pos, canvas);
+          
+          if (clickedObject.type === 'path') {
+            tempPathDataRef.current = { ...clickedObject };
+          } else {
+            tempObjectDataRef.current = { ...clickedObject };
+          }
+        }
+      } else {
+        dispatch(deselectObject());
+      }
+      
+    } else if (activeTool === 'drawing') {
+      startDrawing(pos);
+      
+    } else if (activeTool.startsWith('shape_')) {
+      startShape(pos);
+      
+    } else if (activeTool.startsWith('figure_')) {
+      const figureIcons = {
+        'player': '👤',
+        'goalkeeper': '🧤',
+        'coach': '🧠',
+        'referee': '⚖️',
+        'goal': '🥅',
+        'cone': '🟨'
+      };
+      
+      const figureId = activeTool.replace('figure_', '');
+      dispatch(addObject({
+        type: 'figure',
+        figureType: figureId,
+        icon: figureIcons[figureId],
+        x: pos.x,
+        y: pos.y,
+        size: 30
+      }));
+      
+    } else if (activeTool === 'ball') {
+      dispatch(addObject({
+        type: 'ball',
+        x: pos.x,
+        y: pos.y,
+        radius: 10
+      }));
+    } else if (activeTool === 'text') {
+      const newTextId = `text_${Date.now()}_${Math.random()}`;
+      setIsTextInput(true);
+      setTextInputValue('');
+      setTextInputPos(pos);
+      textIdRef.current = newTextId;
+      
+      // Виділяємо текстовий об'єкт (хоча він ще не створений)
+      dispatch(selectObject(newTextId));
     }
     
-  } else if (activeTool === 'drawing') {
-    startDrawing(pos);
-    
-  } else if (activeTool.startsWith('shape_')) {
-    startShape(pos);
-    
-  } else if (activeTool.startsWith('figure_')) {
-    const figureIcons = {
-      'player': '👤',
-      'goalkeeper': '🧤',
-      'coach': '🧠',
-      'referee': '⚖️',
-      'goal': '🥅',
-      'cone': '🟨'
-    };
-    
-    const figureId = activeTool.replace('figure_', '');
-    dispatch(addObject({
-      type: 'figure',
-      figureType: figureId,
-      icon: figureIcons[figureId],
-      x: pos.x,
-      y: pos.y,
-      size: 30
-    }));
-    
-  } else if (activeTool === 'ball') {
-    dispatch(addObject({
-      type: 'ball',
-      x: pos.x,
-      y: pos.y,
-      radius: 10
-    }));
-  } else if (activeTool === 'text') {
-    const newTextId = `text_${Date.now()}_${Math.random()}`;
-    setIsTextInput(true);
-    setTextInputValue('');
-    setTextInputPos(pos);
-    textIdRef.current = newTextId;
-  }
-  
-  e.preventDefault();
-};
+    e.preventDefault();
+  };
 
   const handleMouseMove = (e) => {
     const pos = getMousePos(e);
@@ -341,81 +347,80 @@ const handleMouseDown = (e) => {
   };
 
   const handleMouseUp = (e) => {
-  const pos = getMousePos(e);
-  
-  if (drawingRef.current) {
-    const path = endDrawing();
-    if (path) {
-      dispatch(addPath({
-        points: path,
-        color: drawColor,
-        brushSize: brushSize
-      }));
-    }
-  }
-  
-  if (isDrawingShapeRef.current && shapeStartRef.current) {
-    const shapeType = activeTool.replace('shape_', '');
-    const shapeData = endShape(pos, shapeType);
+    const pos = getMousePos(e);
     
-    if (shapeData) {
-      dispatch(addObject({
-        type: 'shape',
-        shape: shapeType,
-        ...shapeData,
-        color: drawColor
-      }));
-    }
-  }
-  
-  if (draggedObjectRef.current) {
-    const draggedObject = endDrag();
-    
-    if (draggedObject) {
-      if (draggedObject.type === 'path') {
-        const pathIndex = parseInt(draggedObject.id.replace('path_', ''));
-        dispatch(updatePath({
-          index: pathIndex,
-          updates: draggedObject
-        }));
-      } else {
-        dispatch(updateObject({
-          id: draggedObject.id,
-          updates: draggedObject
+    if (drawingRef.current) {
+      const path = endDrawing();
+      if (path) {
+        dispatch(addPath({
+          points: path,
+          color: drawColor,
+          brushSize: brushSize
         }));
       }
     }
-    tempObjectDataRef.current = null;
-    tempPathDataRef.current = null;
-  }
-  
-  if (resizeHandleRef.current) {
-    const resizeData = endResize();
     
-    if (resizeData && tempObjectDataRef.current) {
-      if (resizeData.type === 'path') {
-        const pathIndex = parseInt(resizeData.id.replace('path_', ''));
-        dispatch(updatePath({
-          index: pathIndex,
-          updates: tempPathDataRef.current
-        }));
-      } else {
-        dispatch(updateObject({
-          id: tempObjectDataRef.current.id,
-          updates: tempObjectDataRef.current
+    if (isDrawingShapeRef.current && shapeStartRef.current) {
+      const shapeType = activeTool.replace('shape_', '');
+      const shapeData = endShape(pos, shapeType);
+      
+      if (shapeData) {
+        dispatch(addObject({
+          type: 'shape',
+          shape: shapeType,
+          ...shapeData,
+          color: drawColor
         }));
       }
     }
-    tempObjectDataRef.current = null;
-    tempPathDataRef.current = null;
-  }
-  
-  setCursorStyle('default');
-  e.preventDefault();
-};
+    
+    if (draggedObjectRef.current) {
+      const draggedObject = endDrag();
+      
+      if (draggedObject) {
+        if (draggedObject.type === 'path') {
+          const pathIndex = parseInt(draggedObject.id.replace('path_', ''));
+          dispatch(updatePath({
+            index: pathIndex,
+            updates: draggedObject
+          }));
+        } else {
+          dispatch(updateObject({
+            id: draggedObject.id,
+            updates: draggedObject
+          }));
+        }
+      }
+      tempObjectDataRef.current = null;
+      tempPathDataRef.current = null;
+    }
+    
+    if (resizeHandleRef.current) {
+      const resizeData = endResize();
+      
+      if (resizeData && tempObjectDataRef.current) {
+        if (resizeData.type === 'path') {
+          const pathIndex = parseInt(resizeData.id.replace('path_', ''));
+          dispatch(updatePath({
+            index: pathIndex,
+            updates: tempPathDataRef.current
+          }));
+        } else {
+          dispatch(updateObject({
+            id: tempObjectDataRef.current.id,
+            updates: tempObjectDataRef.current
+          }));
+        }
+      }
+      tempObjectDataRef.current = null;
+      tempPathDataRef.current = null;
+    }
+    
+    setCursorStyle('default');
+    e.preventDefault();
+  };
 
   const handleMouseLeave = (e) => {
-
     if (drawingRef.current) {
       const path = endDrawing();
       if (path) {
@@ -475,45 +480,39 @@ const handleMouseDown = (e) => {
   const handleTextInputChange = (e) => {
     setTextInputValue(e.target.value);
     
-    if (textInputRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      ctx.font = '16px Arial';
-      const metrics = ctx.measureText(e.target.value || 'W');
-      textInputRef.current.style.width = `${Math.max(100, metrics.width + 20)}px`;
+    // Автоматичне розширення textarea
+    if (textAreaRef.current) {
+      textAreaRef.current.style.height = 'auto';
+      textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
     }
   };
 
- const handleTextInputBlur = () => {
-  const text = textInputValue.trim();
-  
-  if (text) {
-    dispatch(addText({
-      id: textIdRef.current,
-      x: textInputPos.x,
-      y: textInputPos.y,
-      text: text,
-      fontSize: 16,
-      color: drawColor
-    }));
-  }
-  
-  setIsTextInput(false);
-  setTextInputValue('');
-  textIdRef.current = null;  
-  dispatch(setActiveTool('cursor'));
-};
+  const handleTextInputBlur = () => {
+    const text = textInputValue.trim();
+    
+    if (text) {
+      dispatch(addText({
+        id: textIdRef.current,
+        x: textInputPos.x,
+        y: textInputPos.y,
+        text: text,
+        fontSize: textFontSize,
+        color: textColor
+      }));
+    }
+    
+    setIsTextInput(false);
+    setTextInputValue('');
+    textIdRef.current = null;  
+    dispatch(setActiveTool('cursor'));
+  };
 
   const handleTextInputKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (textInputRef.current) {
-        textInputRef.current.blur();
-      }
-    } else if (e.key === 'Escape') {
+    if (e.key === 'Escape') {
       e.preventDefault();
       setIsTextInput(false);
       setTextInputValue('');
+      dispatch(deselectObject());
       dispatch(setActiveTool('cursor'));
     }
   };
@@ -574,11 +573,12 @@ const handleMouseDown = (e) => {
   }, [team1.count, team2.count, canvasSize, objects, dispatch]);
 
   useEffect(() => {
-    if (isTextInput && textInputRef.current && canvasRef.current) {
-      const input = textInputRef.current;
+    if (isTextInput && textAreaRef.current && canvasRef.current) {
+      const input = textAreaRef.current;
       
       setTimeout(() => {
         input.focus();
+        input.select();
       }, 0);
       
       const canvas = canvasRef.current;
@@ -591,23 +591,15 @@ const handleMouseDown = (e) => {
       
       input.style.left = `${screenX}px`;
       input.style.top = `${screenY}px`;
-      input.style.fontSize = `${16 / scaleY}px`;
-      input.style.color = drawColor;
-      input.style.width = '100px';
+      input.style.fontSize = `${textFontSize / scaleY}px`;
+      input.style.color = textColor;
+      input.style.width = 'auto';
+      input.style.height = 'auto';
     }
-  }, [isTextInput, textInputPos, drawColor]);
+  }, [isTextInput, textInputPos, textColor, textFontSize]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedObjectId && !isTextInput) {
-        e.preventDefault();
-        if (selectedObjectId.startsWith('path_')) {
-          const pathIndex = parseInt(selectedObjectId.replace('path_', ''));
-          dispatch(deletePath(pathIndex));
-        } else {
-          dispatch(deleteObject(selectedObjectId));
-        }
-      }
       if (e.key === 'Escape' && !isTextInput) {
         dispatch(deselectObject());
       }
@@ -616,6 +608,11 @@ const handleMouseDown = (e) => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedObjectId, isTextInput, dispatch]);
+
+  // Втрачати фокус при зміні інструмента
+  useEffect(() => {
+    dispatch(deselectObject());
+  }, [activeTool, dispatch]);
 
   return (
     <OuterContainer>
@@ -629,13 +626,14 @@ const handleMouseDown = (e) => {
         />
         
         {isTextInput && (
-          <TextInput
-            ref={textInputRef}
-            type="text"
+          <TextArea
+            ref={textAreaRef}
             value={textInputValue}
             onChange={handleTextInputChange}
             onBlur={handleTextInputBlur}
             onKeyDown={handleTextInputKeyDown}
+            placeholder="Введіть текст"
+            rows={1}
           />
         )}
       </CanvasContainer>

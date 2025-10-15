@@ -1,30 +1,92 @@
 export const drawText = (ctx, textObj, isSelected = false) => {
-  ctx.font = `${textObj.fontSize}px Arial`;
-  ctx.fillStyle = textObj.color;
+  ctx.save();
+  
+  // Застосовуємо трансформації
+  if (textObj.rotation) {
+    const centerX = textObj.x;
+    const centerY = textObj.y;
+    ctx.translate(centerX, centerY);
+    ctx.rotate((textObj.rotation * Math.PI) / 180);
+    ctx.translate(-centerX, -centerY);
+  }
+  
+  // Налаштування шрифту
+  const fontWeight = textObj.fontWeight || 'normal';
+  const fontStyle = textObj.fontStyle || 'normal';
+  const fontSize = textObj.fontSize || 16;
+  const fontFamily = textObj.fontFamily || 'Arial';
+  
+  ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   
-  const metrics = ctx.measureText(textObj.text);
-  const actualWidth = metrics.width;
-  const actualHeight = textObj.fontSize * 1.2;
+  // Колір з прозорістю
+  const opacity = textObj.opacity !== undefined ? textObj.opacity / 100 : 1;
+  const color = textObj.color || '#000000';
   
+  // Конвертуємо HEX в RGB для alpha
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
   
-  ctx.fillStyle = textObj.color;
-  ctx.fillText(textObj.text, textObj.x, textObj.y);
+  // Розбиваємо текст на рядки
+  const lines = (textObj.text || '').split('\n');
+  const lineHeight = (textObj.lineHeight || 1.5) * fontSize;
+  const letterSpacing = textObj.letterSpacing || 0;
   
-  if (isSelected) {
- 
-    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-    ctx.fillRect(textObj.x, textObj.y, actualWidth, actualHeight);
+  // Малюємо кожен рядок
+  let maxWidth = 0;
+  lines.forEach((line, index) => {
+    const y = textObj.y + (index * lineHeight);
     
-   
+    if (letterSpacing !== 0) {
+      // Малюємо з міжлітерним інтервалом
+      let x = textObj.x;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        ctx.fillText(char, x, y);
+        const charWidth = ctx.measureText(char).width;
+        x += charWidth + letterSpacing;
+      }
+      const lineWidth = ctx.measureText(line).width + (letterSpacing * (line.length - 1));
+      if (lineWidth > maxWidth) maxWidth = lineWidth;
+    } else {
+      ctx.fillText(line, textObj.x, y);
+      const lineWidth = ctx.measureText(line).width;
+      if (lineWidth > maxWidth) maxWidth = lineWidth;
+    }
+    
+    // Підкреслення
+    if (textObj.textDecoration === 'underline') {
+      const lineWidth = letterSpacing !== 0 
+        ? ctx.measureText(line).width + (letterSpacing * (line.length - 1))
+        : ctx.measureText(line).width;
+      ctx.beginPath();
+      ctx.moveTo(textObj.x, y + fontSize);
+      ctx.lineTo(textObj.x + lineWidth, y + fontSize);
+      ctx.strokeStyle = ctx.fillStyle;
+      ctx.lineWidth = Math.max(1, fontSize / 16);
+      ctx.stroke();
+    }
+  });
+  
+  // Виділення для вибраного тексту
+  if (isSelected) {
+    const totalHeight = lines.length * lineHeight;
+    
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
+    ctx.fillRect(textObj.x - 2, textObj.y - 2, maxWidth + 4, totalHeight + 4);
+    
     ctx.strokeStyle = '#FFD700';
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 5]);
-    ctx.strokeRect(textObj.x, textObj.y, actualWidth, actualHeight);
+    ctx.strokeRect(textObj.x - 2, textObj.y - 2, maxWidth + 4, totalHeight + 4);
     ctx.setLineDash([]);
   }
   
+  ctx.restore();
   return textObj;
 };
 
@@ -207,7 +269,6 @@ export const getResizeHandles = (bounds, obj) => {
   }
   
   if (obj && obj.type === 'text') {
-
     return {
       topLeft: { x: bounds.x, y: bounds.y, cursor: 'nwse-resize' },
       topRight: { x: bounds.x + bounds.width, y: bounds.y, cursor: 'nesw-resize' },
@@ -216,7 +277,6 @@ export const getResizeHandles = (bounds, obj) => {
     };
   }
   
-
   if (obj && (obj.type === 'player' || obj.type === 'ball' || obj.type === 'figure')) {
     return {
       top: { x: bounds.centerX || bounds.x + bounds.width/2, y: bounds.y, cursor: 'ns-resize' },
@@ -226,7 +286,6 @@ export const getResizeHandles = (bounds, obj) => {
     };
   }
   
-
   return {
     topLeft: { x: bounds.x, y: bounds.y, cursor: 'nwse-resize' },
     topRight: { x: bounds.x + bounds.width, y: bounds.y, cursor: 'nesw-resize' },

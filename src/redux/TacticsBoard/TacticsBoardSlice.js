@@ -4,6 +4,11 @@ const initialState = {
   activeTool: 'cursor',
   drawColor: '#000000',
   brushSize: 3,
+  textFontSize: 16,
+  textColor: '#000000',
+  textOpacity: 100,
+  shapeBorderWidth: 2,
+  shapeColor: '#000000',
   paths: [],
   objects: [],
   selectedObjectId: null,
@@ -34,6 +39,21 @@ const TacticsBoardSlice = createSlice({
     },
     setBrushSize: (state, action) => {
       state.brushSize = action.payload;
+    },
+    setTextFontSize: (state, action) => {
+      state.textFontSize = action.payload;
+    },
+    setTextColor: (state, action) => {
+      state.textColor = action.payload;
+    },
+    setTextOpacity: (state, action) => {
+      state.textOpacity = action.payload;
+    },
+    setShapeBorderWidth: (state, action) => {
+      state.shapeBorderWidth = action.payload;
+    },
+    setShapeColor: (state, action) => {
+      state.shapeColor = action.payload;
     },
     addPath: (state, action) => {
       state.paths.push(action.payload);
@@ -191,15 +211,39 @@ const TacticsBoardSlice = createSlice({
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
     addText: (state, action) => {
-      const { id, x, y, text, fontSize, color } = action.payload;
+      const { 
+        id, 
+        x, 
+        y, 
+        text, 
+        fontSize, 
+        color, 
+        opacity, 
+        fontFamily, 
+        fontWeight, 
+        fontStyle, 
+        textDecoration, 
+        lineHeight, 
+        letterSpacing, 
+        rotation 
+      } = action.payload;
+      
       const newText = {
         id: id || `text_${Date.now()}_${Math.random()}`,
         type: 'text',
         x,
         y,
         text: text || '',
-        fontSize: fontSize || 16,
-        color: color || state.drawColor
+        fontSize: fontSize || state.textFontSize,
+        color: color || state.textColor,
+        opacity: opacity !== undefined ? opacity : state.textOpacity,
+        fontFamily: fontFamily || 'Arial',
+        fontWeight: fontWeight || 'normal',
+        fontStyle: fontStyle || 'normal',
+        textDecoration: textDecoration || 'none',
+        lineHeight: lineHeight || 1.5,
+        letterSpacing: letterSpacing || 0,
+        rotation: rotation || 0
       };
       state.objects.push(newText);
       TacticsBoardSlice.caseReducers.saveToHistory(state);
@@ -210,7 +254,10 @@ const TacticsBoardSlice = createSlice({
         objects: JSON.parse(JSON.stringify(state.objects)),
         team1: JSON.parse(JSON.stringify(state.team1)),
         team2: JSON.parse(JSON.stringify(state.team2)),
-        activeTool: state.activeTool
+        activeTool: state.activeTool,
+        textColor: state.textColor,
+        textOpacity: state.textOpacity,
+        textFontSize: state.textFontSize
       };
       state.history = state.history.slice(0, state.historyIndex + 1);
       state.history.push(snapshot);
@@ -229,6 +276,9 @@ const TacticsBoardSlice = createSlice({
         state.team1 = JSON.parse(JSON.stringify(snapshot.team1));
         state.team2 = JSON.parse(JSON.stringify(snapshot.team2));
         state.activeTool = snapshot.activeTool || 'cursor';
+        state.textColor = snapshot.textColor || '#000000';
+        state.textOpacity = snapshot.textOpacity !== undefined ? snapshot.textOpacity : 100;
+        state.textFontSize = snapshot.textFontSize || 16;
         state.selectedObjectId = null;
       }
     },
@@ -241,6 +291,9 @@ const TacticsBoardSlice = createSlice({
         state.team1 = JSON.parse(JSON.stringify(snapshot.team1));
         state.team2 = JSON.parse(JSON.stringify(snapshot.team2));
         state.activeTool = snapshot.activeTool || 'cursor';
+        state.textColor = snapshot.textColor || '#000000';
+        state.textOpacity = snapshot.textOpacity !== undefined ? snapshot.textOpacity : 100;
+        state.textFontSize = snapshot.textFontSize || 16;
         state.selectedObjectId = null;
       }
     },
@@ -274,7 +327,10 @@ const TacticsBoardSlice = createSlice({
         team1: state.team1,
         team2: state.team2,
         drawColor: state.drawColor,
-        brushSize: state.brushSize
+        brushSize: state.brushSize,
+        textColor: state.textColor,
+        textOpacity: state.textOpacity,
+        textFontSize: state.textFontSize
       };
     },
     setFormation: (state, action) => {
@@ -316,6 +372,23 @@ const TacticsBoardSlice = createSlice({
         });
       }
       TacticsBoardSlice.caseReducers.saveToHistory(state);
+    },
+    updateTextProperties: (state, action) => {
+      const { id, properties } = action.payload;
+      const object = state.objects.find(obj => obj.id === id && obj.type === 'text');
+      if (object) {
+        Object.assign(object, properties);
+        TacticsBoardSlice.caseReducers.saveToHistory(state);
+      }
+    },
+    updateColorWithOpacity: (state, action) => {
+      const { id, color, opacity } = action.payload;
+      const object = state.objects.find(obj => obj.id === id);
+      if (object) {
+        if (color !== undefined) object.color = color;
+        if (opacity !== undefined) object.opacity = opacity;
+        TacticsBoardSlice.caseReducers.saveToHistory(state);
+      }
     }
   }
 });
@@ -324,6 +397,11 @@ export const {
   setActiveTool,
   setDrawColor,
   setBrushSize,
+  setTextFontSize,
+  setTextColor,
+  setTextOpacity,
+  setShapeBorderWidth,
+  setShapeColor,
   addPath,
   addObject,
   updateObject,
@@ -348,7 +426,9 @@ export const {
   resetBoard,
   importState,
   exportState,
-  setFormation
+  setFormation,
+  updateTextProperties,
+  updateColorWithOpacity
 } = TacticsBoardSlice.actions;
 
 export default TacticsBoardSlice.reducer;

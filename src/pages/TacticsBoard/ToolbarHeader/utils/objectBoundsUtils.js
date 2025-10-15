@@ -23,61 +23,60 @@ export const getObjectBounds = (obj, canvas) => {
     };
   } 
   
-if (obj.type === 'shape') {
-  if (obj.shape === 'line' || obj.shape === 'arrow') {
-    const minX = Math.min(obj.startX, obj.endX);
-    const maxX = Math.max(obj.startX, obj.endX);
-    const minY = Math.min(obj.startY, obj.endY);
-    const maxY = Math.max(obj.startY, obj.endY);
+  if (obj.type === 'shape') {
+    if (obj.shape === 'line' || obj.shape === 'arrow') {
+      const minX = Math.min(obj.startX, obj.endX);
+      const maxX = Math.max(obj.startX, obj.endX);
+      const minY = Math.min(obj.startY, obj.endY);
+      const maxY = Math.max(obj.startY, obj.endY);
+      return {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY,
+        startX: obj.startX,
+        startY: obj.startY,
+        endX: obj.endX,
+        endY: obj.endY
+      };
+    }
+    
+    const w = obj.width || 50;
+    const h = obj.height || 30;
+    const minX = w < 0 ? obj.x + w : obj.x;
+    const minY = h < 0 ? obj.y + h : obj.y;
+    
+    if (obj.shape === 'circle') {
+      const maxSize = Math.max(Math.abs(w), Math.abs(h));
+      const centerX = obj.x + w / 2;
+      const centerY = obj.y + h / 2;
+      
+      return {
+        x: centerX - maxSize / 2,
+        y: centerY - maxSize / 2,
+        width: maxSize,
+        height: maxSize,
+        centerX: centerX,
+        centerY: centerY,
+        radius: maxSize / 2,
+        originalX: obj.x,
+        originalY: obj.y,
+        originalWidth: w,
+        originalHeight: h
+      };
+    }
+    
     return {
       x: minX,
       y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
-      startX: obj.startX,
-      startY: obj.startY,
-      endX: obj.endX,
-      endY: obj.endY
-    };
-  }
-  
-  const w = obj.width || 50;
-  const h = obj.height || 30;
-  const minX = w < 0 ? obj.x + w : obj.x;
-  const minY = h < 0 ? obj.y + h : obj.y;
-  
-
-  if (obj.shape === 'circle') {
-    const maxSize = Math.max(Math.abs(w), Math.abs(h));
-    const centerX = obj.x + w / 2;
-    const centerY = obj.y + h / 2;
-    
-    return {
-      x: centerX - maxSize / 2,
-      y: centerY - maxSize / 2,
-      width: maxSize,
-      height: maxSize,
-      centerX: centerX,
-      centerY: centerY,
-      radius: maxSize / 2,
+      width: Math.abs(w),
+      height: Math.abs(h),
       originalX: obj.x,
       originalY: obj.y,
       originalWidth: w,
       originalHeight: h
     };
   }
-  
-  return {
-    x: minX,
-    y: minY,
-    width: Math.abs(w),
-    height: Math.abs(h),
-    originalX: obj.x,
-    originalY: obj.y,
-    originalWidth: w,
-    originalHeight: h
-  };
-}
   
   if (obj.type === 'figure') {
     const size = obj.size || 30;
@@ -117,14 +116,48 @@ if (obj.type === 'shape') {
     };
   } 
   
-if (obj.type === 'text') {
- 
-  if (canvas) {
-    const ctx = canvas.getContext('2d');
-    ctx.font = `${obj.fontSize}px Arial`;
-    const metrics = ctx.measureText(obj.text);
-    const width = metrics.width;
-    const height = obj.fontSize * 1.2;
+  if (obj.type === 'text') {
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      
+      // Налаштування шрифту
+      const fontWeight = obj.fontWeight || 'normal';
+      const fontStyle = obj.fontStyle || 'normal';
+      const fontSize = obj.fontSize || 16;
+      const fontFamily = obj.fontFamily || 'Arial';
+      
+      ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
+      
+      // Розбиваємо текст на рядки
+      const lines = (obj.text || '').split('\n');
+      const lineHeight = (obj.lineHeight || 1.5) * fontSize;
+      const letterSpacing = obj.letterSpacing || 0;
+      
+      // Знаходимо найширший рядок
+      let maxWidth = 0;
+      lines.forEach(line => {
+        const metrics = ctx.measureText(line);
+        let lineWidth = metrics.width;
+        if (letterSpacing !== 0) {
+          lineWidth += letterSpacing * (line.length - 1);
+        }
+        if (lineWidth > maxWidth) maxWidth = lineWidth;
+      });
+      
+      const totalHeight = lines.length * lineHeight;
+      
+      return {
+        x: obj.x,
+        y: obj.y,
+        width: maxWidth,
+        height: totalHeight,
+        centerX: obj.x + maxWidth / 2,
+        centerY: obj.y + totalHeight / 2
+      };
+    }
+    
+    const width = obj.width || 100;
+    const height = obj.height || 20;
     
     return {
       x: obj.x,
@@ -135,20 +168,6 @@ if (obj.type === 'text') {
       centerY: obj.y + height / 2
     };
   }
-  
-  const width = obj.width || 100;
-  const height = obj.height || 20;
-  
-  return {
-    x: obj.x,
-    y: obj.y,
-    width: width,
-    height: height,
-    centerX: obj.x + width / 2,
-    centerY: obj.y + height / 2
-  };
-}
-
   
   return null;
 };
@@ -282,7 +301,6 @@ export const getResizeHandles = (bounds, obj) => {
     };
   }
   
-
   return {
     topLeft: { x: bounds.x, y: bounds.y, cursor: 'nwse-resize' },
     topRight: { x: bounds.x + bounds.width, y: bounds.y, cursor: 'nesw-resize' },
@@ -300,14 +318,12 @@ export const getHandleAtPosition = (x, y, bounds, obj) => {
   const handleSize = 8;
   
   for (const [name, handle] of Object.entries(handles)) {
-   
     if (obj && obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
       const distance = Math.sqrt(Math.pow(x - handle.x, 2) + Math.pow(y - handle.y, 2));
       if (distance <= handleSize * 2) {
         return { name, ...handle };
       }
     } else {
-     
       if (Math.abs(x - handle.x) <= handleSize && 
           Math.abs(y - handle.y) <= handleSize) {
         return { name, ...handle };
@@ -318,14 +334,12 @@ export const getHandleAtPosition = (x, y, bounds, obj) => {
 };
 
 export const getObjectAtPosition = (x, y, objects, paths, brushSize, canvas) => {
-  
   for (let i = objects.length - 1; i >= 0; i--) {
     if (isPointInObject(x, y, objects[i], brushSize, canvas)) {
       return objects[i];
     }
   }
   
-
   for (let i = paths.length - 1; i >= 0; i--) {
     const pathObj = { ...paths[i], type: 'path', id: `path_${i}` };
     if (isPointInObject(x, y, pathObj, brushSize, canvas)) {

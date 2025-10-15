@@ -7,6 +7,7 @@ import { ReactComponent as PencilIconBase } from '../../../assets/pencil.svg';
 import { ReactComponent as СancelIconBase } from '../../../assets/cancel.svg';
 import { ReactComponent as ForwardIconBase } from '../../../assets/forward.svg';
 import { ReactComponent as TextIconBase } from '../../../assets/text.svg';
+import { ReactComponent as DoubleArrowRightBase } from '../../../assets/doubleArrowRight.svg';
 
 import GeometricShapesTool from './GeometricShapesTool';
 import SportsFiguresTool from './SportsFiguresTool';
@@ -24,12 +25,18 @@ import {
   initializePlayers
 } from '../../../redux/TacticsBoard/TacticsBoardSlice';
 
-
 const TextIcon = styled(TextIconBase)`
   width: 80%;
   height: 80%;
   stroke: ${({ theme }) => theme.textBlack};
    fill: ${({ theme }) => theme.textBlack};
+`;
+
+const DoubleArrowRight = styled(DoubleArrowRightBase)`
+  width: 100%;
+  height: 100%;
+   fill: ${({ theme }) => theme.black};
+   rotate: 180deg;
 `;
 
 const СancelIcon = styled(СancelIconBase)`
@@ -69,19 +76,36 @@ const ToolbarContainer = styled.div`
   border-bottom: 2px solid ${({ theme }) => theme.gray};
   padding: 12px 16px;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
+  position: relative;
+`;
 
-  &::-webkit-scrollbar {
-    height: 4px;
-  }
+const ToolbarContent = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  gap: 16px;
 `;
 
 const ToolbarWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: fit-content;
+  min-width: 0;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+`;
+
+const SidebarToggleContainer = styled.div`
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 `;
 
 const ToolButton = styled.button`
@@ -115,22 +139,34 @@ const ToolButton = styled.button`
     opacity: 0.5;
     cursor: not-allowed;
   }
+
+`;
+
+const SidebarToggleButton = styled.button`
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border: 2px solid ${({ theme }) => theme.greenMain};
+  background: ${({ theme }) => theme.lightGreen};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 4px;
+  transition: all 0.2s;
+  padding: 0;
   
-  @media (max-width: 768px) {
-    width: 20px;
-    height: 20px;
-    min-width: 20px;
-    min-height: 20px;
-    font-size: 12px;
+  &:hover {
+    background: ${({ theme }) => theme.darkGreen};
+    border-color: ${({ theme }) => theme.darkGreen};
+    svg {
+      fill: ${({ theme }) => theme.white};
+    }
   }
   
-  @media (max-width: 480px) {
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    min-height: 18px;
-    font-size: 10px;
-  }
 `;
 
 const StyledFieldIcon = styled(FieldIcon)`
@@ -236,7 +272,7 @@ const ColorPicker = styled.input`
   }
 `;
 
-const Toolbar = ({ currentField, onSelectField }) => {
+const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const dispatch = useDispatch();
   
@@ -307,142 +343,154 @@ const Toolbar = ({ currentField, onSelectField }) => {
   return (
     <>
       <ToolbarContainer>
-        <ToolbarWrapper>
-          {/* Обрати поле */}
-          <ToolButton 
-            title="Обрати поле"
-            onClick={handleOpenModal}
-          >
-            <StyledFieldIcon />
-          </ToolButton>
+        <ToolbarContent>
+          <ToolbarWrapper>
+            {/* Обрати поле */}
+            <ToolButton 
+              title="Обрати поле"
+              onClick={handleOpenModal}
+            >
+              <StyledFieldIcon />
+            </ToolButton>
+            
+            <Separator />
           
-          <Separator />
-        
-          {/* Курсор */}
-          <ToolButton 
-            title="Курсор (виділення та переміщення)"
-            active={activeTool === 'cursor'}
-            onClick={() => handleToolClick('cursor')}
-          >
-            <CursorIcon/>
-          </ToolButton>
+            {/* Курсор */}
+            <ToolButton 
+              title="Курсор (виділення та переміщення)"
+              active={activeTool === 'cursor'}
+              onClick={() => handleToolClick('cursor')}
+            >
+              <CursorIcon/>
+            </ToolButton>
 
-          <ToolButton 
-            title="Додати текст"
-            active={activeTool === 'text'}
-            onClick={() => handleToolClick('text')}
-          >
-            <TextIcon/>
-          </ToolButton>
+            <ToolButton 
+              title="Додати текст"
+              active={activeTool === 'text'}
+              onClick={() => handleToolClick('text')}
+            >
+              <TextIcon/>
+            </ToolButton>
 
-          {/* Малювання */}
-          <ToolButton 
-            title="Малювання"
-            active={activeTool === 'drawing'}
-            onClick={() => handleToolClick('drawing')}
-          >
-            <PencilIcon/>
-          </ToolButton>
-        
-          <Separator />
-        
-          {/* Геометричні фігури */}
-          <GeometricShapesTool 
-            activeTool={activeTool}
-            onSelectShape={handleShapeSelect}
-          />
+            {/* Малювання */}
+            <ToolButton 
+              title="Малювання"
+              active={activeTool === 'drawing'}
+              onClick={() => handleToolClick('drawing')}
+            >
+              <PencilIcon/>
+            </ToolButton>
           
-          {/* Спортивні фігури */}
-          <SportsFiguresTool 
-            activeTool={activeTool}
-            onSelectFigure={handleFigureSelect}
-          />
-        
-          <Separator />
-        
-          {/* Команда 1 */}
-          <TeamGroup>
-            <TeamLabel>К1:</TeamLabel>
-            <NumberInput 
-              type="number" 
-              min="0" 
-              max="30" 
-              value={team1.count}
-              onChange={handleTeam1CountChange}
-              title="Кількість гравців команди 1"
-            />
-            <ColorPicker 
-              type="color" 
-              value={team1.color}
-              onChange={handleTeam1ColorChange}
-              title="Колір команди 1"
-            />
-          </TeamGroup>
-        
-          {/* Команда 2 */}
-          <TeamGroup>
-            <TeamLabel>К2:</TeamLabel>
-            <NumberInput 
-              type="number" 
-              min="0" 
-              max="30" 
-              value={team2.count}
-              onChange={handleTeam2CountChange}
-              title="Кількість гравців команди 2"
-            />
-            <ColorPicker 
-              type="color" 
-              value={team2.color}
-              onChange={handleTeam2ColorChange}
-              title="Колір команди 2"
-            />
-          </TeamGroup>
-        
-          <Separator />
-        
-          {/* М'яч */}
-          <ToolButton 
-            title="М'яч"
-            active={activeTool === 'ball'}
-            onClick={() => handleToolClick('ball')}
-          >
-            ⚽
-          </ToolButton>
-        
-          {/* Картки */}
-          <ToolButton 
-            title="Картки"
-            active={activeTool === 'cards'}
-            onClick={() => handleToolClick('cards')}
-          >
-            🟨
-          </ToolButton>
-        
-          <Separator />
-        
-          <ToolButton 
-            title="Назад (Undo)"
-            onClick={handleUndo}
-            disabled={!canUndo}
-          >
-            <BackIcon/>
-          </ToolButton>
-        
-          <ToolButton 
-            title="Вперед (Redo)"
-            onClick={handleRedo}
-            disabled={!canRedo}
-          >
-            <ForwardIcon />
-          </ToolButton>
+            <Separator />
           
-          <ToolButton 
-            title="Скасувати все"
-            onClick={handleClearAll}
-          >
-            <СancelIcon />
-          </ToolButton>
-        </ToolbarWrapper>
+            {/* Геометричні фігури */}
+            <GeometricShapesTool 
+              activeTool={activeTool}
+              onSelectShape={handleShapeSelect}
+            />
+            
+            {/* Спортивні фігури */}
+            <SportsFiguresTool 
+              activeTool={activeTool}
+              onSelectFigure={handleFigureSelect}
+            />
+          
+            <Separator />
+          
+            {/* Команда 1 */}
+            <TeamGroup>
+              <TeamLabel>К1:</TeamLabel>
+              <NumberInput 
+                type="number" 
+                min="0" 
+                max="30" 
+                value={team1.count}
+                onChange={handleTeam1CountChange}
+                title="Кількість гравців команди 1"
+              />
+              <ColorPicker 
+                type="color" 
+                value={team1.color}
+                onChange={handleTeam1ColorChange}
+                title="Колір команди 1"
+              />
+            </TeamGroup>
+          
+            {/* Команда 2 */}
+            <TeamGroup>
+              <TeamLabel>К2:</TeamLabel>
+              <NumberInput 
+                type="number" 
+                min="0" 
+                max="30" 
+                value={team2.count}
+                onChange={handleTeam2CountChange}
+                title="Кількість гравців команди 2"
+              />
+              <ColorPicker 
+                type="color" 
+                value={team2.color}
+                onChange={handleTeam2ColorChange}
+                title="Колір команди 2"
+              />
+            </TeamGroup>
+          
+            <Separator />
+          
+            {/* М'яч */}
+            <ToolButton 
+              title="М'яч"
+              active={activeTool === 'ball'}
+              onClick={() => handleToolClick('ball')}
+            >
+              ⚽
+            </ToolButton>
+          
+            {/* Картки */}
+            <ToolButton 
+              title="Картки"
+              active={activeTool === 'cards'}
+              onClick={() => handleToolClick('cards')}
+            >
+              🟨
+            </ToolButton>
+          
+            <Separator />
+          
+            <ToolButton 
+              title="Назад (Undo)"
+              onClick={handleUndo}
+              disabled={!canUndo}
+            >
+              <BackIcon/>
+            </ToolButton>
+          
+            <ToolButton 
+              title="Вперед (Redo)"
+              onClick={handleRedo}
+              disabled={!canRedo}
+            >
+              <ForwardIcon />
+            </ToolButton>
+            
+            <ToolButton 
+              title="Скасувати все"
+              onClick={handleClearAll}
+            >
+              <СancelIcon />
+            </ToolButton>
+          </ToolbarWrapper>
+
+          <SidebarToggleContainer>
+            <SidebarToggleButton 
+              title={"Відкрити панель інструментів"}
+              active={isSidebarOpen}
+              onClick={onToggleSidebar}
+            >
+             <DoubleArrowRight/>
+            </SidebarToggleButton>
+          </SidebarToggleContainer>
+        </ToolbarContent>
       </ToolbarContainer>
 
       <FieldSelectorModal
