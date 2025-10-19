@@ -5,10 +5,9 @@ import { deselectObject, deleteObject, deletePath } from '../../../../redux/Tact
 import { ReactComponent as DoubleArrowRightBase } from '../../../../assets/doubleArrowRight.svg';
 
 import TextPropertiesPanel from './TextPropertiesPanel';
-// import DrawingToolsPanel from '../DrawingToolsPanel';
 import TextToolsPanel from './TextToolsPanel';
-// import ShapeToolsPanel from './ShapeToolsPanel';
-
+import ShapePropertiesPanel from './ShapePropertiesPanel';
+import ShapeToolsPanel from './ShapeToolsPanel';
 import PlayerPropertiesPanel from './PlayerPropertiesPanel';
 
 const DoubleArrowRight = styled(DoubleArrowRightBase)`
@@ -123,7 +122,6 @@ const DeleteButton = styled.button`
   }
 `;
 
-
 const Sidebar = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const { activeTool, selectedObjectId, objects, paths } = useSelector(state => state.tacticsBoard);
@@ -164,7 +162,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             <>
               <PlayerPropertiesPanel selectedObject={selectedObject} />
               <DeleteButton onClick={handleDelete}>
-                 Видалити гравця
+                Видалити гравця
               </DeleteButton>
             </>
           );
@@ -176,22 +174,23 @@ const Sidebar = ({ isOpen, onClose }) => {
           );
         case 'shape':
           return (
-            <DeleteButton onClick={handleDelete}>
-               Видалити фігуру
-            </DeleteButton>
+            <>
+              <ShapePropertiesPanel selectedObject={selectedObject} />  
+              <DeleteButton onClick={handleDelete}>
+                Видалити фігуру
+              </DeleteButton>
+            </>
           );
         default:
           return (
             <DeleteButton onClick={handleDelete}>
-               Видалити об'єкт
+              Видалити об'єкт
             </DeleteButton>
           );
       }
     }
 
     switch (activeTool) {
-      case 'drawing':
-        // return <DrawingToolsPanel />;
       case 'text':
         return <TextToolsPanel />;
       case 'shape_rectangle':
@@ -199,7 +198,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       case 'shape_triangle':
       case 'shape_line':
       case 'shape_arrow':
-        // return <ShapeToolsPanel />;
+        return <ShapeToolsPanel />;
       default:
         return (
           <EmptyState>

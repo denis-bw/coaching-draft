@@ -4,7 +4,6 @@ export const useResizeHandles = () => {
   const resizeHandleRef = useRef(null);
 
   const startResize = (handle, object, startPos, bounds) => {
-   
     const actualWidth = bounds.width;
     const actualHeight = bounds.height;
     
@@ -19,88 +18,91 @@ export const useResizeHandles = () => {
       startWidth: actualWidth,
       startHeight: actualHeight,
       startMouseX: startPos.x,
-      startMouseY: startPos.y
+      startMouseY: startPos.y,
+      // Для кола зберігаємо початковий центр
+      startCenterX: bounds.centerX,
+      startCenterY: bounds.centerY
     };
   };
 
-const updateResize = (pos) => {
-  if (!resizeHandleRef.current) return null;
+  const updateResize = (pos) => {
+    if (!resizeHandleRef.current) return null;
 
-  const { handle, object, startPos, startBounds, startFontSize, startX, startY, startWidth, startHeight } = resizeHandleRef.current;
-  let updatedObject = { ...object };
-  
-  if (object.type === 'text') {
-    const origX = startX;
-    const origY = startY;
-    const origWidth = startWidth || startBounds.width;
-    const origHeight = startHeight || startBounds.height;
+    const { handle, object, startPos, startBounds, startFontSize, startX, startY, startWidth, startHeight, startCenterX, startCenterY } = resizeHandleRef.current;
+    let updatedObject = { ...object };
     
-    const fixedRight = origX + origWidth;
-    const fixedBottom = origY + origHeight;
-    const fixedLeft = origX;
-    const fixedTop = origY;
-    
-    let newX = origX;
-    let newY = origY;
-    let newWidth = origWidth;
-    let newHeight = origHeight;
-    
-    switch (handle) {
-      case 'topLeft':
-        newY = pos.y;
-        newHeight = Math.max(fixedBottom - pos.y, 1);
-        newWidth = newHeight * (origWidth / origHeight);
-        newX = fixedRight - newWidth;
-        break;
-      case 'topRight':
-        newX = fixedLeft;
-        newY = pos.y;
-        newHeight = Math.max(fixedBottom - pos.y, 1);
-        newWidth = newHeight * (origWidth / origHeight);
-        break;
-      case 'bottomLeft':
-        newY = fixedTop;
-        newHeight = Math.max(pos.y - origY, 1);
-        newWidth = newHeight * (origWidth / origHeight);
-        newX = fixedRight - newWidth;
-        break;
-      case 'bottomRight':
-        newX = fixedLeft;
-        newY = fixedTop;
-        newHeight = Math.max(pos.y - origY, 1);
-        newWidth = newHeight * (origWidth / origHeight);
-        break;
-      default:
-        break;
-    }
-    
-    const minHeight = 15;
-    const minWidth = minHeight * (origWidth / origHeight);
-    
-    if (newHeight < minHeight) {
-      newHeight = minHeight;
-      newWidth = minWidth;
+    if (object.type === 'text') {
+      const origX = startX;
+      const origY = startY;
+      const origWidth = startWidth || startBounds.width;
+      const origHeight = startHeight || startBounds.height;
       
-      if (handle === 'topLeft' || handle === 'topRight') {
-        newY = fixedBottom - minHeight;
+      const fixedRight = origX + origWidth;
+      const fixedBottom = origY + origHeight;
+      const fixedLeft = origX;
+      const fixedTop = origY;
+      
+      let newX = origX;
+      let newY = origY;
+      let newWidth = origWidth;
+      let newHeight = origHeight;
+      
+      switch (handle) {
+        case 'topLeft':
+          newY = pos.y;
+          newHeight = Math.max(fixedBottom - pos.y, 1);
+          newWidth = newHeight * (origWidth / origHeight);
+          newX = fixedRight - newWidth;
+          break;
+        case 'topRight':
+          newX = fixedLeft;
+          newY = pos.y;
+          newHeight = Math.max(fixedBottom - pos.y, 1);
+          newWidth = newHeight * (origWidth / origHeight);
+          break;
+        case 'bottomLeft':
+          newY = fixedTop;
+          newHeight = Math.max(pos.y - origY, 1);
+          newWidth = newHeight * (origWidth / origHeight);
+          newX = fixedRight - newWidth;
+          break;
+        case 'bottomRight':
+          newX = fixedLeft;
+          newY = fixedTop;
+          newHeight = Math.max(pos.y - origY, 1);
+          newWidth = newHeight * (origWidth / origHeight);
+          break;
+        default:
+          break;
       }
-      if (handle === 'topLeft' || handle === 'bottomLeft') {
-        newX = fixedRight - minWidth;
+      
+      const minHeight = 15;
+      const minWidth = minHeight * (origWidth / origHeight);
+      
+      if (newHeight < minHeight) {
+        newHeight = minHeight;
+        newWidth = minWidth;
+        
+        if (handle === 'topLeft' || handle === 'topRight') {
+          newY = fixedBottom - minHeight;
+        }
+        if (handle === 'topLeft' || handle === 'bottomLeft') {
+          newX = fixedRight - minWidth;
+        }
       }
+      
+      const heightScale = newHeight / origHeight;
+      const newFontSize = Math.max(8, Math.min(200, Math.round(startFontSize * heightScale)));
+      
+      updatedObject.x = newX;
+      updatedObject.y = newY;
+      updatedObject.fontSize = newFontSize;
+      delete updatedObject.width;
+      delete updatedObject.height;
+      
+      resizeHandleRef.current.object = updatedObject;
+      return updatedObject;
     }
-    
-    const heightScale = newHeight / origHeight;
-    const newFontSize = Math.max(8, Math.min(200, Math.round(startFontSize * heightScale)));
-    
-    updatedObject.x = newX;
-    updatedObject.y = newY;
-    updatedObject.fontSize = newFontSize;
-    delete updatedObject.width;
-    delete updatedObject.height;
-    
-    resizeHandleRef.current.object = updatedObject;
-    return updatedObject;
-  }
     
     if (object.type === 'path') {
       if (handle === 'start') {
@@ -113,7 +115,10 @@ const updateResize = (pos) => {
     }
     
     if (object.type === 'shape' && (object.shape === 'line' || object.shape === 'arrow')) {
-      if (handle === 'end') {
+      if (handle === 'start') {
+        updatedObject.startX = pos.x;
+        updatedObject.startY = pos.y;
+      } else if (handle === 'end') {
         updatedObject.endX = pos.x;
         updatedObject.endY = pos.y;
       }
@@ -142,14 +147,15 @@ const updateResize = (pos) => {
     if (object.type === 'shape' && object.shape !== 'line' && object.shape !== 'arrow') {
       const bounds = startBounds;
       
+      // ВИПРАВЛЕННЯ ДЛЯ КОЛА
       if (object.shape === 'circle') {
-        const centerX = bounds.centerX;
-        const centerY = bounds.centerY;
-        const newRadius = Math.sqrt(Math.pow(pos.x - centerX, 2) + Math.pow(pos.y - centerY, 2));
+        // Використовуємо початковий центр
+        const newRadius = Math.sqrt(Math.pow(pos.x - startCenterX, 2) + Math.pow(pos.y - startCenterY, 2));
         const newDiameter = newRadius * 2;
         
-        updatedObject.x = centerX - newRadius;
-        updatedObject.y = centerY - newRadius;
+        // Центр залишається незмінним
+        updatedObject.x = startCenterX - newRadius;
+        updatedObject.y = startCenterY - newRadius;
         updatedObject.width = newDiameter;
         updatedObject.height = newDiameter;
         

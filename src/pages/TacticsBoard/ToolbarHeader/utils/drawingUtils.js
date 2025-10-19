@@ -1,7 +1,6 @@
 export const drawText = (ctx, textObj, isSelected = false) => {
   ctx.save();
   
-  // Застосовуємо трансформації
   if (textObj.rotation) {
     const centerX = textObj.x;
     const centerY = textObj.y;
@@ -10,7 +9,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
     ctx.translate(-centerX, -centerY);
   }
   
-  // Налаштування шрифту
   const fontWeight = textObj.fontWeight || 'normal';
   const fontStyle = textObj.fontStyle || 'normal';
   const fontSize = textObj.fontSize || 16;
@@ -20,29 +18,24 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
   
-  // Колір з прозорістю
   const opacity = textObj.opacity !== undefined ? textObj.opacity / 100 : 1;
   const color = textObj.color || '#000000';
   
-  // Конвертуємо HEX в RGB для alpha
   const hex = color.replace('#', '');
   const r = parseInt(hex.slice(0, 2), 16);
   const g = parseInt(hex.slice(2, 4), 16);
   const b = parseInt(hex.slice(4, 6), 16);
   ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
   
-  // Розбиваємо текст на рядки
   const lines = (textObj.text || '').split('\n');
   const lineHeight = (textObj.lineHeight || 1.5) * fontSize;
   const letterSpacing = textObj.letterSpacing || 0;
   
-  // Малюємо кожен рядок
   let maxWidth = 0;
   lines.forEach((line, index) => {
     const y = textObj.y + (index * lineHeight);
     
     if (letterSpacing !== 0) {
-      // Малюємо з міжлітерним інтервалом
       let x = textObj.x;
       for (let i = 0; i < line.length; i++) {
         const char = line[i];
@@ -58,7 +51,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
       if (lineWidth > maxWidth) maxWidth = lineWidth;
     }
     
-    // Підкреслення
     if (textObj.textDecoration === 'underline') {
       const lineWidth = letterSpacing !== 0 
         ? ctx.measureText(line).width + (letterSpacing * (line.length - 1))
@@ -72,7 +64,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
     }
   });
   
-  // Виділення для вибраного тексту
   if (isSelected) {
     const totalHeight = lines.length * lineHeight;
     
@@ -160,39 +151,104 @@ export const drawBall = (ctx, ball, isSelected = false) => {
   }
 };
 
+// Функція для малювання наконечників
+const drawLineCap = (ctx, x, y, angle, capType, size, color, opacity) => {
+  if (capType === 'butt') return;
+  
+  const hex = color.replace('#', '');
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  
+  if (capType === 'round') {
+    ctx.beginPath();
+    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (capType === 'arrow') {
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-size * 0.8, -size * 0.4);
+    ctx.lineTo(-size * 0.8, size * 0.4);
+    ctx.closePath();
+    ctx.fill();
+  }
+  
+  ctx.restore();
+};
+
 export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') => {
-  ctx.strokeStyle = shape.color || drawColor;
-  ctx.lineWidth = 2;
+  ctx.save();
+  
+  // Для ліній та стрілок застосовуємо поворот навколо центру
+  if (shape.rotation) {
+    if (shape.shape === 'line' || shape.shape === 'arrow') {
+      const centerX = (shape.startX + shape.endX) / 2;
+      const centerY = (shape.startY + shape.endY) / 2;
+      ctx.translate(centerX, centerY);
+      ctx.rotate((shape.rotation * Math.PI) / 180);
+      ctx.translate(-centerX, -centerY);
+    } else {
+      const centerX = shape.x + (shape.width || 50) / 2;
+      const centerY = shape.y + (shape.height || 30) / 2;
+      ctx.translate(centerX, centerY);
+      ctx.rotate((shape.rotation * Math.PI) / 180);
+      ctx.translate(-centerX, -centerY);
+    }
+  }
+  
+  const borderColor = shape.borderColor || shape.color || drawColor;
+  const borderOpacity = shape.borderOpacity !== undefined ? shape.borderOpacity / 100 : 1;
+  const borderWidth = shape.borderWidth || 2;
+  const borderStyle = shape.borderStyle || 'solid';
+  
+  const hexBorder = borderColor.replace('#', '');
+  const rBorder = parseInt(hexBorder.slice(0, 2), 16);
+  const gBorder = parseInt(hexBorder.slice(2, 4), 16);
+  const bBorder = parseInt(hexBorder.slice(4, 6), 16);
+  
+  ctx.strokeStyle = `rgba(${rBorder}, ${gBorder}, ${bBorder}, ${borderOpacity})`;
+  ctx.lineWidth = borderWidth;
+  
+  // ВИПРАВЛЕННЯ СТИЛІВ ЛІНІЙ
+  if (borderStyle === 'dashed') {
+    ctx.setLineDash([borderWidth * 3, borderWidth * 2]);
+  } else if (borderStyle === 'dotted') {
+    ctx.setLineDash([borderWidth, borderWidth]);
+    ctx.lineCap = 'round';
+  } else {
+    ctx.setLineDash([]);
+  }
   
   if (isSelected) {
     ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = borderWidth + 2;
+    ctx.setLineDash([]);
   }
   
   if (shape.shape === 'line' || shape.shape === 'arrow') {
+    const dx = shape.endX - shape.startX;
+    const dy = shape.endY - shape.startY;
+    const angle = Math.atan2(dy, dx);
+    
     ctx.beginPath();
     ctx.moveTo(shape.startX, shape.startY);
     ctx.lineTo(shape.endX, shape.endY);
     ctx.stroke();
     
-    if (shape.shape === 'arrow') {
-      const dx = shape.endX - shape.startX;
-      const dy = shape.endY - shape.startY;
-      const angle = Math.atan2(dy, dx);
-      const arrowSize = 15;
+    // Малюємо наконечники тільки якщо не виділено
+    if (!isSelected) {
+      const arrowSize = Math.max(borderWidth * 3, 12);
+      const lineCapStart = shape.lineCapStart || 'butt';
+      const lineCapEnd = shape.shape === 'arrow' ? 'arrow' : (shape.lineCapEnd || 'butt');
       
-      ctx.beginPath();
-      ctx.moveTo(shape.endX, shape.endY);
-      ctx.lineTo(
-        shape.endX - arrowSize * Math.cos(angle - Math.PI / 6),
-        shape.endY - arrowSize * Math.sin(angle - Math.PI / 6)
-      );
-      ctx.moveTo(shape.endX, shape.endY);
-      ctx.lineTo(
-        shape.endX - arrowSize * Math.cos(angle + Math.PI / 6),
-        shape.endY - arrowSize * Math.sin(angle + Math.PI / 6)
-      );
-      ctx.stroke();
+      drawLineCap(ctx, shape.startX, shape.startY, angle + Math.PI, lineCapStart, arrowSize, borderColor, borderOpacity);
+      drawLineCap(ctx, shape.endX, shape.endY, angle, lineCapEnd, arrowSize, borderColor, borderOpacity);
     }
   } else {
     const x = shape.x;
@@ -200,14 +256,32 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
     const w = shape.width || 50;
     const h = shape.height || 30;
     
+    // ВИПРАВЛЕННЯ ЗАЛИВКИ
+    const fillColor = shape.fillColor || '#ffffff';
+    const fillOpacity = shape.fillOpacity !== undefined ? shape.fillOpacity / 100 : 0;
+    
+    let shouldFill = false;
+    if (fillOpacity > 0) {
+      const hexFill = fillColor.replace('#', '');
+      const rFill = parseInt(hexFill.slice(0, 2), 16);
+      const gFill = parseInt(hexFill.slice(2, 4), 16);
+      const bFill = parseInt(hexFill.slice(4, 6), 16);
+      ctx.fillStyle = `rgba(${rFill}, ${gFill}, ${bFill}, ${fillOpacity})`;
+      shouldFill = true;
+    }
+    
     if (shape.shape === 'rectangle') {
-      ctx.strokeRect(x, y, w, h);
+      ctx.beginPath();
+      ctx.rect(x, y, w, h);
+      if (shouldFill) ctx.fill();
+      ctx.stroke();
     } else if (shape.shape === 'circle') {
       const radius = Math.max(Math.abs(w), Math.abs(h)) / 2;
       const centerX = x + w / 2;
       const centerY = y + h / 2;
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      if (shouldFill) ctx.fill();
       ctx.stroke();
     } else if (shape.shape === 'triangle') {
       ctx.beginPath();
@@ -215,9 +289,12 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
       ctx.lineTo(x, y + h);
       ctx.lineTo(x + w, y + h);
       ctx.closePath();
+      if (shouldFill) ctx.fill();
       ctx.stroke();
     }
   }
+  
+  ctx.restore();
 };
 
 export const drawFigure = (ctx, figure, isSelected = false) => {
@@ -260,6 +337,7 @@ export const drawResizeHandles = (ctx, bounds, obj) => {
 export const getResizeHandles = (bounds, obj) => {
   if (obj && obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
     return {
+      start: { x: bounds.startX, y: bounds.startY, cursor: 'crosshair' },
       end: { x: bounds.endX, y: bounds.endY, cursor: 'crosshair' }
     };
   }

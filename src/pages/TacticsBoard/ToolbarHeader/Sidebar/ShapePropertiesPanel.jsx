@@ -101,6 +101,11 @@ const Input = styled.input`
     outline: none;
     border-color: ${({ theme }) => theme.greenMain || '#4CAF50'};
   }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 `;
 
 const ShapePropertiesPanel = ({ selectedObject }) => {
@@ -194,13 +199,13 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
           opacity={selectedObject.borderOpacity !== undefined ? selectedObject.borderOpacity : 100}
           onColorChange={(color) => handleObjectUpdate('borderColor', color)}
           onOpacityChange={(opacity) => handleObjectUpdate('borderOpacity', opacity)}
-          label="Колір обводки і прозорість"
+          label={isLineOrArrow ? "Колір лінії і прозорість" : "Колір обводки і прозорість"}
         />
       </PropertyRow>
 
       <PropertyRow>
         <PropertyLabel>
-          Товщина обводки
+          {isLineOrArrow ? "Товщина лінії" : "Товщина обводки"}
           <SliderValue>{selectedObject.borderWidth || 2}px</SliderValue>
         </PropertyLabel>
         <Slider

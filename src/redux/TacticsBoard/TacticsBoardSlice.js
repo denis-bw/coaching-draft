@@ -1,5 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+
 const initialState = {
   activeTool: 'cursor',
   drawColor: '#000000',
@@ -9,6 +10,13 @@ const initialState = {
   textOpacity: 100,
   shapeBorderWidth: 2,
   shapeColor: '#000000',
+  shapeBorderColor: '#000000',
+  shapeBorderOpacity: 100,
+  shapeFillColor: '#ffffff',
+  shapeFillOpacity: 0,
+  shapeBorderStyle: 'solid',
+  shapeLineCapStart: 'butt',  
+  shapeLineCapEnd: 'butt',    
   paths: [],
   objects: [],
   selectedObjectId: null,
@@ -34,6 +42,12 @@ const TacticsBoardSlice = createSlice({
     setActiveTool: (state, action) => {
       state.activeTool = action.payload;
     },
+      setShapeLineCapStart: (state, action) => {
+      state.shapeLineCapStart = action.payload;
+    },
+    setShapeLineCapEnd: (state, action) => {
+      state.shapeLineCapEnd = action.payload;
+    },
     setDrawColor: (state, action) => {
       state.drawColor = action.payload;
     },
@@ -54,6 +68,21 @@ const TacticsBoardSlice = createSlice({
     },
     setShapeColor: (state, action) => {
       state.shapeColor = action.payload;
+    },
+    setShapeBorderColor: (state, action) => {
+      state.shapeBorderColor = action.payload;
+    },
+    setShapeBorderOpacity: (state, action) => {
+      state.shapeBorderOpacity = action.payload;
+    },
+    setShapeFillColor: (state, action) => {
+      state.shapeFillColor = action.payload;
+    },
+    setShapeFillOpacity: (state, action) => {
+      state.shapeFillOpacity = action.payload;
+    },
+    setShapeBorderStyle: (state, action) => {
+      state.shapeBorderStyle = action.payload;
     },
     addPath: (state, action) => {
       state.paths.push(action.payload);
@@ -402,6 +431,11 @@ export const {
   setTextOpacity,
   setShapeBorderWidth,
   setShapeColor,
+  setShapeBorderColor,
+  setShapeBorderOpacity,
+  setShapeFillColor,
+  setShapeFillOpacity,
+  setShapeBorderStyle,
   addPath,
   addObject,
   updateObject,
@@ -428,6 +462,8 @@ export const {
   exportState,
   setFormation,
   updateTextProperties,
+   setShapeLineCapStart,   
+  setShapeLineCapEnd,    
   updateColorWithOpacity
 } = TacticsBoardSlice.actions;
 

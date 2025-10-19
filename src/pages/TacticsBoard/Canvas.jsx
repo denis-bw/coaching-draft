@@ -76,6 +76,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const [textInputPos, setTextInputPos] = useState({ x: 0, y: 0 });
   
   const dispatch = useDispatch();
+  
   const { 
     activeTool, 
     drawColor, 
@@ -86,7 +87,15 @@ const Canvas = ({ fieldSize, fieldType }) => {
     team1,
     team2,
     textFontSize,
-    textColor
+    textColor,
+    shapeBorderColor,
+    shapeBorderOpacity,
+    shapeFillColor,
+    shapeFillOpacity,
+    shapeBorderWidth,
+    shapeBorderStyle,
+    shapeLineCapStart,  
+    shapeLineCapEnd     
   } = useSelector((state) => state.tacticsBoard);
 
   const { 
@@ -292,7 +301,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
       setTextInputPos(pos);
       textIdRef.current = newTextId;
       
-      // Виділяємо текстовий об'єкт (хоча він ще не створений)
       dispatch(selectObject(newTextId));
     }
     
@@ -340,7 +348,14 @@ const Canvas = ({ fieldSize, fieldType }) => {
     } else if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
       redraw(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
-      drawPreviewShape(shapeType, shapeStartRef.current, pos, drawColor);
+      drawPreviewShape(
+        shapeType, 
+        shapeStartRef.current, 
+        pos, 
+        shapeBorderColor, 
+        shapeBorderStyle,
+        shapeBorderWidth 
+      );
     }
     
     e.preventDefault();
@@ -365,12 +380,28 @@ const Canvas = ({ fieldSize, fieldType }) => {
       const shapeData = endShape(pos, shapeType);
       
       if (shapeData) {
-        dispatch(addObject({
+        const baseShapeData = {
           type: 'shape',
           shape: shapeType,
           ...shapeData,
-          color: drawColor
-        }));
+          borderColor: shapeBorderColor,
+          borderOpacity: shapeBorderOpacity,
+          borderWidth: shapeBorderWidth,
+          borderStyle: shapeBorderStyle,
+          color: shapeBorderColor
+        };
+
+        // Додаємо наконечники тільки для ліній та стрілок
+        if (shapeType === 'line' || shapeType === 'arrow') {
+          baseShapeData.lineCapStart = shapeLineCapStart;
+          baseShapeData.lineCapEnd = shapeType === 'arrow' ? 'arrow' : shapeLineCapEnd;
+        } else {
+          // Для інших фігур додаємо заливку
+          baseShapeData.fillColor = shapeFillColor;
+          baseShapeData.fillOpacity = shapeFillOpacity;
+        }
+
+        dispatch(addObject(baseShapeData));
       }
     }
     
@@ -480,7 +511,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const handleTextInputChange = (e) => {
     setTextInputValue(e.target.value);
     
-    // Автоматичне розширення textarea
     if (textAreaRef.current) {
       textAreaRef.current.style.height = 'auto';
       textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
@@ -609,7 +639,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedObjectId, isTextInput, dispatch]);
 
-  // Втрачати фокус при зміні інструмента
   useEffect(() => {
     dispatch(deselectObject());
   }, [activeTool, dispatch]);

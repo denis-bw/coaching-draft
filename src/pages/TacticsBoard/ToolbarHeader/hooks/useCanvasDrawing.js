@@ -154,7 +154,7 @@ export const useCanvasDrawing = (canvasRef) => {
     ctx.stroke();
   }, [canvasRef]);
 
-  const drawPreviewShape = useCallback((shape, startPos, endPos, color) => {
+  const drawPreviewShape = useCallback((shape, startPos, endPos, color, borderStyle) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -164,7 +164,15 @@ export const useCanvasDrawing = (canvasRef) => {
     
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
+    
+    // Застосовуємо стиль лінії для preview
+    if (borderStyle === 'dashed') {
+      ctx.setLineDash([10, 5, 5, 5]);
+    } else if (borderStyle === 'dotted') {
+      ctx.setLineDash([2, 3, 2, 3]);
+    } else {
+      ctx.setLineDash([5, 5]);
+    }
     
     if (shape === 'line' || shape === 'arrow') {
       ctx.beginPath();

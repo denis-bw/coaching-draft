@@ -23,7 +23,7 @@ export const getObjectBounds = (obj, canvas) => {
     };
   } 
   
-  if (obj.type === 'shape') {
+if (obj.type === 'shape') {
     if (obj.shape === 'line' || obj.shape === 'arrow') {
       const minX = Math.min(obj.startX, obj.endX);
       const maxX = Math.max(obj.startX, obj.endX);
@@ -37,7 +37,8 @@ export const getObjectBounds = (obj, canvas) => {
         startX: obj.startX,
         startY: obj.startY,
         endX: obj.endX,
-        endY: obj.endY
+        endY: obj.endY,
+        rotation: obj.rotation || 0
       };
     }
     
@@ -62,7 +63,8 @@ export const getObjectBounds = (obj, canvas) => {
         originalX: obj.x,
         originalY: obj.y,
         originalWidth: w,
-        originalHeight: h
+        originalHeight: h,
+        rotation: obj.rotation || 0
       };
     }
     
@@ -74,7 +76,8 @@ export const getObjectBounds = (obj, canvas) => {
       originalX: obj.x,
       originalY: obj.y,
       originalWidth: w,
-      originalHeight: h
+      originalHeight: h,
+      rotation: obj.rotation || 0
     };
   }
   
