@@ -348,14 +348,16 @@ const Canvas = ({ fieldSize, fieldType }) => {
     } else if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
       redraw(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
-      drawPreviewShape(
-        shapeType, 
-        shapeStartRef.current, 
-        pos, 
-        shapeBorderColor, 
-        shapeBorderStyle,
-        shapeBorderWidth 
-      );
+        drawPreviewShape(
+          shapeType, 
+          shapeStartRef.current, 
+          pos, 
+          shapeBorderColor, 
+          shapeBorderStyle,
+          shapeBorderWidth,
+          shapeFillColor,
+          shapeFillOpacity
+        );
     }
     
     e.preventDefault();
@@ -375,35 +377,36 @@ const Canvas = ({ fieldSize, fieldType }) => {
       }
     }
     
-    if (isDrawingShapeRef.current && shapeStartRef.current) {
-      const shapeType = activeTool.replace('shape_', '');
-      const shapeData = endShape(pos, shapeType);
-      
-      if (shapeData) {
-        const baseShapeData = {
-          type: 'shape',
-          shape: shapeType,
-          ...shapeData,
-          borderColor: shapeBorderColor,
-          borderOpacity: shapeBorderOpacity,
-          borderWidth: shapeBorderWidth,
-          borderStyle: shapeBorderStyle,
-          color: shapeBorderColor
-        };
+   // В Canvas.js, функція handleMouseUp
+if (isDrawingShapeRef.current && shapeStartRef.current) {
+  const shapeType = activeTool.replace('shape_', '');
+  const shapeData = endShape(pos, shapeType);
+  
+  if (shapeData) {
+    const baseShapeData = {
+      type: 'shape',
+      shape: shapeType,
+      ...shapeData,
+      borderColor: shapeBorderColor,
+      borderOpacity: shapeBorderOpacity,
+      borderWidth: shapeBorderWidth,
+      borderStyle: shapeBorderStyle,
+      color: shapeBorderColor
+    };
 
-        // Додаємо наконечники тільки для ліній та стрілок
-        if (shapeType === 'line' || shapeType === 'arrow') {
-          baseShapeData.lineCapStart = shapeLineCapStart;
-          baseShapeData.lineCapEnd = shapeType === 'arrow' ? 'arrow' : shapeLineCapEnd;
-        } else {
-          // Для інших фігур додаємо заливку
-          baseShapeData.fillColor = shapeFillColor;
-          baseShapeData.fillOpacity = shapeFillOpacity;
-        }
-
-        dispatch(addObject(baseShapeData));
-      }
+    // Додаємо наконечники тільки для ліній та стрілок
+    if (shapeType === 'line' || shapeType === 'arrow') {
+      baseShapeData.lineCapStart = shapeLineCapStart;
+      baseShapeData.lineCapEnd = shapeType === 'arrow' ? 'arrow' : shapeLineCapEnd;
+    } else {
+      // ВАЖЛИВО: Для інших фігур явно передаємо значення заливки
+      baseShapeData.fillColor = shapeFillColor;
+      baseShapeData.fillOpacity = shapeFillOpacity; // Це значення має бути числом від 0 до 100
     }
+
+    dispatch(addObject(baseShapeData));
+  }
+}
     
     if (draggedObjectRef.current) {
       const draggedObject = endDrag();

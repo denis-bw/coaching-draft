@@ -1,6 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-
 const initialState = {
   activeTool: 'cursor',
   drawColor: '#000000',
@@ -13,10 +12,10 @@ const initialState = {
   shapeBorderColor: '#000000',
   shapeBorderOpacity: 100,
   shapeFillColor: '#ffffff',
-  shapeFillOpacity: 0,
+  shapeFillOpacity: 50,
   shapeBorderStyle: 'solid',
-  shapeLineCapStart: 'butt',  
-  shapeLineCapEnd: 'butt',    
+  shapeLineCapStart: 'butt',
+  shapeLineCapEnd: 'butt',
   paths: [],
   objects: [],
   selectedObjectId: null,
@@ -41,12 +40,6 @@ const TacticsBoardSlice = createSlice({
   reducers: {
     setActiveTool: (state, action) => {
       state.activeTool = action.payload;
-    },
-      setShapeLineCapStart: (state, action) => {
-      state.shapeLineCapStart = action.payload;
-    },
-    setShapeLineCapEnd: (state, action) => {
-      state.shapeLineCapEnd = action.payload;
     },
     setDrawColor: (state, action) => {
       state.drawColor = action.payload;
@@ -83,6 +76,12 @@ const TacticsBoardSlice = createSlice({
     },
     setShapeBorderStyle: (state, action) => {
       state.shapeBorderStyle = action.payload;
+    },
+    setShapeLineCapStart: (state, action) => {
+      state.shapeLineCapStart = action.payload;
+    },
+    setShapeLineCapEnd: (state, action) => {
+      state.shapeLineCapEnd = action.payload;
     },
     addPath: (state, action) => {
       state.paths.push(action.payload);
@@ -436,6 +435,8 @@ export const {
   setShapeFillColor,
   setShapeFillOpacity,
   setShapeBorderStyle,
+  setShapeLineCapStart,
+  setShapeLineCapEnd,
   addPath,
   addObject,
   updateObject,
@@ -462,8 +463,6 @@ export const {
   exportState,
   setFormation,
   updateTextProperties,
-   setShapeLineCapStart,   
-  setShapeLineCapEnd,    
   updateColorWithOpacity
 } = TacticsBoardSlice.actions;
 

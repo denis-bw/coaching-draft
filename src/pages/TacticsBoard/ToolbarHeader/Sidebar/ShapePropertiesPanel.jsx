@@ -240,27 +240,30 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
               onChange={(value) => handleObjectUpdate('lineCapStart', value)}
               options={[
                 { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Круглий' },
-                { value: 'arrow', label: 'Стрілка' }
+                { value: 'round', label: 'Заокруглений' },
+                { value: 'arrow', label: 'Стрілка' },
+                { value: 'circle', label: 'Коло' },
+                { value: 'bar', label: 'Тупік' }
               ]}
               placeholder="Оберіть тип"
             />
           </PropertyRow>
           
-          <PropertyRow>
-            <PropertyLabel>Кінець лінії</PropertyLabel>
-            <CustomSelect
-              value={selectedObject.shape === 'arrow' ? 'arrow' : (selectedObject.lineCapEnd || 'butt')}
-              onChange={(value) => handleObjectUpdate('lineCapEnd', value)}
-              options={[
-                { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Круглий' },
-                { value: 'arrow', label: 'Стрілка' }
-              ]}
-              placeholder="Оберіть тип"
-              disabled={selectedObject.shape === 'arrow'}
-            />
-          </PropertyRow>
+<PropertyRow>
+  <PropertyLabel>Кінець лінії</PropertyLabel>
+    <CustomSelect
+      value={selectedObject.lineCapEnd || (selectedObject.shape === 'arrow' ? 'arrow' : 'butt')}
+      onChange={(value) => handleObjectUpdate('lineCapEnd', value)}
+       options={[
+        { value: 'butt', label: 'Без закінчення' },
+         { value: 'round', label: 'Заокруглений' },
+         { value: 'arrow', label: 'Стрілка' },
+         { value: 'circle', label: 'Коло' },
+         { value: 'bar', label: 'Тупік' }
+       ]}
+      placeholder="Оберіть тип"
+      />
+    </PropertyRow>
         </>
       )}
 
