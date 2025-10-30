@@ -188,7 +188,6 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
     setCurrentColor(newHexColor);
     setRgbaValue(hexToRgba(newHexColor, newAlpha));
     
-    // Дебаунс для зміни кольору
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }

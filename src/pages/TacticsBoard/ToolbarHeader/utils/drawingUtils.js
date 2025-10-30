@@ -461,25 +461,198 @@ export const drawPath = (ctx, path, isSelected = false) => {
   ctx.shadowBlur = 0;
 };
 
-export const drawPlayer = (ctx, player, isSelected = false) => {
-  const radius = player.radius || 20;
+
+export const drawPlayer = (ctx, player, isSelected) => {
+  ctx.save();
   
-  ctx.fillStyle = player.color;
+  const x = player.x;
+  const y = player.y;
+  const radius = player.radius || 20;
+  const rotation = player.rotation || 0;
+  
+  // Переміщуємося до центру гравця та застосовуємо поворот
+  ctx.translate(x, y);
+  ctx.rotate((rotation * Math.PI) / 180);
+  
+  // Обводка з прозорістю та типом
+  const borderWidth = player.borderWidth || 2;
+  const borderOpacity = (player.borderOpacity !== undefined ? player.borderOpacity : 100) / 100;
+  const borderColor = player.borderColor || '#000000';
+  const borderStyle = player.borderStyle || 'solid';
+  
+  const borderHex = borderColor.replace('#', '');
+  const borderR = parseInt(borderHex.slice(0, 2), 16);
+  const borderG = parseInt(borderHex.slice(2, 4), 16);
+  const borderB = parseInt(borderHex.slice(4, 6), 16);
+  
+  // ФІКС: Колір круга з прозорістю - використовуємо colorOpacity замість circleOpacity
+  const circleOpacity = (player.colorOpacity !== undefined ? player.colorOpacity : 100) / 100;
+  const circleColor = player.color || '#ff0000';
+  const circleHex = circleColor.replace('#', '');
+  const circleR = parseInt(circleHex.slice(0, 2), 16);
+  const circleG = parseInt(circleHex.slice(2, 4), 16);
+  const circleB = parseInt(circleHex.slice(4, 6), 16);
+  
+  // Малюємо коло гравця
   ctx.beginPath();
-  ctx.arc(player.x, player.y, radius, 0, Math.PI * 2);
+  ctx.arc(0, 0, radius, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${circleR}, ${circleG}, ${circleB}, ${circleOpacity})`;
   ctx.fill();
   
+  // ФІКС: Застосовуємо обводку з правильною логікою для пунктиру та точок
+  ctx.strokeStyle = `rgba(${borderR}, ${borderG}, ${borderB}, ${borderOpacity})`;
+  ctx.lineWidth = borderWidth;
+  
   if (isSelected) {
+    // Для виділеного гравця - завжди суцільна обводка
+    ctx.setLineDash([]);
     ctx.strokeStyle = '#FFD700';
     ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
     ctx.stroke();
+  } else {
+    // Для різних типів обводки
+    if (borderStyle === 'dashed') {
+      // Логіка переходу до суцільної обводки для маленьких об'єктів
+      const circumference = 2 * Math.PI * radius;
+      const dashLength = Math.max(borderWidth * 2.5, Math.min(borderWidth * 4, circumference / 25));
+      const minGapLength = Math.max(borderWidth * 1.5, dashLength * 0.5);
+      const totalSegmentInitial = dashLength + minGapLength;
+      
+      const numFullSegments = Math.floor(circumference / totalSegmentInitial);
+      
+      // НОВА ЛОГІКА З МІНІМАЛЬНОЮ КІЛЬКІСТЮ СЕГМЕНТІВ
+      const MIN_DASH_SEGMENTS = 3; 
+      
+      if (numFullSegments < MIN_DASH_SEGMENTS || circumference < 30) {
+        // Суцільна обводка
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        // Рівномірний розподіл пунктирів
+        const totalGapLength = circumference - (numFullSegments * dashLength);
+        const adjustedGap = totalGapLength / numFullSegments;
+        
+        const actualSegmentAngle = (dashLength + adjustedGap) / radius;
+        const dashAngle = dashLength / radius;
+        
+        const fullSegmentLength = dashLength + adjustedGap;
+        const totalSegmentsLength = numFullSegments * fullSegmentLength - adjustedGap;
+        const remainingArc = circumference - totalSegmentsLength;
+        const startPhase = remainingArc / 2;
+        const startAngleOffset = startPhase / radius;
+        
+        ctx.lineCap = 'butt';
+        
+        for (let i = 0; i < numFullSegments; i++) {
+          const startAngle = startAngleOffset + i * actualSegmentAngle;
+          const endAngle = startAngle + dashAngle;
+          
+          ctx.beginPath();
+          ctx.arc(0, 0, radius, startAngle, endAngle);
+          ctx.stroke();
+        }
+      }
+    } else if (borderStyle === 'dotted') {
+      // Точкова обводка для кола (малюємо круглі точки)
+      const circumference = 2 * Math.PI * radius;
+      const dotRadius = borderWidth / 2;
+      const dotSpacing = Math.max(borderWidth * 2, circumference / 60);
+      const numDots = Math.max(8, Math.round(circumference / dotSpacing));
+      const angleStep = (2 * Math.PI) / numDots;
+      
+      ctx.fillStyle = `rgba(${borderR}, ${borderG}, ${borderB}, ${borderOpacity})`;
+      
+      for (let i = 0; i < numDots; i++) {
+        const angle = i * angleStep;
+        const dotX = radius * Math.cos(angle);
+        const dotY = radius * Math.sin(angle);
+        
+        ctx.beginPath();
+        ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      // Суцільна обводка
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   }
   
-  ctx.fillStyle = 'white';
-  ctx.font = `bold ${Math.floor(radius * 0.7)}px Arial`;
+  ctx.setLineDash([]);
+  
+  // Малюємо номер гравця з прозорістю
+  const number = player.number !== undefined ? player.number : 1;
+  const numberOpacity = (player.numberOpacity !== undefined ? player.numberOpacity : 100) / 100;
+  const numberColor = player.numberColor || '#ffffff';
+  const numberHex = numberColor.replace('#', '');
+  const numberR = parseInt(numberHex.slice(0, 2), 16);
+  const numberG = parseInt(numberHex.slice(2, 4), 16);
+  const numberB = parseInt(numberHex.slice(4, 6), 16);
+  const fontSize = Math.max(12, radius * 0.8);
+  
+  ctx.fillStyle = `rgba(${numberR}, ${numberG}, ${numberB}, ${numberOpacity})`;
+  ctx.font = `bold ${fontSize}px Arial`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(player.number, player.x, player.y);
+  ctx.fillText(number.toString(), 0, 0);
+  
+  // Малюємо текст над гравцем (якщо є) з прозорістю
+  if (player.topText) {
+    const textOpacity = (player.textOpacity !== undefined ? player.textOpacity : 100) / 100;
+    const textColor = player.textColor || '#000000';
+    const textHex = textColor.replace('#', '');
+    const textR = parseInt(textHex.slice(0, 2), 16);
+    const textG = parseInt(textHex.slice(2, 4), 16);
+    const textB = parseInt(textHex.slice(4, 6), 16);
+    const textFontSize = player.textSize || Math.max(10, radius * 0.5);
+    
+    // ФІКС: Фіксований відступ 5px від верхнього краю кола
+    const fixedGap = 5;
+    const textY = -(radius + fixedGap);
+    
+    ctx.fillStyle = `rgba(${textR}, ${textG}, ${textB}, ${textOpacity})`;
+    ctx.font = `${textFontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(player.topText, 0, textY);
+  }
+  
+  if (player.cards && player.cards.length > 0) {
+    const cardWidth = radius * 0.35;
+    const cardHeight = cardWidth * 1.4;
+    const cardSpacing = 4; // ЗБІЛЬШЕНО ВІДСТУП МІЖ КАРТКАМИ
+    
+    const startAngle = Math.PI / 4;
+    const startX = Math.cos(startAngle) * radius * 0.7;
+    const startY = Math.sin(startAngle) * radius * 0.7;
+    
+    player.cards.forEach((card, index) => {
+      // Логіка кольорів та обводки з попередніх кроків
+      const cardColor = card.color || (card === 'yellow' ? '#FFD700' : '#FF0000');
+      const cardBorderColor = card.cardBorderColor || '#000000';
+      
+      // ЗАСТОСУВАННЯ ВІДСТУПУ: кожна наступна картка зміщується на ширину + простір
+      const cardX = startX - (index * (cardWidth + cardSpacing));
+      
+      // Заливка картки
+      ctx.fillStyle = cardColor;
+      ctx.fillRect(cardX - cardWidth, startY, cardWidth, cardHeight);
+      
+      // Обводка картки (з попереднього кроку)
+      ctx.strokeStyle = cardBorderColor;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([]);
+      ctx.strokeRect(cardX - cardWidth, startY, cardWidth, cardHeight);
+    });
+  }
+  
+  ctx.restore();
 };
 
 export const drawBall = (ctx, ball, isSelected = false) => {

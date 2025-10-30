@@ -1,15 +1,82 @@
 export const getObjectBounds = (obj, canvas) => {
-  if (obj.type === 'player') {
-    const radius = obj.radius || 20;
-    return {
-      x: obj.x - radius,
-      y: obj.y - radius,
-      width: radius * 2,
-      height: radius * 2,
-      centerX: obj.x,
-      centerY: obj.y
-    };
-  } 
+if (obj.type === 'player') {
+  const radius = obj.radius || 20;
+  const rotation = obj.rotation || 0;
+  const angle = (rotation * Math.PI) / 180;
+  
+  // Базові bounds кола
+  let minX = obj.x - radius;
+  let maxX = obj.x + radius;
+  let minY = obj.y - radius;
+  let maxY = obj.y + radius;
+  
+  // Враховуємо текст над гравцем
+  if (obj.topText) {
+    const textFontSize = obj.textSize || Math.max(10, radius * 0.5);
+    const textHeight = textFontSize;
+    const textWidth = obj.topText.length * textFontSize * 0.6;
+    
+    const textY = -(radius + textHeight);
+    
+    const corners = [
+      { x: -textWidth / 2, y: textY - textHeight * 0.2 },
+      { x: textWidth / 2, y: textY - textHeight * 0.2 },
+      { x: -textWidth / 2, y: textY },
+      { x: textWidth / 2, y: textY }
+    ];
+    
+    corners.forEach(corner => {
+      const rotatedX = corner.x * Math.cos(angle) - corner.y * Math.sin(angle);
+      const rotatedY = corner.x * Math.sin(angle) + corner.y * Math.cos(angle);
+      
+      minX = Math.min(minX, obj.x + rotatedX);
+      maxX = Math.max(maxX, obj.x + rotatedX);
+      minY = Math.min(minY, obj.y + rotatedY);
+      maxY = Math.max(maxY, obj.y + rotatedY);
+    });
+  }
+  
+  // Враховуємо картки праворуч знизу
+  if (obj.cards && obj.cards.length > 0) {
+    const cardWidth = radius * 0.35;
+    const cardHeight = cardWidth * 1.4;
+    const cardSpacing = 2;
+    
+    const startAngle = Math.PI / 4;
+    const startX = Math.cos(startAngle) * radius * 0.7;
+    const startY = Math.sin(startAngle) * radius * 0.7;
+    
+    // Крайня картка (найлівіша)
+    const lastCardIndex = obj.cards.length - 1;
+    const lastCardX = startX - (lastCardIndex * (cardWidth + cardSpacing));
+    
+    const cardCorners = [
+      { x: lastCardX - cardWidth, y: startY },
+      { x: startX, y: startY },
+      { x: lastCardX - cardWidth, y: startY + cardHeight },
+      { x: startX, y: startY + cardHeight }
+    ];
+    
+    cardCorners.forEach(corner => {
+      const rotatedX = corner.x * Math.cos(angle) - corner.y * Math.sin(angle);
+      const rotatedY = corner.x * Math.sin(angle) + corner.y * Math.cos(angle);
+      
+      minX = Math.min(minX, obj.x + rotatedX);
+      maxX = Math.max(maxX, obj.x + rotatedX);
+      minY = Math.min(minY, obj.y + rotatedY);
+      maxY = Math.max(maxY, obj.y + rotatedY);
+    });
+  }
+  
+  return {
+    x: obj.x - radius,
+    y: obj.y - radius,
+    width: radius * 2,
+    height: radius * 2,
+    centerX: obj.x,
+    centerY: obj.y
+  };
+}
   
   if (obj.type === 'ball') {
     const radius = obj.radius || 10;
@@ -23,7 +90,7 @@ export const getObjectBounds = (obj, canvas) => {
     };
   } 
   
-if (obj.type === 'shape') {
+  if (obj.type === 'shape') {
     if (obj.shape === 'line' || obj.shape === 'arrow') {
       const minX = Math.min(obj.startX, obj.endX);
       const maxX = Math.max(obj.startX, obj.endX);

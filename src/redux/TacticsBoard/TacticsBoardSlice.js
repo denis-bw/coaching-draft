@@ -175,38 +175,132 @@ const TacticsBoardSlice = createSlice({
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
     initializePlayers: (state, action) => {
-      const { canvasWidth, canvasHeight } = action.payload;
-      const existingPlayers = state.objects.filter(obj => obj.type === 'player');
-      if (existingPlayers.length === 0) {
-        const margin = 50;
-        const verticalSpacing = canvasHeight / (Math.max(state.team1.count, state.team2.count) + 1);
-        for (let i = 0; i < state.team1.count; i++) {
-          state.objects.push({
-            id: `player_team1_${i}`,
-            type: 'player',
-            team: 1,
-            number: i + 1,
-            x: margin,
-            y: verticalSpacing * (i + 1),
-            color: state.team1.color,
-            radius: 20
-          });
-        }
-        for (let i = 0; i < state.team2.count; i++) {
-          state.objects.push({
-            id: `player_team2_${i}`,
-            type: 'player',
-            team: 2,
-            number: i + 1,
-            x: canvasWidth - margin,
-            y: verticalSpacing * (i + 1),
-            color: state.team2.color,
-            radius: 20
-          });
-        }
-        TacticsBoardSlice.caseReducers.saveToHistory(state);
-      }
-    },
+  const { canvasWidth, canvasHeight } = action.payload;
+  const existingPlayers = state.objects.filter(obj => obj.type === 'player');
+  if (existingPlayers.length === 0) {
+    const margin = 50;
+    const verticalSpacing = canvasHeight / (Math.max(state.team1.count, state.team2.count) + 1);
+    
+    // Team 1
+    for (let i = 0; i < state.team1.count; i++) {
+      state.objects.push({
+        id: `player_team1_${i}`,
+        type: 'player',
+        team: 1,
+        number: i + 1,
+        x: margin,
+        y: verticalSpacing * (i + 1),
+        color: state.team1.color,
+        radius: 20,
+        rotation: 0,
+        topText: '',
+        textSize: 10,
+        numberColor: '#ffffff',
+        numberOpacity: 100,
+        textColor: '#000000',
+        textOpacity: 100,
+        colorOpacity: 100,
+        borderColor: '#000000',
+        borderOpacity: 100,
+        borderWidth: 2,
+        borderStyle: 'solid',
+        cards: []
+      });
+    }
+    
+    // Team 2
+    for (let i = 0; i < state.team2.count; i++) {
+      state.objects.push({
+        id: `player_team2_${i}`,
+        type: 'player',
+        team: 2,
+        number: i + 1,
+        x: canvasWidth - margin,
+        y: verticalSpacing * (i + 1),
+        color: state.team2.color,
+        radius: 20,
+        rotation: 0,
+        topText: '',
+        textSize: 10,
+        numberColor: '#ffffff',
+        numberOpacity: 100,
+        textColor: '#000000',
+        textOpacity: 100,
+        colorOpacity: 100,
+        borderColor: '#000000',
+        borderOpacity: 100,
+        borderWidth: 2,
+        borderStyle: 'solid',
+        cards: []
+      });
+    }
+    
+    TacticsBoardSlice.caseReducers.saveToHistory(state);
+  }
+},
+
+updatePlayersPosition: (state, action) => {
+  const { canvasWidth, canvasHeight } = action.payload;
+  state.objects = state.objects.filter(obj => obj.type !== 'player');
+  const margin = 50;
+  const verticalSpacing = canvasHeight / (Math.max(state.team1.count, state.team2.count) + 1);
+  
+  // Team 1
+  for (let i = 0; i < state.team1.count; i++) {
+    state.objects.push({
+      id: `player_team1_${i}`,
+      type: 'player',
+      team: 1,
+      number: i + 1,
+      x: margin,
+      y: verticalSpacing * (i + 1),
+      color: state.team1.color,
+      radius: 20,
+      rotation: 0,
+      topText: '',
+      textSize: 10,
+      numberColor: '#ffffff',
+      numberOpacity: 100,
+      textColor: '#000000',
+      textOpacity: 100,
+      colorOpacity: 100,
+      borderColor: '#000000',
+      borderOpacity: 100,
+      borderWidth: 2,
+      borderStyle: 'solid',
+      cards: []
+    });
+  }
+  
+  // Team 2
+  for (let i = 0; i < state.team2.count; i++) {
+    state.objects.push({
+      id: `player_team2_${i}`,
+      type: 'player',
+      team: 2,
+      number: i + 1,
+      x: canvasWidth - margin,
+      y: verticalSpacing * (i + 1),
+      color: state.team2.color,
+      radius: 20,
+      rotation: 0,
+      topText: '',
+      textSize: 10,
+      numberColor: '#ffffff',
+      numberOpacity: 100,
+      textColor: '#000000',
+      textOpacity: 100,
+      colorOpacity: 100,
+      borderColor: '#000000',
+      borderOpacity: 100,
+      borderWidth: 2,
+      borderStyle: 'solid',
+      cards: []
+    });
+  }
+  
+  TacticsBoardSlice.caseReducers.saveToHistory(state);
+},
     updatePlayersPosition: (state, action) => {
       const { canvasWidth, canvasHeight } = action.payload;
       state.objects = state.objects.filter(obj => obj.type !== 'player');

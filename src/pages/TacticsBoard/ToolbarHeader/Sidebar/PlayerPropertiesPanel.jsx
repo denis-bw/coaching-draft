@@ -4,12 +4,12 @@ import { useDispatch } from 'react-redux';
 import { updateObject } from '../../../../redux/TacticsBoard/TacticsBoardSlice';
 import ColorOpacityControl from './ColorOpacityControl';
 import CustomSelect from './CustomSelect';
+import { ReactComponent as DeleteIcon } from '../../../../assets/DeleteIcon.svg';
 
 const Section = styled.div`
   margin-bottom: 20px;
   padding-bottom: 16px;
   border-bottom: 1px solid ${({ theme }) => theme.lightGreen || '#E0E0E0'};
-  
   &:last-child {
     border-bottom: none;
   }
@@ -26,7 +26,6 @@ const SectionTitle = styled.h3`
 
 const PropertyRow = styled.div`
   margin-bottom: 12px;
-  
   &:last-child {
     margin-bottom: 0;
   }
@@ -40,6 +39,21 @@ const PropertyLabel = styled.label`
   color: ${({ theme }) => theme.textBlack || '#555'};
 `;
 
+const Input = styled.input`
+  width: 100%;
+  padding: 8px;
+  border: 1px solid ${({ theme }) => theme.lightGreen || '#ccc'};
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: ${({ theme }) => theme.ContainerBGColor || '#fff'};
+  color: ${({ theme }) => theme.textBlack || '#333'};
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.greenMain || '#4CAF50'};
+  }
+`;
+
 const Slider = styled.input.attrs({ type: 'range' })`
   -webkit-appearance: none;
   width: 100%;
@@ -51,7 +65,6 @@ const Slider = styled.input.attrs({ type: 'range' })`
   }};
   outline: none;
   margin: 0;
-
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     width: 16px;
@@ -62,7 +75,6 @@ const Slider = styled.input.attrs({ type: 'range' })`
     box-shadow: 0 0 2px rgba(0,0,0,0.3);
     border: none;
   }
-
   &::-moz-range-thumb {
     width: 16px;
     height: 16px;
@@ -81,197 +93,412 @@ const SliderValue = styled.span`
   margin-left: 8px;
 `;
 
-const DimensionsGrid = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+// --- ОНОВЛЕНІ СТИЛІ ДЛЯ КАРТОК ---
+
+const CardsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px; 
+  margin-top: 10px;
 `;
 
-const Input = styled.input`
-  width: 100%;
-  padding: 8px;
-  border: 1px solid ${({ theme }) => theme.lightGreen || '#ccc'};
-  border-radius: 4px;
-  font-size: 14px;
-  box-sizing: border-box;
-  background: ${({ theme }) => theme.ContainerBGColor || '#fff'};
-  color: ${({ theme }) => theme.textBlack || '#333'};
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.greenMain || '#4CAF50'};
+const CardRow = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  background: ${({ theme }) => theme.ContainerBGColor || '#f5f5f5'}; 
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); 
+  border-radius: 8px; 
+  border: 1px solid ${({ theme }) => theme.lightGreen || '#e0e0e0'}; 
+  transition: all 0.2s;
+  &:hover {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 `;
 
-const ShapePropertiesPanel = ({ selectedObject }) => {
+const CardPreview = styled.div`
+  width: 30px; 
+  height: 45px;
+  background: ${({ $color }) => $color};
+  border: 2px solid ${({ $borderColor }) => $borderColor}; 
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
+`;
+
+const CardControls = styled.div`
+  display: flex;
+  flex-direction: row; 
+  gap: 15px; 
+  flex: 1;
+  align-items: center;
+  justify-content: flex-start; // Вирівняти контролери на початку
+`;
+
+const CardColorRow = styled.div`
+  display: flex;
+  gap: 6px;
+  align-items: center;
+`;
+
+const CardColorInput = styled.input.attrs({ type: 'color' })`
+  width: 25px; 
+  height: 25px;
+  padding: 0;
+  border: none; 
+  border-radius: 4px; 
+  cursor: pointer;
+  background: transparent; 
+  flex-shrink: 0;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  &::-webkit-color-swatch {
+    border: 1px solid ${({ theme }) => theme.lightGreen || '#ccc'}; 
+    border-radius: 4px;
+  }
+  &::-moz-color-swatch {
+    border: 1px solid ${({ theme }) => theme.lightGreen || '#ccc'};
+    border-radius: 4px;
+  }
+`;
+
+const ColorLabel = styled.span`
+  font-size: 11px;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textGray || '#666'};
+  min-width: 45px; 
+`;
+
+const RemoveCardButton = styled.button`
+  width: 35px; 
+  height: 35px;
+  background: #ff5252; 
+  color: ${({ theme }) => theme.white};
+  border: none;
+  border-radius: 50%; 
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  &:hover {
+    background: #e04b4b; 
+    transform: scale(1.02);
+  }
+
+  svg {
+   
+    width: 18px; 
+    height: 18px;
+    fill: none; 
+    stroke: currentColor;
+    display: block;
+  }
+`;
+
+const AddCardButton = styled.button`
+  width: 100%;
+  padding: 10px;
+  background: ${({ theme }) => theme.greenMain};
+  color: ${({ theme }) => theme.white};
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover {
+    background: ${({ theme }) => theme.darkGreen};
+  }
+  &:disabled {
+    background: ${({ theme }) => theme.lightGreen};
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+`;
+
+const CharCounter = styled.span`
+  font-size: 10px;
+  color: ${({ theme, $over }) => $over ? theme.red : theme.textGray};
+  margin-top: 4px;
+  display: block;
+`;
+
+const MIN_PLAYER_SIZE = 8;
+const MAX_TEXT_LENGTH = 100;
+const MAX_CARDS = 3;
+
+const PlayerPropertiesPanel = ({ selectedObject }) => {
   const dispatch = useDispatch();
 
   const handleObjectUpdate = (property, value) => {
-    dispatch(updateObject({ 
-      id: selectedObject.id, 
-      updates: { [property]: value } 
-    }));
+    dispatch(updateObject({ id: selectedObject.id, updates: { [property]: value } }));
   };
 
-  const handleSizeChange = (dimension, value) => {
-    const numValue = Number(value);
-    
-    if (selectedObject.shape === 'circle') {
-      // Для кола змінюємо обидва розміри одночасно
-      dispatch(updateObject({
-        id: selectedObject.id,
-        updates: {
-          width: numValue,
-          height: numValue
-        }
-      }));
-    } else {
-      // Для інших фігур змінюємо окремо
-      handleObjectUpdate(dimension, numValue);
+  const handleSizeChange = (value) => {
+    let numValue = Number(value);
+    if (numValue < MIN_PLAYER_SIZE) numValue = MIN_PLAYER_SIZE;
+    handleObjectUpdate('radius', numValue);
+  };
+
+  const handleNumberChange = (value) => {
+    const numValue = Math.max(0, Math.min(99, Number(value) || 0));
+    handleObjectUpdate('number', numValue);
+  };
+
+  const handleTopTextChange = (value) => {
+    if (value.length <= MAX_TEXT_LENGTH) handleObjectUpdate('topText', value);
+  };
+
+  const addCard = () => {
+    const currentCards = selectedObject.cards || [];
+    if (currentCards.length < MAX_CARDS) {
+      // Додавання нової картки з дефолтними кольорами
+      const newCards = [...currentCards, { color: '#FFD700', cardBorderColor: '#000000' }]; 
+      handleObjectUpdate('cards', newCards);
     }
   };
 
-  const isLineOrArrow = selectedObject.shape === 'line' || selectedObject.shape === 'arrow';
-  const isCircle = selectedObject.shape === 'circle';
+  const removeCard = (index) => {
+    const currentCards = selectedObject.cards || [];
+    const newCards = currentCards.filter((_, i) => i !== index);
+    handleObjectUpdate('cards', newCards);
+  };
+
+  const updateCardColor = (index, color) => {
+    const currentCards = selectedObject.cards || [];
+    const newCards = [...currentCards];
+    newCards[index] = { ...newCards[index], color };
+    handleObjectUpdate('cards', newCards);
+  };
+
+  const updateCardBorderColor = (index, borderColor) => {
+    const currentCards = selectedObject.cards || [];
+    const newCards = [...currentCards];
+    newCards[index] = { ...newCards[index], cardBorderColor: borderColor };
+    handleObjectUpdate('cards', newCards);
+  };
+
+  const playerRadius = selectedObject.radius || 20;
+  const playerNumber = selectedObject.number !== undefined ? selectedObject.number : 1; 
+  const playerTopText = selectedObject.topText || '';
+  const playerRotation = selectedObject.rotation || 0;
+  const playerColor = selectedObject.color || '#ff0000';
+  const playerColorOpacity = selectedObject.colorOpacity !== undefined ? selectedObject.colorOpacity : 100;
+  const playerNumberColor = selectedObject.numberColor || '#ffffff';
+  const playerNumberOpacity = selectedObject.numberOpacity !== undefined ? selectedObject.numberOpacity : 100;
+  const playerTextColor = selectedObject.textColor || '#000000';
+  const playerTextOpacity = selectedObject.textOpacity !== undefined ? selectedObject.textOpacity : 100;
+  const playerTextSize = selectedObject.textSize || Math.max(10, playerRadius * 0.5);
+  const playerBorderWidth = selectedObject.borderWidth || 2;
+  const playerBorderColor = selectedObject.borderColor || '#000000';
+  const playerBorderOpacity = selectedObject.borderOpacity !== undefined ? selectedObject.borderOpacity : 100;
+  const playerBorderStyle = selectedObject.borderStyle || 'solid';
+  const playerCards = selectedObject.cards || [];
 
   return (
-    <Section>
-      <SectionTitle>Властивості фігури</SectionTitle>
-      
-      {!isLineOrArrow && (
+    <>
+      <Section>
+        <SectionTitle>Розмір та позиція</SectionTitle>
         <PropertyRow>
-          <PropertyLabel>{isCircle ? 'Діаметр' : 'Розміри'}</PropertyLabel>
-          {isCircle ? (
-            <Input 
-              type="number"
-              min="10"
-              value={Math.abs(selectedObject.width || 50)}
-              onChange={(e) => handleSizeChange('width', e.target.value)}
-            />
-          ) : (
-            <DimensionsGrid>
-              <div>
-                <PropertyLabel style={{ fontSize: '10px', marginBottom: '4px' }}>Ширина</PropertyLabel>
-                <Input 
-                  type="number"
-                  min="10"
-                  value={Math.abs(selectedObject.width || 50)}
-                  onChange={(e) => handleSizeChange('width', e.target.value)}
-                />
-              </div>
-              <div>
-                <PropertyLabel style={{ fontSize: '10px', marginBottom: '4px' }}>Висота</PropertyLabel>
-                <Input 
-                  type="number"
-                  min="10"
-                  value={Math.abs(selectedObject.height || 30)}
-                  onChange={(e) => handleSizeChange('height', e.target.value)}
-                />
-              </div>
-            </DimensionsGrid>
-          )}
-        </PropertyRow>
-      )}
-
-      <PropertyRow>
-        <PropertyLabel>
-          Кут повороту
-          <SliderValue>{selectedObject.rotation || 0}°</SliderValue>
-        </PropertyLabel>
-        <Slider
-          type="range"
-          min="-180"
-          max="180"
-          step="5"
-          value={selectedObject.rotation || 0}
-          onChange={(e) => handleObjectUpdate('rotation', Number(e.target.value))}
-        />
-      </PropertyRow>
-
-      <PropertyRow>
-        <ColorOpacityControl
-          color={selectedObject.borderColor || selectedObject.color || '#000000'}
-          opacity={selectedObject.borderOpacity !== undefined ? selectedObject.borderOpacity : 100}
-          onColorChange={(color) => handleObjectUpdate('borderColor', color)}
-          onOpacityChange={(opacity) => handleObjectUpdate('borderOpacity', opacity)}
-          label="Колір обводки і прозорість"
-        />
-      </PropertyRow>
-
-      <PropertyRow>
-        <PropertyLabel>
-          Товщина обводки
-          <SliderValue>{selectedObject.borderWidth || 2}px</SliderValue>
-        </PropertyLabel>
-        <Slider
-          type="range"
-          min="1"
-          max="20"
-          value={selectedObject.borderWidth || 2}
-          onChange={(e) => handleObjectUpdate('borderWidth', Number(e.target.value))}
-        />
-      </PropertyRow>
-
-      <PropertyRow>
-        <PropertyLabel>Тип обводки</PropertyLabel>
-        <CustomSelect
-          value={selectedObject.borderStyle || 'solid'}
-          onChange={(value) => handleObjectUpdate('borderStyle', value)}
-          options={[
-            { value: 'solid', label: 'Суцільна' },
-            { value: 'dashed', label: 'Пунктирна' },
-            { value: 'dotted', label: 'Точкова' }
-          ]}
-          placeholder="Оберіть тип"
-        />
-      </PropertyRow>
-
-      {isLineOrArrow && (
-        <>
-          <PropertyRow>
-            <PropertyLabel>Початок лінії</PropertyLabel>
-            <CustomSelect
-              value={selectedObject.lineCapStart || 'butt'}
-              onChange={(value) => handleObjectUpdate('lineCapStart', value)}
-              options={[
-                { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Круглий' },
-                { value: 'arrow', label: 'Стрілка' }
-              ]}
-              placeholder="Оберіть тип"
-            />
-          </PropertyRow>
-          
-          <PropertyRow>
-            <PropertyLabel>Кінець лінії</PropertyLabel>
-            <CustomSelect
-              value={selectedObject.shape === 'arrow' ? 'arrow' : (selectedObject.lineCapEnd || 'butt')}
-              onChange={(value) => handleObjectUpdate('lineCapEnd', value)}
-              options={[
-                { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Круглий' },
-                { value: 'arrow', label: 'Стрілка' }
-              ]}
-              placeholder="Оберіть тип"
-              disabled={selectedObject.shape === 'arrow'}
-            />
-          </PropertyRow>
-        </>
-      )}
-
-      {!isLineOrArrow && (
-        <PropertyRow>
-          <ColorOpacityControl
-            color={selectedObject.fillColor || '#ffffff'}
-            opacity={selectedObject.fillOpacity !== undefined ? selectedObject.fillOpacity : 0}
-            onColorChange={(color) => handleObjectUpdate('fillColor', color)}
-            onOpacityChange={(opacity) => handleObjectUpdate('fillOpacity', opacity)}
-            label="Колір заливки і прозорість"
+          <PropertyLabel>
+            Розмір гравця
+            <SliderValue>{playerRadius}px</SliderValue>
+          </PropertyLabel>
+          <Slider
+            min={MIN_PLAYER_SIZE}
+            max="50"
+            value={playerRadius}
+            onChange={(e) => handleSizeChange(e.target.value)}
           />
         </PropertyRow>
-      )}
-    </Section>
+        <PropertyRow>
+          <PropertyLabel>
+            Кут повороту
+            <SliderValue>{playerRotation}º</SliderValue>
+          </PropertyLabel>
+          <Slider
+            min="-180"
+            max="180"
+            step="5"
+            value={playerRotation}
+            onChange={(e) => handleObjectUpdate('rotation', Number(e.target.value))}
+          />
+        </PropertyRow>
+        <PropertyRow>
+          <ColorOpacityControl
+            color={playerColor}
+            opacity={playerColorOpacity}
+            onColorChange={(color) => handleObjectUpdate('color', color)}
+            onOpacityChange={(opacity) => handleObjectUpdate('colorOpacity', opacity)}
+            label="Колір гравця"
+          />
+        </PropertyRow>
+      </Section>
+      
+      <Section>
+        <SectionTitle>Номер гравця</SectionTitle>
+        <PropertyRow>
+          <PropertyLabel>Номер гравця (0-99)</PropertyLabel>
+          <Input 
+            type="number"
+            min="0"
+            max="99"
+            value={playerNumber}
+            onChange={(e) => handleNumberChange(e.target.value)}
+          />
+        </PropertyRow>
+        <PropertyRow>
+          <ColorOpacityControl
+            color={playerNumberColor}
+            opacity={playerNumberOpacity}
+            onColorChange={(color) => handleObjectUpdate('numberColor', color)}
+            onOpacityChange={(opacity) => handleObjectUpdate('numberOpacity', opacity)}
+            label="Колір номера"
+          />
+        </PropertyRow>
+      </Section>
+
+      <Section>
+        <SectionTitle>Текст над гравцем</SectionTitle>
+        <PropertyRow>
+          <PropertyLabel>Текст</PropertyLabel>
+          <Input 
+            type="text"
+            maxLength={MAX_TEXT_LENGTH}
+            placeholder="Введіть текст"
+            value={playerTopText}
+            onChange={(e) => handleTopTextChange(e.target.value)}
+          />
+          <CharCounter $over={playerTopText.length > MAX_TEXT_LENGTH}>
+            {playerTopText.length}/{MAX_TEXT_LENGTH} символів
+          </CharCounter>
+        </PropertyRow>
+        {playerTopText && (
+          <>
+            <PropertyRow>
+              <PropertyLabel>
+                Розмір тексту
+                <SliderValue>{playerTextSize}px</SliderValue>
+              </PropertyLabel>
+              <Slider
+                min="8"
+                max="40"
+                value={playerTextSize}
+                onChange={(e) => handleObjectUpdate('textSize', Number(e.target.value))}
+              />
+            </PropertyRow>
+            <PropertyRow>
+              <ColorOpacityControl
+                color={playerTextColor}
+                opacity={playerTextOpacity}
+                onColorChange={(color) => handleObjectUpdate('textColor', color)}
+                onOpacityChange={(opacity) => handleObjectUpdate('textOpacity', opacity)}
+                label="Колір тексту"
+              />
+            </PropertyRow>
+          </>
+        )}
+      </Section>
+
+      <Section>
+        <SectionTitle>Обводка</SectionTitle>
+        <PropertyRow>
+          <ColorOpacityControl
+            color={playerBorderColor}
+            opacity={playerBorderOpacity}
+            onColorChange={(color) => handleObjectUpdate('borderColor', color)}
+            onOpacityChange={(opacity) => handleObjectUpdate('borderOpacity', opacity)}
+            label="Колір обводки"
+          />
+        </PropertyRow>
+        <PropertyRow>
+          <PropertyLabel>
+            Товщина обводки
+            <SliderValue>{playerBorderWidth}px</SliderValue>
+          </PropertyLabel>
+          <Slider
+            min="1"
+            max="10"
+            value={playerBorderWidth}
+            onChange={(e) => handleObjectUpdate('borderWidth', Number(e.target.value))}
+          />
+        </PropertyRow>
+        <PropertyRow>
+          <PropertyLabel>Тип обводки</PropertyLabel>
+          <CustomSelect
+            value={playerBorderStyle}
+            onChange={(value) => handleObjectUpdate('borderStyle', value)}
+            options={[
+              { value: 'solid', label: 'Суцільна' },
+              { value: 'dashed', label: 'Пунктирна' },
+              { value: 'dotted', label: 'Точкова' }
+            ]}
+            placeholder="Оберіть тип"
+          />
+        </PropertyRow>
+      </Section>
+
+      {/* ОНОВЛЕНА СЕКЦІЯ КАРТОК */}
+      <Section>
+        <SectionTitle>Картки ({playerCards.length}/{MAX_CARDS})</SectionTitle>
+        {playerCards.length > 0 && (
+          <CardsContainer>
+            {playerCards.map((card, index) => (
+              <CardRow key={index}>
+                <CardPreview 
+                  $color={card.color} 
+                  $borderColor={card.cardBorderColor || '#000000'}
+                />
+                <CardControls>
+                  {/* Контрол кольору заливки */}
+                  <CardColorRow title="Колір заливки картки">
+                    <ColorLabel>Заливка:</ColorLabel>
+                    <CardColorInput
+                      value={card.color}
+                      onChange={(e) => updateCardColor(index, e.target.value)}
+                    />
+                  </CardColorRow>
+                  
+                  {/* Контрол кольору обводки */}
+                  <CardColorRow title="Колір обводки картки">
+                    <ColorLabel>Обводка:</ColorLabel>
+                    <CardColorInput
+                      value={card.cardBorderColor || '#000000'}
+                      onChange={(e) => updateCardBorderColor(index, e.target.value)}
+                    />
+                  </CardColorRow>
+                </CardControls>
+                
+                {/* Компактна кнопка видалення */}
+                <RemoveCardButton 
+                  onClick={() => removeCard(index)}
+                  title="Видалити картку"
+                >
+                 <DeleteIcon />
+                </RemoveCardButton>
+              </CardRow>
+            ))}
+          </CardsContainer>
+        )}
+        <PropertyRow style={{ marginTop: playerCards.length > 0 ? '15px' : '0' }}>
+          <AddCardButton 
+            onClick={addCard}
+            disabled={playerCards.length >= MAX_CARDS}
+          >
+            {playerCards.length >= MAX_CARDS 
+              ? `Максимум ${MAX_CARDS} картки`
+              : 'Додати картку'}
+          </AddCardButton>
+        </PropertyRow>
+      </Section>
+    </>
   );
 };
 
-export default ShapePropertiesPanel;
+export default PlayerPropertiesPanel;
