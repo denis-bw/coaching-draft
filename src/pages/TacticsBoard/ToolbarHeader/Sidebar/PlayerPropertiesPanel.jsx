@@ -93,8 +93,6 @@ const SliderValue = styled.span`
   margin-left: 8px;
 `;
 
-// --- ОНОВЛЕНІ СТИЛІ ДЛЯ КАРТОК ---
-
 const CardsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -133,7 +131,7 @@ const CardControls = styled.div`
   gap: 15px; 
   flex: 1;
   align-items: center;
-  justify-content: flex-start; // Вирівняти контролери на початку
+  justify-content: flex-start;
 `;
 
 const CardColorRow = styled.div`
@@ -192,7 +190,6 @@ const RemoveCardButton = styled.button`
   }
 
   svg {
-   
     width: 18px; 
     height: 18px;
     fill: none; 
@@ -230,6 +227,7 @@ const CharCounter = styled.span`
 `;
 
 const MIN_PLAYER_SIZE = 8;
+const MAX_PLAYER_SIZE = 50;
 const MAX_TEXT_LENGTH = 100;
 const MAX_CARDS = 3;
 
@@ -242,7 +240,7 @@ const PlayerPropertiesPanel = ({ selectedObject }) => {
 
   const handleSizeChange = (value) => {
     let numValue = Number(value);
-    if (numValue < MIN_PLAYER_SIZE) numValue = MIN_PLAYER_SIZE;
+    numValue = Math.max(MIN_PLAYER_SIZE, Math.min(MAX_PLAYER_SIZE, numValue));
     handleObjectUpdate('radius', numValue);
   };
 
@@ -258,7 +256,6 @@ const PlayerPropertiesPanel = ({ selectedObject }) => {
   const addCard = () => {
     const currentCards = selectedObject.cards || [];
     if (currentCards.length < MAX_CARDS) {
-      // Додавання нової картки з дефолтними кольорами
       const newCards = [...currentCards, { color: '#FFD700', cardBorderColor: '#000000' }]; 
       handleObjectUpdate('cards', newCards);
     }
@@ -307,12 +304,12 @@ const PlayerPropertiesPanel = ({ selectedObject }) => {
         <SectionTitle>Розмір та позиція</SectionTitle>
         <PropertyRow>
           <PropertyLabel>
-            Розмір гравця
+            Розмір гравця (8-50px)
             <SliderValue>{playerRadius}px</SliderValue>
           </PropertyLabel>
           <Slider
             min={MIN_PLAYER_SIZE}
-            max="50"
+            max={MAX_PLAYER_SIZE}
             value={playerRadius}
             onChange={(e) => handleSizeChange(e.target.value)}
           />
@@ -444,7 +441,6 @@ const PlayerPropertiesPanel = ({ selectedObject }) => {
         </PropertyRow>
       </Section>
 
-      {/* ОНОВЛЕНА СЕКЦІЯ КАРТОК */}
       <Section>
         <SectionTitle>Картки ({playerCards.length}/{MAX_CARDS})</SectionTitle>
         {playerCards.length > 0 && (
@@ -456,7 +452,6 @@ const PlayerPropertiesPanel = ({ selectedObject }) => {
                   $borderColor={card.cardBorderColor || '#000000'}
                 />
                 <CardControls>
-                  {/* Контрол кольору заливки */}
                   <CardColorRow title="Колір заливки картки">
                     <ColorLabel>Заливка:</ColorLabel>
                     <CardColorInput
@@ -465,7 +460,6 @@ const PlayerPropertiesPanel = ({ selectedObject }) => {
                     />
                   </CardColorRow>
                   
-                  {/* Контрол кольору обводки */}
                   <CardColorRow title="Колір обводки картки">
                     <ColorLabel>Обводка:</ColorLabel>
                     <CardColorInput
@@ -475,7 +469,6 @@ const PlayerPropertiesPanel = ({ selectedObject }) => {
                   </CardColorRow>
                 </CardControls>
                 
-                {/* Компактна кнопка видалення */}
                 <RemoveCardButton 
                   onClick={() => removeCard(index)}
                   title="Видалити картку"

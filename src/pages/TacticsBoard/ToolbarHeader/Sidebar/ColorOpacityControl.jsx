@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 
 const PropertyLabel = styled.label`
@@ -40,16 +40,6 @@ const ColorPreview = styled.div`
   border: 2px solid ${({ theme }) => theme.lightGreen || '#ccc'};
   cursor: pointer;
   overflow: hidden;
-
-  &::after {
-    content: '';
-    display: block;
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    z-index: 1;
-    background: ${props => `rgba(${props.$rgbaColor}, ${props.$opacity})`};
-  }
 `;
 
 const ColorInput = styled.input`
@@ -117,134 +107,120 @@ const OpacityLabel = styled.span`
   margin-top: 2px;
 `;
 
+// Хелпери
+const percentToAlpha = (percent) => Math.max(0, Math.min(1, percent / 100));
+const alphaToPercent = (alpha) => Math.round(Math.max(0, Math.min(100, alpha * 100)));
+
+const hexToRgba = (hex, alpha = 1) => {
+  if (!hex) return '0, 0, 0, 1';
+  let cleanHex = hex.replace('#', '');
+  if (cleanHex.length === 3) {
+    cleanHex = cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2];
+  }
+  const r = parseInt(cleanHex.slice(0, 2), 16);
+  const g = parseInt(cleanHex.slice(2, 4), 16);
+  const b = parseInt(cleanHex.slice(4, 6), 16);
+  return `${r}, ${g}, ${b}, ${alpha}`;
+};
+
 const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, label }) => {
-  const [currentColor, setCurrentColor] = useState(color || '#000000');
-  const [currentOpacity, setCurrentOpacity] = useState(opacity || 100);
-  const [rgbaValue, setRgbaValue] = useState('0, 0, 0, 1');
+  const [localColor, setLocalColor] = useState(color || '#000000');
+  const [localOpacity, setLocalOpacity] = useState(opacity !== undefined ? opacity : 100);
+  
   const colorInputRef = useRef(null);
   const debounceTimerRef = useRef(null);
+  
+  // Додаємо ref для текстового інпута RGBA
+  const textInputRef = useRef(null);
 
-  const hexToRgba = (hex, alpha = 1) => {
-    if (!hex) return '0, 0, 0, 1';
-    hex = hex.replace('#', '');
-    if (hex.length === 3) {
-      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    }
-    const r = parseInt(hex.slice(0, 2), 16);
-    const g = parseInt(hex.slice(2, 4), 16);
-    const b = parseInt(hex.slice(4, 6), 16);
-    return `${r}, ${g}, ${b}, ${alpha}`;
-  };
+  // Обчислюємо значення рядка
+  const rgbaValue = useMemo(() => {
+    const alpha = percentToAlpha(localOpacity);
+    return hexToRgba(localColor, alpha);
+  }, [localColor, localOpacity]);
 
-  const isValidRgbaFormat = (input) => {
-    const rgbaFormat = /^[\d\s,\.]*$/;
-    return rgbaFormat.test(input);
-  };
+  // Локальний стан для тексту в інпуті
+  const [inputValue, setInputValue] = useState(rgbaValue);
 
-  const parseRgbaString = (rgbaString) => {
-    const values = rgbaString.split(',').map(val => parseFloat(val.trim()));
-    if (values.length < 3 || values.some(isNaN)) return null;
-    const r = Math.max(0, Math.min(255, values[0] || 0));
-    const g = Math.max(0, Math.min(255, values[1] || 0));
-    const b = Math.max(0, Math.min(255, values[2] || 0));
-    const alpha = values[3] !== undefined ? Math.max(0, Math.min(1, values[3])) : 1;
-    return { r, g, b, alpha };
-  };
+  const previewStyle = useMemo(() => {
+    const alpha = percentToAlpha(localOpacity);
+    const rgba = hexToRgba(localColor, alpha);
+    return { backgroundColor: `rgba(${rgba})` };
+  }, [localColor, localOpacity]);
 
-  const percentToAlpha = (percent) => {
-    return Math.max(0, Math.min(1, percent / 100));
-  };
-
-  const alphaToPercent = (alpha) => {
-    return Math.round(Math.max(0, Math.min(100, alpha * 100)));
-  };
-
-  const getRgbValues = () => {
-    const hex = currentColor.replace('#', '');
-    let r, g, b;
-    if (hex.length === 3) {
-      r = parseInt(hex[0] + hex[0], 16);
-      g = parseInt(hex[1] + hex[1], 16);
-      b = parseInt(hex[2] + hex[2], 16);
-    } else {
-      r = parseInt(hex.slice(0, 2), 16);
-      g = parseInt(hex.slice(2, 4), 16);
-      b = parseInt(hex.slice(4, 6), 16);
-    }
-    return `${r}, ${g}, ${b}`;
-  };
-
+  // Скидаємо локальний стан, якщо пропси змінилися ззовні
   useEffect(() => {
-    setCurrentColor(color || '#000000');
-    setCurrentOpacity(opacity || 100);
-    const newAlpha = percentToAlpha(opacity || 100);
-    setRgbaValue(hexToRgba(color || '#000000', newAlpha));
+    if (!debounceTimerRef.current) {
+      setLocalColor(color || '#000000');
+      setLocalOpacity(opacity !== undefined ? opacity : 100);
+    }
   }, [color, opacity]);
 
-  const handleColorInputChange = (e) => {
+  // Синхронізуємо текст в інпуті з кольором, АЛЕ ТІЛЬКИ якщо інпут не у фокусі.
+  // Це дозволяє змінювати колір піпеткою і бачити зміни в тексті,
+  // але не заважає користувачу друкувати (курсор не стрибатиме).
+  useEffect(() => {
+    if (document.activeElement !== textInputRef.current) {
+      setInputValue(rgbaValue);
+    }
+  }, [rgbaValue]);
+
+  const handleNativeColorPickerChange = (e) => {
     const newHexColor = e.target.value;
-    const newAlpha = percentToAlpha(currentOpacity);
-    
-    setCurrentColor(newHexColor);
-    setRgbaValue(hexToRgba(newHexColor, newAlpha));
+    setLocalColor(newHexColor);
     
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
     
     debounceTimerRef.current = setTimeout(() => {
-      if (onColorChange) onColorChange(newHexColor);
-    }, 100);
+      if (onColorChange) {
+        onColorChange(newHexColor);
+      }
+      debounceTimerRef.current = null;
+    }, 150);
   };
 
+  // Змінено на onChange для миттєвої реакції
   const handleRgbaChange = (e) => {
-    const input = e.target.value;
-    if (!isValidRgbaFormat(input)) return;
-    setRgbaValue(input);
-  };
+    const newValue = e.target.value;
+    setInputValue(newValue); // Даємо користувачу друкувати що завгодно
 
-  const handleRgbaBlur = (e) => {
-    const input = e.target.value;
-    const parsed = parseRgbaString(input);
+    // Спробуємо розпарсити
+    const values = newValue.split(',').map(val => parseFloat(val.trim()));
     
-    if (parsed) {
-      const { r, g, b, alpha } = parsed;
-      const formattedRgba = `${r}, ${g}, ${b}, ${alpha}`;
-      const newHex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
-      const newPercent = alphaToPercent(alpha);
-      
-      setRgbaValue(formattedRgba);
-      setCurrentColor(newHex);
-      setCurrentOpacity(newPercent);
-      
-      if (onColorChange) onColorChange(newHex);
-      if (onOpacityChange) onOpacityChange(newPercent);
-    } else {
-      const newAlpha = percentToAlpha(currentOpacity);
-      setRgbaValue(hexToRgba(currentColor, newAlpha));
+    // Якщо введено валідні дані (3 числа + опціонально альфа), оновлюємо стан
+    if (values.length >= 3 && !values.some(isNaN)) {
+       const r = Math.max(0, Math.min(255, values[0] || 0));
+       const g = Math.max(0, Math.min(255, values[1] || 0));
+       const b = Math.max(0, Math.min(255, values[2] || 0));
+       const alpha = values[3] !== undefined ? Math.max(0, Math.min(1, values[3])) : 1;
+       
+       // Конвертуємо в HEX
+       const newHex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+       const newPercent = alphaToPercent(alpha);
+
+       setLocalColor(newHex);
+       setLocalOpacity(newPercent);
+       
+       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+       
+       // Миттєве оновлення батьківського компонента
+       if (onColorChange) onColorChange(newHex);
+       if (onOpacityChange) onOpacityChange(newPercent);
     }
   };
 
   const handleOpacityChange = (e) => {
-    let newOpacity = parseInt(e.target.value);
+    let inputValue = e.target.value;
+    let newOpacity = parseInt(inputValue);
+    
     if (isNaN(newOpacity)) newOpacity = 0;
-    newOpacity = Math.max(0, Math.min(100, newOpacity));
+    if (newOpacity > 100) newOpacity = 100;
+    if (newOpacity < 0) newOpacity = 0;
     
-    const newAlpha = percentToAlpha(newOpacity);
-    setCurrentOpacity(newOpacity);
-    setRgbaValue(hexToRgba(currentColor, newAlpha));
-  };
-
-  const handleOpacityBlur = (e) => {
-    let value = parseInt(e.target.value);
-    if (isNaN(value)) value = 0;
-    value = Math.max(0, Math.min(100, value));
-    
-    const newAlpha = percentToAlpha(value);
-    setCurrentOpacity(value);
-    setRgbaValue(hexToRgba(currentColor, newAlpha));
-    
-    if (onOpacityChange) onOpacityChange(value);
+    setLocalOpacity(newOpacity);
+    if (onOpacityChange) onOpacityChange(newOpacity);
   };
 
   const handleColorPreviewClick = () => {
@@ -259,23 +235,23 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
       <ColorOpacityWrapper>
         <ColorPreviewWrapper>
           <ColorPreview 
-            $rgbaColor={getRgbValues()}
-            $opacity={currentOpacity / 100}
+            style={previewStyle}
             onClick={handleColorPreviewClick}
           />
           <ColorInput 
             ref={colorInputRef}
             type="color" 
-            value={currentColor}
-            onChange={handleColorInputChange}
+            value={localColor}
+            onChange={handleNativeColorPickerChange} 
           />
         </ColorPreviewWrapper>
         <RGBInputWrapper>
           <RGBInput 
+            ref={textInputRef}
             type="text"
-            value={rgbaValue}
+            // Важливо: прибрано key={rgbaValue} та defaultValue
+            value={inputValue}
             onChange={handleRgbaChange}
-            onBlur={handleRgbaBlur}
             placeholder="0, 0, 0, 1"
           />
           <RGBLabel>RGBA</RGBLabel>
@@ -285,9 +261,8 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
             type="number"
             min="0"
             max="100"
-            value={currentOpacity}
+            value={localOpacity}
             onChange={handleOpacityChange}
-            onBlur={handleOpacityBlur}
           />
           <OpacityLabel>Прозорість %</OpacityLabel>
         </OpacityInputWrapper>

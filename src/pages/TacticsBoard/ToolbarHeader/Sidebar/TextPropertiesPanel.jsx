@@ -126,11 +126,13 @@ const ToggleButton = styled.button`
 
 const TextPropertiesPanel = ({ selectedObject }) => {
   const dispatch = useDispatch();
+  
+  // Локальний стейт ЛИШЕ для textarea, щоб курсор не стрибав
   const [localText, setLocalText] = useState(selectedObject.text || '');
 
   useEffect(() => {
     setLocalText(selectedObject.text || '');
-  }, [selectedObject.id]);
+  }, [selectedObject.id, selectedObject.text]);
 
   const handleObjectUpdate = (property, value) => {
     dispatch(updateObject({ 

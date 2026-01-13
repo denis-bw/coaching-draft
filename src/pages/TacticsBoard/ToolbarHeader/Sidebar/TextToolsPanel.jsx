@@ -1,8 +1,19 @@
+// ShapeToolsPanel.jsx - ВИПРАВЛЕНО
 import React from 'react';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
-import { setTextColor, setTextOpacity, setTextFontSize } from '../../../../redux/TacticsBoard/TacticsBoardSlice';
+import { 
+  setShapeBorderColor, 
+  setShapeBorderOpacity, 
+  setShapeFillColor, 
+  setShapeFillOpacity, 
+  setShapeBorderWidth,
+  setShapeBorderStyle,
+  setShapeLineCapStart,
+  setShapeLineCapEnd
+} from '../../../../redux/TacticsBoard/TacticsBoardSlice';
 import ColorOpacityControl from './ColorOpacityControl';
+import CustomSelect from './CustomSelect';
 
 const Section = styled.div`
   margin-bottom: 20px;
@@ -87,38 +98,117 @@ const InfoText = styled.p`
   font-style: italic;
 `;
 
-const TextToolsPanel = () => {
+const ShapeToolsPanel = () => {
   const dispatch = useDispatch();
-  const { textColor, textOpacity, textFontSize } = useSelector(state => state.tacticsBoard);
+  const { 
+    shapeBorderColor, 
+    shapeBorderOpacity, 
+    shapeFillColor, 
+    shapeFillOpacity, 
+    shapeBorderWidth,
+    shapeBorderStyle,
+    shapeLineCapStart,
+    shapeLineCapEnd,
+    activeTool 
+  } = useSelector(state => state.tacticsBoard);
+
+  const isLineOrArrow = activeTool === 'shape_line' || activeTool === 'shape_arrow';
 
   return (
     <Section>
-      <SectionTitle>Текст</SectionTitle>
+      <SectionTitle>Налаштування фігури</SectionTitle>
+      
       <PropertyRow>
         <ColorOpacityControl
-          color={textColor}
-          opacity={textOpacity}
-          onColorChange={(color) => dispatch(setTextColor(color))}
-          onOpacityChange={(opacity) => dispatch(setTextOpacity(opacity))}
-          label="Колір і прозорість"
+          color={shapeBorderColor}
+          opacity={shapeBorderOpacity}
+          onColorChange={(color) => dispatch(setShapeBorderColor(color))}
+          onOpacityChange={(opacity) => dispatch(setShapeBorderOpacity(opacity))}
+          label={isLineOrArrow ? "Колір лінії і прозорість" : "Колір обводки і прозорість"}
         />
       </PropertyRow>
+
       <PropertyRow>
         <PropertyLabel>
-          Розмір шрифту
-          <SliderValue>{textFontSize}px</SliderValue>
+          {isLineOrArrow ? "Товщина лінії" : "Товщина обводки"}
+          <SliderValue>{shapeBorderWidth}px</SliderValue>
         </PropertyLabel>
         <Slider
           type="range"
-          min="8"
-          max="200"
-          value={textFontSize}
-          onChange={(e) => dispatch(setTextFontSize(Number(e.target.value)))}
+          min="1"
+          max="20"
+          value={shapeBorderWidth}
+          onChange={(e) => dispatch(setShapeBorderWidth(Number(e.target.value)))}
         />
       </PropertyRow>
-      <InfoText>Клікніть на полі, щоб додати текст.</InfoText>
+
+      <PropertyRow>
+        <PropertyLabel>Тип обводки</PropertyLabel>
+        <CustomSelect
+          value={shapeBorderStyle}
+          onChange={(value) => dispatch(setShapeBorderStyle(value))}
+          options={[
+            { value: 'solid', label: 'Суцільна' },
+            { value: 'dashed', label: 'Пунктирна' },
+            { value: 'dotted', label: 'Точкова' }
+          ]}
+          placeholder="Оберіть тип"
+        />
+      </PropertyRow>
+
+      {isLineOrArrow && (
+        <>
+          <PropertyRow>
+            <PropertyLabel>Початок лінії</PropertyLabel>
+            <CustomSelect
+              value={shapeLineCapStart}
+              onChange={(value) => dispatch(setShapeLineCapStart(value))}
+              options={[
+                { value: 'butt', label: 'Без закінчення' },
+                { value: 'round', label: 'Точка' },
+                { value: 'arrow', label: 'Стрілка' },
+                { value: 'bar', label: 'Тупик' }
+              ]}
+              placeholder="Оберіть тип"
+            />
+          </PropertyRow>
+
+          <PropertyRow>
+            <PropertyLabel>Кінець лінії</PropertyLabel>
+            <CustomSelect
+              value={shapeLineCapEnd || (activeTool === 'shape_arrow' ? 'arrow' : 'butt')}
+              onChange={(value) => dispatch(setShapeLineCapEnd(value))}
+              options={[
+                { value: 'butt', label: 'Без закінчення' },
+                { value: 'round', label: 'Точка' },
+                { value: 'arrow', label: 'Стрілка' },
+                { value: 'bar', label: 'Тупик' }
+              ]}
+              placeholder="Оберіть тип"
+            />
+          </PropertyRow>
+        </>
+      )}
+
+      {!isLineOrArrow && (
+        <PropertyRow>
+          <ColorOpacityControl
+            color={shapeFillColor}
+            opacity={shapeFillOpacity}
+            onColorChange={(color) => dispatch(setShapeFillColor(color))}
+            onOpacityChange={(opacity) => dispatch(setShapeFillOpacity(opacity))}
+            label="Колір заливки і прозорість"
+          />
+        </PropertyRow>
+      )}
+
+      <InfoText>
+        {isLineOrArrow 
+          ? 'Клікніть і потягніть, щоб намалювати лінію.'
+          : 'Клікніть і потягніть, щоб намалювати фігуру.'}
+      </InfoText>
     </Section>
   );
 };
 
-export default TextToolsPanel;
+export default ShapeToolsPanel;

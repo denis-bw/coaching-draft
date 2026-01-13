@@ -1,3 +1,4 @@
+// ShapePropertiesPanel.jsx - ВИПРАВЛЕНО
 import React from 'react';
 import styled from 'styled-components';
 import { useDispatch } from 'react-redux';
@@ -103,7 +104,7 @@ const Input = styled.input`
   }
 `;
 
-const MIN_ALLOWED_SIZE = 8; // Нова константа для мінімального розміру
+const MIN_ALLOWED_SIZE = 8;
 
 const ShapePropertiesPanel = ({ selectedObject }) => {
   const dispatch = useDispatch();
@@ -118,17 +119,14 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
   const handleSizeChange = (dimension, value) => {
     let numValue = Number(value);
     
-    // Обмеження мінімального розміру
     if (numValue < MIN_ALLOWED_SIZE) {
       numValue = MIN_ALLOWED_SIZE;
     }
     
-    // Зберігаємо знак, якщо розмір був від'ємним (для фігур, намальованих вгору/вліво)
     const sign = (selectedObject[dimension] || 1) < 0 ? -1 : 1;
     numValue *= sign;
 
     if (selectedObject.shape === 'circle') {
-      // Для кола змінюємо обидва розміри одночасно
       dispatch(updateObject({
         id: selectedObject.id,
         updates: {
@@ -137,7 +135,6 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
         }
       }));
     } else {
-      // Для інших фігур змінюємо окремо
       handleObjectUpdate(dimension, numValue);
     }
   };
@@ -155,7 +152,7 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
           {isCircle ? (
             <Input 
               type="number"
-              min={MIN_ALLOWED_SIZE} // Додано обмеження
+              min={MIN_ALLOWED_SIZE}
               value={Math.abs(selectedObject.width || 50)}
               onChange={(e) => handleSizeChange('width', e.target.value)}
             />
@@ -205,13 +202,13 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
           opacity={selectedObject.borderOpacity !== undefined ? selectedObject.borderOpacity : 100}
           onColorChange={(color) => handleObjectUpdate('borderColor', color)}
           onOpacityChange={(opacity) => handleObjectUpdate('borderOpacity', opacity)}
-          label="Колір обводки і прозорість"
+          label={isLineOrArrow ? "Колір лінії і прозорість" : "Колір обводки і прозорість"}
         />
       </PropertyRow>
 
       <PropertyRow>
         <PropertyLabel>
-          Товщина обводки
+          {isLineOrArrow ? "Товщина лінії" : "Товщина обводки"}
           <SliderValue>{selectedObject.borderWidth || 2}px</SliderValue>
         </PropertyLabel>
         <Slider
@@ -246,8 +243,9 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
               onChange={(value) => handleObjectUpdate('lineCapStart', value)}
               options={[
                 { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Круглий' },
-                { value: 'arrow', label: 'Стрілка' }
+                { value: 'round', label: 'Точка' },
+                { value: 'arrow', label: 'Стрілка' },
+                { value: 'bar', label: 'Тупик' }
               ]}
               placeholder="Оберіть тип"
             />
@@ -256,15 +254,15 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
           <PropertyRow>
             <PropertyLabel>Кінець лінії</PropertyLabel>
             <CustomSelect
-              value={selectedObject.shape === 'arrow' ? 'arrow' : (selectedObject.lineCapEnd || 'butt')}
+              value={selectedObject.lineCapEnd || (selectedObject.shape === 'arrow' ? 'arrow' : 'butt')}
               onChange={(value) => handleObjectUpdate('lineCapEnd', value)}
               options={[
                 { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Круглий' },
-                { value: 'arrow', label: 'Стрілка' }
+                { value: 'round', label: 'Точка' },
+                { value: 'arrow', label: 'Стрілка' },
+                { value: 'bar', label: 'Тупик' }
               ]}
               placeholder="Оберіть тип"
-              disabled={selectedObject.shape === 'arrow'}
             />
           </PropertyRow>
         </>

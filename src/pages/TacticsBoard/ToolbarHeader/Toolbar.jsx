@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
 import { ReactComponent as FieldIcon } from '../../../assets/field.svg';
@@ -244,7 +244,7 @@ const NumberInput = styled.input`
   }
 `;
 
-const ColorPicker = styled.input`
+const ColorPickerStyled = styled.input`
   width: 24px;
   height: 24px;
   border: 1px solid ${({ theme }) => theme.gray};
@@ -271,6 +271,46 @@ const ColorPicker = styled.input`
     height: 18px;
   }
 `;
+
+// Оптимізований компонент ColorPicker з Debounce логікою
+const DebouncedColorPicker = ({ value, onChange, ...props }) => {
+  const [localValue, setLocalValue] = useState(value);
+  const debounceTimerRef = useRef(null);
+
+  // Синхронізація з зовнішніми змінами (наприклад, Undo/Redo)
+  // Оновлюємо локальний стейт тільки якщо не тягнемо повзунок (таймер не активний)
+  useEffect(() => {
+    if (!debounceTimerRef.current) {
+      setLocalValue(value);
+    }
+  }, [value]);
+
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    // 1. Миттєво оновлюємо UI інпута
+    setLocalValue(newValue);
+
+    // 2. Скасовуємо попередній таймер
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // 3. Відкладаємо відправку в Redux на 200 мс після зупинки руху
+    debounceTimerRef.current = setTimeout(() => {
+      onChange(newValue);
+      debounceTimerRef.current = null;
+    }, 200);
+  };
+
+  return (
+    <ColorPickerStyled 
+      type="color" 
+      value={localValue} 
+      onChange={handleChange} 
+      {...props} 
+    />
+  );
+};
 
 const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -310,8 +350,8 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
     dispatch(setTeam1Count(Math.max(0, Math.min(30, value))));
   };
 
-  const handleTeam1ColorChange = (e) => {
-    dispatch(setTeam1Color(e.target.value));
+  const handleTeam1ColorChange = (colorValue) => {
+    dispatch(setTeam1Color(colorValue));
   };
 
   const handleTeam2CountChange = (e) => {
@@ -319,8 +359,8 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
     dispatch(setTeam2Count(Math.max(0, Math.min(30, value))));
   };
 
-  const handleTeam2ColorChange = (e) => {
-    dispatch(setTeam2Color(e.target.value));
+  const handleTeam2ColorChange = (colorValue) => {
+    dispatch(setTeam2Color(colorValue));
   };
 
   const handleUndo = () => {
@@ -381,7 +421,6 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
               <PencilIcon/>
             </ToolButton>
           
-            <Separator />
           
             {/* Геометричні фігури */}
             <GeometricShapesTool 
@@ -408,8 +447,7 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
                 onChange={handleTeam1CountChange}
                 title="Кількість гравців команди 1"
               />
-              <ColorPicker 
-                type="color" 
+              <DebouncedColorPicker 
                 value={team1.color}
                 onChange={handleTeam1ColorChange}
                 title="Колір команди 1"
@@ -427,8 +465,7 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
                 onChange={handleTeam2CountChange}
                 title="Кількість гравців команди 2"
               />
-              <ColorPicker 
-                type="color" 
+              <DebouncedColorPicker 
                 value={team2.color}
                 onChange={handleTeam2ColorChange}
                 title="Колір команди 2"
@@ -444,15 +481,6 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
               onClick={() => handleToolClick('ball')}
             >
               ⚽
-            </ToolButton>
-          
-            {/* Картки */}
-            <ToolButton 
-              title="Картки"
-              active={activeTool === 'cards'}
-              onClick={() => handleToolClick('cards')}
-            >
-              🟨
             </ToolButton>
           
             <Separator />

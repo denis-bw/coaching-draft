@@ -7,7 +7,9 @@ import {
   setShapeFillColor, 
   setShapeFillOpacity, 
   setShapeBorderWidth,
-  setShapeBorderStyle
+  setShapeBorderStyle,
+  setShapeLineCapStart,
+  setShapeLineCapEnd
 } from '../../../../redux/TacticsBoard/TacticsBoardSlice';
 import ColorOpacityControl from './ColorOpacityControl';
 import CustomSelect from './CustomSelect';
@@ -104,6 +106,8 @@ const ShapeToolsPanel = () => {
     shapeFillOpacity, 
     shapeBorderWidth,
     shapeBorderStyle,
+    shapeLineCapStart,
+    shapeLineCapEnd,
     activeTool 
   } = useSelector(state => state.tacticsBoard);
 
@@ -150,6 +154,40 @@ const ShapeToolsPanel = () => {
           placeholder="Оберіть тип"
         />
       </PropertyRow>
+
+      {isLineOrArrow && (
+        <>
+          <PropertyRow>
+            <PropertyLabel>Початок лінії</PropertyLabel>
+            <CustomSelect
+              value={shapeLineCapStart}
+              onChange={(value) => dispatch(setShapeLineCapStart(value))}
+              options={[
+                { value: 'butt', label: 'Без закінчення' },
+                { value: 'round', label: 'Точка' },
+                { value: 'arrow', label: 'Стрілка' },
+                { value: 'perp', label: 'Тупик' }
+              ]}
+              placeholder="Оберіть тип"
+            />
+          </PropertyRow>
+
+          <PropertyRow>
+            <PropertyLabel>Кінець лінії</PropertyLabel>
+            <CustomSelect
+              value={shapeLineCapEnd || (activeTool === 'shape_arrow' ? 'arrow' : 'butt')}
+              onChange={(value) => dispatch(setShapeLineCapEnd(value))}
+              options={[
+                { value: 'butt', label: 'Без закінчення' },
+                { value: 'round', label: 'Точка' },
+                { value: 'arrow', label: 'Стрілка' },
+                { value: 'perp', label: 'Тупик' }
+              ]}
+              placeholder="Оберіть тип"
+            />
+          </PropertyRow>
+        </>
+      )}
 
       {!isLineOrArrow && (
         <PropertyRow>
