@@ -1,41 +1,183 @@
 import { useRef } from 'react';
 
-const MIN_SHAPE_SIZE = 8;
+const MIN_SHAPE_SIZE = 10;
 const MIN_PLAYER_SIZE = 8;
-const MAX_PLAYER_SIZE = 50;
+const MAX_PLAYER_SIZE = 70;
+const MIN_BALL_SIZE = 5;
+const MAX_BALL_SIZE = 50;
+const MIN_FONT_SIZE = 5;
+
+// Допоміжна функція: отримати координати 4-х кутів у глобальному просторі
+const getCorners = (cx, cy, w, h, rotation) => {
+  const rad = (rotation * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+
+  const dx = w / 2;
+  const dy = h / 2;
+
+  // Локальні координати вершин (відносно центру)
+  // 0:TL, 1:TR, 2:BR, 3:BL
+  const cornersLocal = [
+    { x: -dx, y: -dy }, 
+    { x: dx, y: -dy },  
+    { x: dx, y: dy },   
+    { x: -dx, y: dy }   
+  ];
+
+  // Переводимо в глобальні
+  return cornersLocal.map(p => ({
+    x: cx + (p.x * cos - p.y * sin),
+    y: cy + (p.x * sin + p.y * cos)
+  }));
+};
+
+const rotatePoint = (x, y, cx, cy, angle) => {
+  const rad = (angle * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const dx = x - cx;
+  const dy = y - cy;
+  return {
+    x: cx + (dx * cos - dy * sin),
+    y: cy + (dx * sin + dy * cos)
+  };
+};
 
 export const useResizeHandles = () => {
   const resizeHandleRef = useRef(null);
 
   const startResize = (handle, object, startPos, bounds) => {
-    const actualWidth = bounds.width;
-    const actualHeight = bounds.height;
+    // 1. Отримуємо точні початкові розміри
+    let actualWidth, actualHeight;
+    
+    if (object.type === 'player' || object.type === 'ball') {
+       actualWidth = (object.radius || 20) * 2;
+       actualHeight = (object.radius || 20) * 2;
+    } else if (object.type === 'figure') {
+       actualWidth = object.size || 30;
+       actualHeight = object.size || 30;
+    } else if (object.type === 'text') {
 
-    // Для кола обчислюємо початкову відстань від курсору до центру
+      
+       actualWidth = bounds.originalWidth || bounds.width; 
+       actualHeight = bounds.originalHeight || bounds.height;
+    } else {
+       // Для інших фігур
+       actualWidth = object.width !== undefined ? object.width : bounds.width;
+       actualHeight = object.height !== undefined ? object.height : bounds.height;
+    }
+
+    // 2. Визначаємо центр
+    let cx, cy;
+    if (object.shape === 'line' || object.shape === 'arrow') {
+      cx = (object.startX + object.endX) / 2;
+      cy = (object.startY + object.endY) / 2;
+    } else if (object.type === 'player' || object.type === 'ball' || object.type === 'figure') {
+      cx = object.x;
+      cy = object.y;
+    } else if (object.type === 'text') {
+      cx = bounds.centerX;
+      cy = bounds.centerY;
+    } else {
+      cx = object.x + actualWidth / 2;
+      cy = object.y + actualHeight / 2;
+    }
+
+    const rotation = object.rotation || 0;
+
+    // 3. ВИЗНАЧЕННЯ ЯКОРЯ (Anchor Point)
+    const corners = getCorners(cx, cy, actualWidth, actualHeight, rotation);
+    let anchorPoint = { x: cx, y: cy }; 
+    let handlePoint = { x: startPos.x, y: startPos.y }; 
+
+    if (handle.name === 'topLeft') {
+        handlePoint = corners[0];
+        anchorPoint = corners[2]; 
+    } else if (handle.name === 'topRight') {
+        handlePoint = corners[1];
+        anchorPoint = corners[3]; 
+    } else if (handle.name === 'bottomRight') {
+        handlePoint = corners[2];
+        anchorPoint = corners[0]; 
+    } else if (handle.name === 'bottomLeft') {
+        handlePoint = corners[3];
+        anchorPoint = corners[1]; 
+    } 
+    // Логіка для сторін
+    else if (handle.name === 'top') {
+        handlePoint = { x: (corners[0].x + corners[1].x)/2, y: (corners[0].y + corners[1].y)/2 };
+        anchorPoint = { x: (corners[2].x + corners[3].x)/2, y: (corners[2].y + corners[3].y)/2 };
+    } else if (handle.name === 'bottom') {
+        handlePoint = { x: (corners[2].x + corners[3].x)/2, y: (corners[2].y + corners[3].y)/2 };
+        anchorPoint = { x: (corners[0].x + corners[1].x)/2, y: (corners[0].y + corners[1].y)/2 };
+    } else if (handle.name === 'left') {
+        handlePoint = { x: (corners[0].x + corners[3].x)/2, y: (corners[0].y + corners[3].y)/2 };
+        anchorPoint = { x: (corners[1].x + corners[2].x)/2, y: (corners[1].y + corners[2].y)/2 };
+    } else if (handle.name === 'right') {
+        handlePoint = { x: (corners[1].x + corners[2].x)/2, y: (corners[1].y + corners[2].y)/2 };
+        anchorPoint = { x: (corners[0].x + corners[3].x)/2, y: (corners[0].y + corners[3].y)/2 };
+    }
+
+    // 4. PRESS OFFSET (Зміщення кліку)
+    const pressOffsetX = handlePoint.x - startPos.x;
+    const pressOffsetY = handlePoint.y - startPos.y;
+
+    // 5. Вектор Діагоналі
+    const startVectorX = handlePoint.x - anchorPoint.x;
+    const startVectorY = handlePoint.y - anchorPoint.y;
+    const startLengthSq = startVectorX * startVectorX + startVectorY * startVectorY;
+
+    // Зберігаємо початкові дані
+    const startLocalMouse = rotatePoint(startPos.x, startPos.y, cx, cy, -rotation);
+    const mx = startLocalMouse.x - cx;
+    const my = startLocalMouse.y - cy;
+    
     let startDistanceFromCenter = 0;
-    if (object.shape === 'circle' || object.type === 'player' || object.type === 'ball' || object.type === 'figure') {
-      const cx = bounds.centerX;
-      const cy = bounds.centerY;
-      startDistanceFromCenter = Math.sqrt(
-        Math.pow(startPos.x - cx, 2) + Math.pow(startPos.y - cy, 2)
-      );
+    if (object.shape === 'circle' || ['player', 'ball', 'figure'].includes(object.type)) {
+      startDistanceFromCenter = Math.sqrt(Math.pow(startPos.x - cx, 2) + Math.pow(startPos.y - cy, 2));
     }
 
     resizeHandleRef.current = {
       handle: handle.name,
       object: { ...object },
       startPos,
-      startBounds: bounds,
-      startFontSize: object.fontSize,
+      
+      anchorPoint,
+      startVectorX,
+      startVectorY,
+      startLengthSq,
+      pressOffsetX,
+      pressOffsetY,
+      
+      startFontSize: object.fontSize || 16,
+      
       startX: object.x,
       startY: object.y,
-      startWidth: actualWidth,
+      lineStartX: object.startX,
+      lineStartY: object.startY,
+      lineEndX: object.endX,
+      lineEndY: object.endY,
+      
+      startCenterX: cx,
+      startCenterY: cy,
+      rotation: rotation,
+      
+      startLocalLeft: -Math.abs(actualWidth) / 2,
+      startLocalRight: Math.abs(actualWidth) / 2,
+      startLocalTop: -Math.abs(actualHeight) / 2,
+      startLocalBottom: Math.abs(actualHeight) / 2,
+      
+      startFlippedX: actualWidth < 0,
+      startFlippedY: actualHeight < 0,
+      isHandleLeft: mx < 0, 
+      isHandleRight: mx > 0,
+      isHandleTop: my < 0,
+      isHandleBottom: my > 0,
+      
+      startWidth: actualWidth, 
       startHeight: actualHeight,
-      startMouseX: startPos.x,
-      startMouseY: startPos.y,
-      startCenterX: bounds.centerX,
-      startCenterY: bounds.centerY,
-      startDistanceFromCenter // Зберігаємо початкову відстань
+      startDistanceFromCenter
     };
   };
 
@@ -43,235 +185,204 @@ export const useResizeHandles = () => {
     if (!resizeHandleRef.current) return null;
 
     const {
-      handle,
-      object,
-      startBounds,
-      startFontSize,
-      startX,
-      startY,
-      startWidth,
-      startHeight,
-      startCenterX,
-      startCenterY,
-      startDistanceFromCenter
+      handle, object, startFontSize,
+      startCenterX, startCenterY, startDistanceFromCenter,
+      rotation, lineStartX, lineStartY, lineEndX, lineEndY,
+      startPos, startLocalLeft, startLocalRight, startLocalTop, startLocalBottom,
+      isHandleLeft, isHandleRight, isHandleTop, isHandleBottom,
+      startFlippedX, startFlippedY, startWidth, startHeight, startX, startY,
+      anchorPoint, startVectorX, startVectorY, startLengthSq, pressOffsetX, pressOffsetY
     } = resizeHandleRef.current;
 
     let updatedObject = { ...object };
 
+    // =========================================================
+    // 1. ТЕКСТ (МЕТОД ПРОЄКЦІЇ)
+    // =========================================================
     if (object.type === 'text') {
-      const origX = startX;
-      const origY = startY;
-      const origWidth = startWidth || startBounds.width;
-      const origHeight = startHeight || startBounds.height;
+        const adjustedMouseX = pos.x + pressOffsetX;
+        const adjustedMouseY = pos.y + pressOffsetY;
 
-      const fixedRight = origX + origWidth;
-      const fixedBottom = origY + origHeight;
+        const currentVectorX = adjustedMouseX - anchorPoint.x;
+        const currentVectorY = adjustedMouseY - anchorPoint.y;
 
-      let newX = origX;
-      let newY = origY;
-      let newHeight = origHeight;
+        const dotProduct = currentVectorX * startVectorX + currentVectorY * startVectorY;
+        let scale = dotProduct / startLengthSq;
 
-      switch (handle) {
-        case 'topLeft':
-        case 'topRight':
-          newY = pos.y;
-          newHeight = Math.max(fixedBottom - pos.y, 1);
-          break;
-        case 'bottomLeft':
-        case 'bottomRight':
-          newY = origY;
-          newHeight = Math.max(pos.y - origY, 1);
-          break;
-        default:
-          break;
-      }
-
-      const minTextHeight = 15;
-
-      if (newHeight < minTextHeight) {
-        newHeight = minTextHeight;
-        if (handle === 'topLeft' || handle === 'topRight') {
-          newY = fixedBottom - minTextHeight;
+        if (!['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].includes(handle)) {
+             // Для сторін простіша логіка (довжина вектора)
+             const distStart = Math.sqrt(startLengthSq);
+             const distCurrent = Math.sqrt(currentVectorX*currentVectorX + currentVectorY*currentVectorY);
+             const sign = dotProduct > 0 ? 1 : -1;
+             scale = (distCurrent / distStart) * sign;
         }
-      }
 
-      const heightScale = newHeight / origHeight;
-      const newFontSize = Math.max(
-        8,
-        Math.min(200, Math.round(startFontSize * heightScale))
-      );
+      const MIN_FONT_LIMIT = 8;
+        let newFontSize = startFontSize * scale;
 
-      updatedObject.x = newX;
-      updatedObject.y = newY;
-      updatedObject.fontSize = newFontSize;
-
-      resizeHandleRef.current.object = updatedObject;
-      return updatedObject;
-    }
-
-    if (
-      object.type === 'path' ||
-      (object.type === 'shape' &&
-        (object.shape === 'line' || object.shape === 'arrow'))
-    ) {
-      if (object.rotation && object.rotation !== 0) {
-        const angle = -(object.rotation * Math.PI) / 180;
-        const centerX = (object.startX + object.endX) / 2;
-        const centerY = (object.startY + object.endY) / 2;
-        
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        const dx = pos.x - centerX;
-        const dy = pos.y - centerY;
-        const rotatedX = centerX + (dx * cos - dy * sin);
-        const rotatedY = centerY + (dx * sin + dy * cos);
-        
-        if (handle === 'start') {
-          updatedObject.startX = rotatedX;
-          updatedObject.startY = rotatedY;
-        } else if (handle === 'end') {
-          updatedObject.endX = rotatedX;
-          updatedObject.endY = rotatedY;
-        }
-      } else {
-        if (handle === 'start') {
-          updatedObject.startX = pos.x;
-          updatedObject.startY = pos.y;
-        } else if (handle === 'end') {
-          updatedObject.endX = pos.x;
-          updatedObject.endY = pos.y;
-        }
+        if (newFontSize < MIN_FONT_LIMIT) {
+          newFontSize = MIN_FONT_LIMIT;
+          scale = MIN_FONT_LIMIT / startFontSize;
       }
       
-      resizeHandleRef.current.object = updatedObject;
-      return updatedObject;
+        if (scale < 0.1) scale = 0.1;
+
+        updatedObject.fontSize = startFontSize * scale;
+        
+        const newWidth = startWidth * scale;
+        const newHeight = startHeight * scale;
+
+        const vecNewDiagonalX = startVectorX * scale;
+        const vecNewDiagonalY = startVectorY * scale;
+
+        const newCenterX = anchorPoint.x + vecNewDiagonalX * 0.5;
+        const newCenterY = anchorPoint.y + vecNewDiagonalY * 0.5;
+
+        updatedObject.x = newCenterX - newWidth / 2;
+        updatedObject.y = newCenterY - newHeight / 2;
+        updatedObject.width = newWidth;
+        updatedObject.height = newHeight;
+
+        resizeHandleRef.current.object = updatedObject;
+        return updatedObject;
     }
 
-    // Логіка для об'єктів, що зберігають пропорції або мають радіус
-    if (object.type === 'player' || object.type === 'ball' || object.type === 'figure') {
-      const centerX = startBounds.centerX;
-      const centerY = startBounds.centerY;
-      const currentDistance = Math.sqrt(
-        Math.pow(pos.x - centerX, 2) + Math.pow(pos.y - centerY, 2)
-      );
+    // =========================================================
+    // 2. ЛІНІЇ ТА СТРІЛКИ
+    // =========================================================
+    if (object.type === 'shape' && (object.shape === 'line' || object.shape === 'arrow')) {
+       const globalStart = rotatePoint(lineStartX, lineStartY, startCenterX, startCenterY, rotation);
+       const globalEnd = rotatePoint(lineEndX, lineEndY, startCenterX, startCenterY, rotation);
+
+       let targetGlobalStart = { ...globalStart };
+       let targetGlobalEnd = { ...globalEnd };
+
+       if (['start', 'topLeft', 'left', 'top'].includes(handle)) {
+           targetGlobalStart = { x: pos.x, y: pos.y };
+       } else {
+           targetGlobalEnd = { x: pos.x, y: pos.y };
+       }
+
+       const newCx = (targetGlobalStart.x + targetGlobalEnd.x) / 2;
+       const newCy = (targetGlobalStart.y + targetGlobalEnd.y) / 2;
+
+       const newLocalStart = rotatePoint(targetGlobalStart.x, targetGlobalStart.y, newCx, newCy, -rotation);
+       const newLocalEnd = rotatePoint(targetGlobalEnd.x, targetGlobalEnd.y, newCx, newCy, -rotation);
+
+       updatedObject.startX = newLocalStart.x;
+       updatedObject.startY = newLocalStart.y;
+       updatedObject.endX = newLocalEnd.x;
+       updatedObject.endY = newLocalEnd.y;
+       
+       resizeHandleRef.current.object = updatedObject;
+       return updatedObject;
+    }
+
+    // =========================================================
+    // 3. ГРАВЦІ, М'ЯЧІ, ФІГУРИ
+    // =========================================================
+    if (object.shape === 'circle' || ['player', 'ball', 'figure'].includes(object.type)) {
+       const currentDist = Math.sqrt(
+         Math.pow(pos.x - startCenterX, 2) + Math.pow(pos.y - startCenterY, 2)
+       );
+       const scale = startDistanceFromCenter > 0 ? currentDist / startDistanceFromCenter : 1;
+       const absStartWidth = Math.abs(startWidth);
+
+       if (object.shape === 'circle') {
+           const s = Math.max(MIN_SHAPE_SIZE, absStartWidth * scale);
+           updatedObject.width = s; 
+           updatedObject.height = s;
+           updatedObject.x = startCenterX - s / 2; 
+           updatedObject.y = startCenterY - s / 2;
+       } 
+       else if (object.type === 'player') {
+           const r = (absStartWidth / 2) * scale;
+           updatedObject.radius = Math.max(MIN_PLAYER_SIZE, Math.min(MAX_PLAYER_SIZE, r));
+       } 
+       else if (object.type === 'ball') {
+           const r = (absStartWidth / 2) * scale;
+           updatedObject.radius = Math.max(MIN_BALL_SIZE, Math.min(MAX_BALL_SIZE, r));
+       } 
+       else {
+           updatedObject.size = Math.max(10, absStartWidth * scale);
+       }
+
+       resizeHandleRef.current.object = updatedObject;
+       return updatedObject;
+    }
+
+    // =========================================================
+    // 4. ГЕОМЕТРИЧНІ ФІГУРИ (Rect/Triangle)
+    // =========================================================
+    if (object.type === 'shape') {
+      const rad = (rotation * Math.PI) / 180;
+      const cos = Math.cos(-rad);
+      const sin = Math.sin(-rad);
+
+      const globalDx = pos.x - startPos.x;
+      const globalDy = pos.y - startPos.y;
+
+      const localDx = globalDx * cos - globalDy * sin;
+      const localDy = globalDx * sin + globalDy * cos;
+
+      let currentL = startLocalLeft;
+      let currentR = startLocalRight;
+      let currentT = startLocalTop;
+      let currentB = startLocalBottom;
+
+      if (isHandleLeft) currentL += localDx;
+      else if (isHandleRight) currentR += localDx;
       
-      // Використовуємо коефіцієнт масштабування відносно початкового кліку
-      // Це запобігає стрибкам
-      const scale = startDistanceFromCenter > 0 ? currentDistance / startDistanceFromCenter : 1;
+      if (isHandleTop) currentT += localDy;
+      else if (isHandleBottom) currentB += localDy;
 
-      if (object.type === 'player') {
-        // Початковий радіус * масштаб
-        const initialRadius = startWidth / 2;
-        const newRadius = initialRadius * scale;
-        updatedObject.radius = Math.max(MIN_PLAYER_SIZE, Math.min(MAX_PLAYER_SIZE, newRadius));
-      } else if (object.type === 'ball') {
-        const initialRadius = startWidth / 2;
-        updatedObject.radius = Math.max(5, initialRadius * scale);
-      } else if (object.type === 'figure') {
-        const initialSize = startWidth; // width == size for figures usually
-        updatedObject.size = Math.max(10, initialSize * scale);
+      let isFlippedX = startFlippedX;
+      let isFlippedY = startFlippedY;
+
+      if (currentL > currentR) {
+          [currentL, currentR] = [currentR, currentL];
+          isFlippedX = !isFlippedX;
       }
+      if (currentT > currentB) {
+          [currentT, currentB] = [currentB, currentT];
+          isFlippedY = !isFlippedY;
+      }
+
+      let physW = currentR - currentL;
+      let physH = currentB - currentT;
+
+      if (physW < MIN_SHAPE_SIZE) {
+          physW = MIN_SHAPE_SIZE;
+          if (isHandleLeft) currentL = currentR - physW;
+          else currentR = currentL + physW;
+      }
+      if (physH < MIN_SHAPE_SIZE) {
+          physH = MIN_SHAPE_SIZE;
+          if (isHandleTop) currentT = currentB - physH;
+          else currentB = currentT + physH;
+      }
+
+      const newLocalCx = (currentL + currentR) / 2;
+      const newLocalCy = (currentT + currentB) / 2;
+
+      const globalShiftX = newLocalCx * Math.cos(rad) - newLocalCy * Math.sin(rad);
+      const globalShiftY = newLocalCx * Math.sin(rad) + newLocalCy * Math.cos(rad);
+
+      const finalCx = startCenterX + globalShiftX;
+      const finalCy = startCenterY + globalShiftY;
+
+      let finalWidth = isFlippedX ? -physW : physW;
+      let finalHeight = isFlippedY ? -physH : physH;
+
+      updatedObject.width = finalWidth;
+      updatedObject.height = finalHeight;
+      updatedObject.x = finalCx - finalWidth / 2;
+      updatedObject.y = finalCy - finalHeight / 2;
 
       resizeHandleRef.current.object = updatedObject;
       return updatedObject;
     }
 
-    if (object.type === 'shape' && object.shape !== 'line' && object.shape !== 'arrow') {
-      const bounds = startBounds;
-
-      const origX = bounds.originalX ?? bounds.x;
-      const origY = bounds.originalY ?? bounds.y;
-      const origW = bounds.originalWidth ?? bounds.width;
-      const origH = bounds.originalHeight ?? bounds.height;
-
-      let newX = origX;
-      let newY = origY;
-      let newW = origW;
-      let newH = origH;
-
-      const diffX = pos.x - resizeHandleRef.current.startMouseX;
-      const diffY = pos.y - resizeHandleRef.current.startMouseY;
-
-      if (object.shape === 'circle') {
-        const centerX = startCenterX;
-        const centerY = startCenterY;
-        
-        const currentDistance = Math.sqrt(
-          Math.pow(pos.x - centerX, 2) + Math.pow(pos.y - centerY, 2)
-        );
-        
-        // Використовуємо той самий підхід масштабування для кола
-        const scale = startDistanceFromCenter > 0 ? currentDistance / startDistanceFromCenter : 1;
-        const initialDiameter = startWidth; // width = diameter
-        const newDiameter = Math.max(MIN_SHAPE_SIZE, initialDiameter * scale);
-        
-        newX = centerX - newDiameter / 2;
-        newY = centerY - newDiameter / 2;
-        newW = newDiameter;
-        newH = newDiameter;
-      } else {
-        const oppositeX = origX + origW;
-        const oppositeY = origY + origH;
-
-        switch (handle) {
-          case 'topLeft':
-            newX = origX + diffX;
-            newY = origY + diffY;
-            newW = origW - diffX;
-            newH = origH - diffY;
-            break;
-          case 'topRight':
-            newY = origY + diffY;
-            newW = origW + diffX;
-            newH = origH - diffY;
-            break;
-          case 'bottomLeft':
-            newX = origX + diffX;
-            newW = origW - diffX;
-            newH = origH + diffY;
-            break;
-          case 'bottomRight':
-            newW = origW + diffX;
-            newH = origH + diffY;
-            break;
-          case 'top':
-            newY = origY + diffY;
-            newH = origH - diffY;
-            break;
-          case 'bottom':
-            newH = origH + diffY;
-            break;
-          case 'left':
-            newX = origX + diffX;
-            newW = origW - diffX;
-            break;
-          case 'right':
-            newW = origW + diffX;
-            break;
-          default:
-            break;
-        }
-
-        if (Math.abs(newW) < MIN_SHAPE_SIZE) {
-          const sign = newW < 0 ? -1 : 1;
-          newW = MIN_SHAPE_SIZE * sign;
-          if (handle.includes('Left')) newX = oppositeX - newW;
-        }
-
-        if (Math.abs(newH) < MIN_SHAPE_SIZE) {
-          const sign = newH < 0 ? -1 : 1;
-          newH = MIN_SHAPE_SIZE * sign;
-          if (handle.includes('Top')) newY = oppositeY - newH;
-        }
-      }
-
-      updatedObject.x = newX;
-      updatedObject.y = newY;
-      updatedObject.width = newW;
-      updatedObject.height = newH;
-    }
-
-    resizeHandleRef.current.object = updatedObject;
     return updatedObject;
   };
 

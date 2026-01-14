@@ -373,14 +373,6 @@ const drawLineCap = (ctx, x, y, angle, capType, size, color, opacity, lineWidth)
 export const drawText = (ctx, textObj, isSelected = false) => {
   ctx.save();
   
-  if (textObj.rotation) {
-    const centerX = textObj.x;
-    const centerY = textObj.y;
-    ctx.translate(centerX, centerY);
-    ctx.rotate((textObj.rotation * Math.PI) / 180);
-    ctx.translate(-centerX, -centerY);
-  }
-  
   const fontWeight = textObj.fontWeight || 'normal';
   const fontStyle = textObj.fontStyle || 'normal';
   const fontSize = textObj.fontSize || 16;
@@ -389,6 +381,39 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   ctx.font = `${fontStyle} ${fontWeight} ${fontSize}px ${fontFamily}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
+  
+  const lines = (textObj.text || '').split('\n');
+  const lineHeight = (textObj.lineHeight || 1.5) * fontSize;
+  const letterSpacing = textObj.letterSpacing || 0;
+  
+  // Розрахунок ширини
+  let maxWidth = 0;
+  lines.forEach(line => {
+    let lineWidth = 0;
+    if (letterSpacing !== 0) {
+      lineWidth = ctx.measureText(line).width + (letterSpacing * (line.length - 1));
+    } else {
+      lineWidth = ctx.measureText(line).width;
+    }
+    if (lineWidth > maxWidth) maxWidth = lineWidth;
+  });
+  
+  // Розрахунок висоти
+  const totalHeight = lines.length > 0 
+    ? (lines.length - 1) * lineHeight + fontSize 
+    : 0;
+
+  const PADDING = 2;
+
+  if (textObj.rotation) {
+    // Враховуємо padding при розрахунку центру
+    const centerX = textObj.x + maxWidth / 2;
+    const centerY = textObj.y + totalHeight / 2;
+    
+    ctx.translate(centerX, centerY);
+    ctx.rotate((textObj.rotation * Math.PI) / 180);
+    ctx.translate(-centerX, -centerY);
+  }
   
   const opacity = textObj.opacity !== undefined ? textObj.opacity / 100 : 1;
   const color = textObj.color || '#000000';
@@ -399,11 +424,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   const b = parseInt(hex.slice(4, 6), 16);
   ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
   
-  const lines = (textObj.text || '').split('\n');
-  const lineHeight = (textObj.lineHeight || 1.5) * fontSize;
-  const letterSpacing = textObj.letterSpacing || 0;
-  
-  let maxWidth = 0;
   lines.forEach((line, index) => {
     const y = textObj.y + (index * lineHeight);
     
@@ -415,12 +435,8 @@ export const drawText = (ctx, textObj, isSelected = false) => {
         const charWidth = ctx.measureText(char).width;
         x += charWidth + letterSpacing;
       }
-      const lineWidth = ctx.measureText(line).width + (letterSpacing * (line.length - 1));
-      if (lineWidth > maxWidth) maxWidth = lineWidth;
     } else {
       ctx.fillText(line, textObj.x, y);
-      const lineWidth = ctx.measureText(line).width;
-      if (lineWidth > maxWidth) maxWidth = lineWidth;
     }
     
     if (textObj.textDecoration === 'underline') {
@@ -437,16 +453,14 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   });
   
   if (isSelected) {
-    const totalHeight = lines.length * lineHeight;
-    
     ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-    ctx.fillRect(textObj.x - 2, textObj.y - 2, maxWidth + 4, totalHeight + 4);
-        
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
-    ctx.strokeRect(textObj.x - 2, textObj.y - 2, maxWidth + 4, totalHeight + 4);
-    ctx.setLineDash([]);
+    // Малюємо фон з урахуванням PADDING (розширюємо на всі боки)
+    ctx.fillRect(
+      textObj.x - PADDING, 
+      textObj.y - PADDING, 
+      maxWidth + (PADDING * 2), 
+      totalHeight + (PADDING * 2)
+    );
   }
   
   ctx.restore();

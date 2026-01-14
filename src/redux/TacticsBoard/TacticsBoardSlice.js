@@ -4,7 +4,7 @@ const initialState = {
   activeTool: 'cursor',
   drawColor: '#000000',
   brushSize: 3,
-  textFontSize: 16,
+  textFontSize: 17,
   textColor: '#000000',
   textOpacity: 100,
   shapeBorderWidth: 2,
@@ -363,7 +363,7 @@ updatePlayersPosition: (state, action) => {
         fontWeight: fontWeight || 'normal',
         fontStyle: fontStyle || 'normal',
         textDecoration: textDecoration || 'none',
-        lineHeight: lineHeight || 1.5,
+        lineHeight: lineHeight || 1.1,
         letterSpacing: letterSpacing || 0,
         rotation: rotation || 0
       };

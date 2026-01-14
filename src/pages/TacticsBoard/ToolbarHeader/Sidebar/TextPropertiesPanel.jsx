@@ -67,7 +67,7 @@ const Slider = styled.input.attrs({ type: 'range' })`
   border-radius: 4px;
   background: ${({ value, min, max, theme }) => {
     const percent = ((value - min) / (max - min)) * 100;
-    return `linear-gradient(to right, ${theme.greenMain} 0%, ${theme.greenMain} ${percent}%, ${theme.lightGreen} ${percent}%, ${theme.lightGreen} 100%)`;
+    return `linear-gradient(to right, ${theme.greenMain || '#4CAF50'} 0%, ${theme.greenMain || '#4CAF50'} ${percent}%, ${theme.lightGreen || '#E8F5E9'} ${percent}%, ${theme.lightGreen || '#E8F5E9'} 100%)`;
   }};
   outline: none;
   margin: 0;
@@ -77,7 +77,7 @@ const Slider = styled.input.attrs({ type: 'range' })`
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: ${({ theme }) => theme.greenMain};
+    background: ${({ theme }) => theme.greenMain || '#4CAF50'};
     cursor: pointer;
     box-shadow: 0 0 2px rgba(0,0,0,0.3);
     border: none;
@@ -87,7 +87,7 @@ const Slider = styled.input.attrs({ type: 'range' })`
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: ${({ theme }) => theme.greenMain};
+    background: ${({ theme }) => theme.greenMain || '#4CAF50'};
     cursor: pointer;
     border: none;
   }
@@ -130,6 +130,7 @@ const TextPropertiesPanel = ({ selectedObject }) => {
   // Локальний стейт ЛИШЕ для textarea, щоб курсор не стрибав
   const [localText, setLocalText] = useState(selectedObject.text || '');
 
+  // Синхронізуємо локальний стейт, коли змінюється вибраний об'єкт
   useEffect(() => {
     setLocalText(selectedObject.text || '');
   }, [selectedObject.id, selectedObject.text]);
@@ -142,11 +143,10 @@ const TextPropertiesPanel = ({ selectedObject }) => {
   };
 
   const handleTextChange = (e) => {
-    setLocalText(e.target.value);
-  };
-
-  const handleTextBlur = () => {
-    handleObjectUpdate('text', localText);
+    const newValue = e.target.value;
+    setLocalText(newValue);
+    // ВИПРАВЛЕНО: Оновлюємо Redux одразу при вводі (onChange), а не на onBlur
+    handleObjectUpdate('text', newValue);
   };
 
   return (
@@ -158,7 +158,7 @@ const TextPropertiesPanel = ({ selectedObject }) => {
         <Textarea 
           value={localText}
           onChange={handleTextChange}
-          onBlur={handleTextBlur}
+          // onBlur прибираємо, бо зберігаємо на льоту
           placeholder="Введіть текст..."
           $fontFamily={selectedObject.fontFamily}
         />
@@ -180,7 +180,6 @@ const TextPropertiesPanel = ({ selectedObject }) => {
           <SliderValue>{selectedObject.fontSize || 16}px</SliderValue>
         </PropertyLabel>
         <Slider
-          type="range"
           min="8"
           max="200"
           value={selectedObject.fontSize || 16}
@@ -232,14 +231,14 @@ const TextPropertiesPanel = ({ selectedObject }) => {
       <PropertyRow>
         <PropertyLabel>
           Міжрядковий інтервал
-          <SliderValue>{(selectedObject.lineHeight || 1.5).toFixed(1)}</SliderValue>
+          {/* Відображаємо значення з точністю до десятих */}
+          <SliderValue>{(selectedObject.lineHeight || 0.9).toFixed(1)}</SliderValue>
         </PropertyLabel>
         <Slider
-          type="range"
-          min="0.8"
+          min="0.5"
           max="3"
           step="0.1"
-          value={selectedObject.lineHeight || 1.5}
+          value={selectedObject.lineHeight || 0.9} // Дефолтне значення змінено на 0.9
           onChange={(e) => handleObjectUpdate('lineHeight', Number(e.target.value))}
         />
       </PropertyRow>
@@ -250,7 +249,6 @@ const TextPropertiesPanel = ({ selectedObject }) => {
           <SliderValue>{selectedObject.letterSpacing || 0}px</SliderValue>
         </PropertyLabel>
         <Slider
-          type="range"
           min="-2"
           max="10"
           step="0.5"
@@ -265,7 +263,6 @@ const TextPropertiesPanel = ({ selectedObject }) => {
           <SliderValue>{selectedObject.rotation || 0}°</SliderValue>
         </PropertyLabel>
         <Slider
-          type="range"
           min="-180"
           max="180"
           step="5"
