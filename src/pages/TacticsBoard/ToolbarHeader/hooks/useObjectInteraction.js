@@ -4,13 +4,22 @@ import { getObjectBounds, getObjectAtPosition, getHandleAtPosition, isPointInBou
 export const useObjectInteraction = () => {
   const draggedObjectRef = useRef(null);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const initialDragStateRef = useRef(null); 
   const [cursorStyle, setCursorStyle] = useState('default');
 
   const startDrag = (clickedObject, pos, canvas) => {
-    draggedObjectRef.current = { ...clickedObject };
+
+    const bounds = getObjectBounds(clickedObject, canvas);
     
+    draggedObjectRef.current = JSON.parse(JSON.stringify(clickedObject));
+    
+    initialDragStateRef.current = {
+      mouseStart: { ...pos },
+      objectStart: JSON.parse(JSON.stringify(clickedObject)),
+      cachedBounds: bounds || { x: 0, y: 0, width: 0, height: 0 }
+    };
+
     if (clickedObject.type === 'path') {
-      const bounds = getObjectBounds(clickedObject, canvas);
       dragOffsetRef.current = {
         x: pos.x - bounds.points[0].x,
         y: pos.y - bounds.points[0].y
@@ -28,64 +37,86 @@ export const useObjectInteraction = () => {
         y: pos.y - clickedObject.y
       };
     } else {
-      const bounds = getObjectBounds(clickedObject, canvas);
-      if (bounds.centerX !== undefined) {
-        dragOffsetRef.current = {
-          x: pos.x - bounds.centerX,
-          y: pos.y - bounds.centerY
-        };
-      } else {
-        dragOffsetRef.current = {
-          x: pos.x - bounds.x,
-          y: pos.y - bounds.y
-        };
-      }
+      dragOffsetRef.current = {
+        x: pos.x - (bounds ? bounds.x : 0),
+        y: pos.y - (bounds ? bounds.y : 0)
+      };
     }
   };
 
-  const updateDragPosition = (pos) => {
-    if (!draggedObjectRef.current) return null;
+  const updateDragPosition = (pos, canvasWidth, canvasHeight) => {
+    if (!draggedObjectRef.current || !initialDragStateRef.current) return null;
 
-    let updatedObject = { ...draggedObjectRef.current };
+    const { objectStart, cachedBounds } = initialDragStateRef.current;
     
-    if (updatedObject.type === 'path') {
-      const dx = pos.x - dragOffsetRef.current.x - updatedObject.points[0].x;
-      const dy = pos.y - dragOffsetRef.current.y - updatedObject.points[0].y;
-      
-      updatedObject.points = updatedObject.points.map(point => ({
-        x: point.x + dx,
-        y: point.y + dy
+    const totalDeltaX = pos.x - initialDragStateRef.current.mouseStart.x;
+    const totalDeltaY = pos.y - initialDragStateRef.current.mouseStart.y;
+
+    let candidateObject = JSON.parse(JSON.stringify(objectStart));
+    
+    if (candidateObject.type === 'path') {
+      candidateObject.points = candidateObject.points.map(p => ({
+        x: p.x + totalDeltaX,
+        y: p.y + totalDeltaY
       }));
-    } else if (updatedObject.type === 'shape' && (updatedObject.shape === 'line' || updatedObject.shape === 'arrow')) {
-      const midX = (updatedObject.startX + updatedObject.endX) / 2;
-      const midY = (updatedObject.startY + updatedObject.endY) / 2;
-      const newMidX = pos.x - dragOffsetRef.current.x;
-      const newMidY = pos.y - dragOffsetRef.current.y;
-      const dx = newMidX - midX;
-      const dy = newMidY - midY;
-      
-      updatedObject.startX += dx;
-      updatedObject.startY += dy;
-      updatedObject.endX += dx;
-      updatedObject.endY += dy;
-    } else if (updatedObject.x !== undefined && updatedObject.y !== undefined) {
-      updatedObject.x = pos.x - dragOffsetRef.current.x;
-      updatedObject.y = pos.y - dragOffsetRef.current.y;
+    } else if (candidateObject.type === 'shape' && (candidateObject.shape === 'line' || candidateObject.shape === 'arrow')) {
+      candidateObject.startX += totalDeltaX;
+      candidateObject.endX += totalDeltaX;
+      candidateObject.startY += totalDeltaY;
+      candidateObject.endY += totalDeltaY;
+    } else {
+      candidateObject.x += totalDeltaX;
+      candidateObject.y += totalDeltaY;
     }
-    
-    draggedObjectRef.current = updatedObject;
-    return updatedObject;
+
+    const currentBoundsCenterX = (cachedBounds.x + cachedBounds.width / 2) + totalDeltaX;
+    const currentBoundsCenterY = (cachedBounds.y + cachedBounds.height / 2) + totalDeltaY;
+
+    let correctionX = 0;
+    let correctionY = 0;
+
+    if (currentBoundsCenterX < 0) {
+      correctionX = 0 - currentBoundsCenterX;
+    } else if (currentBoundsCenterX > canvasWidth) {
+      correctionX = canvasWidth - currentBoundsCenterX;
+    }
+
+    if (currentBoundsCenterY < 0) {
+      correctionY = 0 - currentBoundsCenterY;
+    } else if (currentBoundsCenterY > canvasHeight) {
+      correctionY = canvasHeight - currentBoundsCenterY;
+    }
+
+    if (correctionX !== 0 || correctionY !== 0) {
+      if (candidateObject.type === 'path') {
+        candidateObject.points = candidateObject.points.map(p => ({
+          x: p.x + correctionX,
+          y: p.y + correctionY
+        }));
+      } else if (candidateObject.type === 'shape' && (candidateObject.shape === 'line' || candidateObject.shape === 'arrow')) {
+        candidateObject.startX += correctionX;
+        candidateObject.endX += correctionX;
+        candidateObject.startY += correctionY;
+        candidateObject.endY += correctionY;
+      } else {
+        candidateObject.x += correctionX;
+        candidateObject.y += correctionY;
+      }
+    }
+
+    draggedObjectRef.current = candidateObject;
+    return candidateObject;
   };
 
   const endDrag = () => {
     const draggedObject = draggedObjectRef.current;
     draggedObjectRef.current = null;
+    initialDragStateRef.current = null;
     dragOffsetRef.current = { x: 0, y: 0 };
     return draggedObject;
   };
 
   const updateCursor = (pos, objects, paths, selectedObjectId, brushSize, canvas) => {
-  
     if (selectedObjectId) {
       const selectedObj = selectedObjectId ? 
         (selectedObjectId.startsWith('path_') ? 
@@ -101,7 +132,6 @@ export const useObjectInteraction = () => {
             setCursorStyle(handle.cursor);
             return;
           }
-          
           if (isPointInBoundingBox(pos.x, pos.y, bounds)) {
             setCursorStyle('move');
             return;
@@ -121,7 +151,6 @@ export const useObjectInteraction = () => {
   const checkForHandle = (pos, clickedObject, canvas) => {
     const bounds = getObjectBounds(clickedObject, canvas);
     if (!bounds) return null;
-    
     return getHandleAtPosition(pos.x, pos.y, bounds, clickedObject);
   };
 

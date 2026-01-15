@@ -208,8 +208,7 @@ export const getObjectBounds = (obj, canvas) => {
         if (letterSpacing !== 0) lineWidth += letterSpacing * (line.length - 1);
         if (lineWidth > maxWidth) maxWidth = lineWidth;
       });
-      
-      // "Тісна" висота - без коефіцієнтів, щоб не було зайвого місця знизу
+
       const totalHeight = lines.length > 0 
         ? (lines.length - 1) * lineHeight + fontSize 
         : 0;
@@ -272,17 +271,13 @@ export const getObjectBounds = (obj, canvas) => {
   return null;
 };
 
-// === ГОЛОВНЕ ВИПРАВЛЕННЯ ТУТ ===
-// Тепер ця функція перевіряє rotatedCorners, якщо вони є.
-// Це виправить проблему, коли виділений об'єкт можна схопити за "повітря" довкола.
 export const isPointInBoundingBox = (x, y, bounds) => {
   if (!bounds) return false;
 
-  // Якщо є повернуті кути (наприклад, у тексту або повернутої фігури)
   if (bounds.rotatedCorners && bounds.rotatedCorners.length > 0) {
     const corners = bounds.rotatedCorners;
     let inside = false;
-    // Ray Casting Algorithm (перевірка "точка в полігоні")
+
     for (let i = 0, j = corners.length - 1; i < corners.length; j = i++) {
       const xi = corners[i].x, yi = corners[i].y;
       const xj = corners[j].x, yj = corners[j].y;
@@ -292,7 +287,6 @@ export const isPointInBoundingBox = (x, y, bounds) => {
     return inside;
   }
 
-  // Стандартна перевірка прямокутника (якщо повороту немає)
   return x >= bounds.x && x <= bounds.x + bounds.width &&
          y >= bounds.y && y <= bounds.y + bounds.height;
 };
@@ -340,7 +334,6 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
     return distance <= radius;
   }
   
-  // Для інших випадків (Текст, Прямокутник, Трикутник) використовуємо нашу оновлену розумну функцію
   return isPointInBoundingBox(x, y, bounds);
 };
 

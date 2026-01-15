@@ -1,6 +1,5 @@
 import { getResizeHandles } from './objectBoundsUtils';
 
-// Допоміжна функція для малювання суцільних кутів
 const drawCorner = (ctx, x1, y1, x2, y2, x3, y3, strokeStyle, lineWidth) => {
   ctx.save();
   ctx.strokeStyle = strokeStyle;
@@ -46,13 +45,12 @@ const drawStyledLine = (ctx, x1, y1, x2, y2, borderStyle, borderWidth, strokeSty
     const minGapLength = Math.max(borderWidth * 2, 8);
     const totalSegmentInitial = dashLength + minGapLength;
     
-    // FIX: Завжди малюємо мінімум 2 штрихи
     const numSegments = Math.max(2, Math.floor(adjustedLength / totalSegmentInitial));
     
     if (numSegments === 2 && adjustedLength < totalSegmentInitial * 2) {
-      // Для коротких ліній - масштабуємо штрихи
-      const scaledDash = adjustedLength * 0.35; // 35% на кожен штрих
-      const scaledGap = adjustedLength * 0.3;   // 30% на проміжок
+
+      const scaledDash = adjustedLength * 0.35; 
+      const scaledGap = adjustedLength * 0.3;  
       
       ctx.setLineDash([scaledDash, scaledGap]);
       ctx.lineDashOffset = 0;
@@ -65,7 +63,6 @@ const drawStyledLine = (ctx, x1, y1, x2, y2, borderStyle, borderWidth, strokeSty
       return;
     }
         
-    // Рівномірний розподіл (центрування)
     const totalGapLength = adjustedLength - (numSegments * dashLength);
     const adjustedGap = totalGapLength / numSegments; 
     
@@ -88,7 +85,6 @@ const drawStyledLine = (ctx, x1, y1, x2, y2, borderStyle, borderWidth, strokeSty
     const dotSpacing = Math.max(borderWidth * 2.5, 10);
     const dotRadius = borderWidth / 2;
     
-    // FIX: Мінімум 2 точки
     const numDots = Math.max(2, Math.floor(adjustedLength / dotSpacing) + 1);
     const actualDotSpacing = adjustedLength / (numDots - 1);
     
@@ -104,7 +100,7 @@ const drawStyledLine = (ctx, x1, y1, x2, y2, borderStyle, borderWidth, strokeSty
       ctx.fill();
     }
   } else {
-    // Solid line fallback
+ 
     ctx.beginPath();
     ctx.moveTo(sx, sy);
     ctx.lineTo(x2 - dirX * endOffset, y2 - dirY * endOffset);
@@ -112,11 +108,9 @@ const drawStyledLine = (ctx, x1, y1, x2, y2, borderStyle, borderWidth, strokeSty
   }
 };
 
-// Функція для малювання пунктирної лінії з суцільними кутами (для фігур)
 const drawStyledLineWithCorners = (ctx, points, borderStyle, borderWidth, strokeStyle) => {
   if (points.length < 2) return;
   
-  // Якщо лінія суцільна або дуже коротка - малюємо просто лінію
   if (borderStyle === 'solid') {
     ctx.strokeStyle = strokeStyle;
     ctx.lineWidth = borderWidth;
@@ -174,7 +168,6 @@ const drawStyledLineWithCorners = (ctx, points, borderStyle, borderWidth, stroke
     
     ctx.fillStyle = strokeStyle;
     
-    // 1. Малюємо точки на кутах
     for (let i = 0; i < numVertices; i++) {
       const p = points[i];
       
@@ -183,7 +176,6 @@ const drawStyledLineWithCorners = (ctx, points, borderStyle, borderWidth, stroke
       ctx.fill();
     }
     
-    // 2. Розподіляємо точки рівномірно вздовж сторін
     for (let i = 0; i < numVertices; i++) {
       const start = points[i];
       const sideLength = sideLengths[i];
@@ -218,7 +210,6 @@ const drawStyledLineWithCorners = (ctx, points, borderStyle, borderWidth, stroke
     ctx.lineWidth = borderWidth;
     ctx.lineCap = 'butt';
     
-    // Малюємо суцільні кути
     for (let i = 0; i < numVertices; i++) {
       const curr = points[i];
       const prev = points[i === 0 ? numVertices - 1 : i - 1];
@@ -246,7 +237,6 @@ const drawStyledLineWithCorners = (ctx, points, borderStyle, borderWidth, stroke
       }
     }
     
-    // Малюємо рівномірний пунктир між кутами
     for (let i = 0; i < numVertices; i++) {
       const start = points[i];
       const end = points[(i + 1) % numVertices];
@@ -316,7 +306,6 @@ const drawStyledLineWithCorners = (ctx, points, borderStyle, borderWidth, stroke
   }
 };
 
-// ВИПРАВЛЕНО: Зміщено малювання стрілки, щоб вістря було в 0
 const drawLineCap = (ctx, x, y, angle, capType, size, color, opacity, lineWidth) => {
   if (capType === 'butt') return 0;
   
@@ -334,22 +323,22 @@ const drawLineCap = (ctx, x, y, angle, capType, size, color, opacity, lineWidth)
   let offset = 0;
   
   if (capType === 'round') {
-    // Кругла точка - малюємо по центру
+ 
     const circleRadius = Math.max(lineWidth * 0.75, 4);
     ctx.beginPath();
     ctx.arc(0, 0, circleRadius, 0, Math.PI * 2);
     ctx.fill();
-    offset = 0; // Лінія доходить до центру, точка перекриває її
+    offset = 0; 
   } else if (capType === 'arrow') {
-    // Стрілка - зміщуємо так, щоб вістря було в точці прив'язки (0,0)
+   
     ctx.beginPath();
-    // БУЛО: ctx.moveTo(size * 0.3, 0);
-    ctx.moveTo(0, 0); // Вістря точно в центрі
+   
+    ctx.moveTo(0, 0); 
     ctx.lineTo(-size, -size * 0.5);
     ctx.lineTo(-size, size * 0.5);
     ctx.closePath();
     ctx.fill();
-    // Offset = розмір стрілки, щоб лінія не заходила під неї
+ 
     offset = size; 
   } else if (capType === 'circle') {
     ctx.beginPath();
@@ -386,7 +375,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   const lineHeight = (textObj.lineHeight || 1.5) * fontSize;
   const letterSpacing = textObj.letterSpacing || 0;
   
-  // Розрахунок ширини
   let maxWidth = 0;
   lines.forEach(line => {
     let lineWidth = 0;
@@ -398,7 +386,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
     if (lineWidth > maxWidth) maxWidth = lineWidth;
   });
   
-  // Розрахунок висоти
   const totalHeight = lines.length > 0 
     ? (lines.length - 1) * lineHeight + fontSize 
     : 0;
@@ -406,7 +393,7 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   const PADDING = 2;
 
   if (textObj.rotation) {
-    // Враховуємо padding при розрахунку центру
+
     const centerX = textObj.x + maxWidth / 2;
     const centerY = textObj.y + totalHeight / 2;
     
@@ -454,7 +441,7 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   
   if (isSelected) {
     ctx.fillStyle = 'rgba(255, 215, 0, 0.2)';
-    // Малюємо фон з урахуванням PADDING (розширюємо на всі боки)
+
     ctx.fillRect(
       textObj.x - PADDING, 
       textObj.y - PADDING, 
@@ -709,29 +696,25 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
     const lineCapStart = shape.lineCapStart || 'butt';
     const lineCapEnd = shape.lineCapEnd || (shape.shape === 'arrow' ? 'arrow' : 'butt');
     const arrowSize = Math.max(borderWidth * 2.5, 10);
-    
-    // ВИПРАВЛЕНО: Розрахунок зміщення (Offset)
+
     let requiredStartOffset = 0;
-    // Стрілка: відступаємо на розмір, щоб лінія не заходила під стрілку
+
     if (lineCapStart === 'arrow') requiredStartOffset = arrowSize; 
     else if (lineCapStart === 'circle') requiredStartOffset = arrowSize * 0.2; 
-    // Точка: нульовий відступ (лінія доходить до центру)
     else if (lineCapStart === 'round') requiredStartOffset = 0; 
     else if (lineCapStart === 'bar') requiredStartOffset = 0;
 
     let requiredEndOffset = 0;
-    // Стрілка: відступаємо на розмір, щоб лінія не заходила під стрілку
+
     if (lineCapEnd === 'arrow') requiredEndOffset = arrowSize; 
     else if (lineCapEnd === 'circle') requiredEndOffset = arrowSize * 0.2; 
-    // Точка: нульовий відступ (лінія доходить до центру)
     else if (lineCapEnd === 'round') requiredEndOffset = 0; 
     else if (lineCapEnd === 'bar') requiredEndOffset = 0;
     
-    // Малюємо лінію
     if (borderStyle === 'dashed' || borderStyle === 'dotted') {
       drawStyledLine(ctx, shape.startX, shape.startY, shape.endX, shape.endY, borderStyle, borderWidth, strokeStyle, requiredStartOffset, requiredEndOffset);
     } else {
-      // Solid
+
       const startX = shape.startX + Math.cos(angle) * requiredStartOffset; 
       const startY = shape.startY + Math.sin(angle) * requiredStartOffset;
       const endX = shape.endX - Math.cos(angle) * requiredEndOffset;    
@@ -744,7 +727,7 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
       ctx.stroke();
     }
     
-    // Малюємо наконечники (ЗАВЖДИ).
+  
     if (lineCapStart !== 'butt') {
       drawLineCap(ctx, shape.startX, shape.startY, angle + Math.PI, lineCapStart, arrowSize, borderColor, borderOpacity, borderWidth);
     }
@@ -753,7 +736,7 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
     }
 
   } else {
-    // Фігури (прямокутник, коло, трикутник)
+
     const x = shape.x;
     const y = shape.y;
     const w = shape.width || 50;
