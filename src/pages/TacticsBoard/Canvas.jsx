@@ -37,17 +37,32 @@ const CanvasContainer = styled.div`
   display: inline-block;
   max-width: 100%;
   position: relative;
-  cursor: ${props => props.cursor};
+  /* Приховуємо системний курсор, якщо активне малювання */
+  cursor: ${props => props.$activeTool === 'drawing' ? 'none' : props.cursor};
 `;
 
-const StyledCanvas = styled.canvas`
+const StaticCanvas = styled.canvas`
   display: block;
   background: white;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+`;
+
+const ActiveCanvas = styled.canvas`
+  display: block;
+  background: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
   touch-action: none; 
 `;
 
 const TextArea = styled.textarea`
   position: absolute;
+  z-index: 10;
   border: 2px solid #FFD700;
   background: white;
   padding: 4px 6px;
@@ -64,31 +79,50 @@ const TextArea = styled.textarea`
   word-wrap: break-word;
 `;
 
+const CustomCursor = styled.div`
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 50%;
+  border: 2px solid ${props => props.color};
+  width: ${props => props.size}px;
+  height: ${props => props.size}px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8), 0 0 4px rgba(0,0,0,0.2); /* Контраст */
+  display: ${props => props.visible ? 'block' : 'none'};
+  transition: width 0.1s, height 0.1s; /* Плавна зміна розміру */
+`;
+
 const Canvas = ({ fieldSize, fieldType }) => {
-  const canvasRef = useRef(null);
+  const staticCanvasRef = useRef(null);
+  const activeCanvasRef = useRef(null);
   const containerRef = useRef(null);
   const textAreaRef = useRef(null);
   const initializedRef = useRef(false);
   const textIdRef = useRef(null);
-  
   const selectedObjectIdRef = useRef(null);
+
+  const cursorRef = useRef(null);
 
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 500 });
   const [isTextInput, setIsTextInput] = useState(false);
   const [textInputValue, setTextInputValue] = useState('');
   const [textInputPos, setTextInputPos] = useState({ x: 0, y: 0 });
   
+  const [isCursorVisible, setIsCursorVisible] = useState(false);
+
   const dispatch = useDispatch();
   
   const { 
     activeTool, 
     drawColor, 
-    brushSize, 
+    brushSize,
+    brushOpacity,
+    brushStyle,
+    lineType,
     paths, 
     objects, 
     selectedObjectId,
-    team1,
-    team2,
     textFontSize,
     textColor,
     shapeBorderColor,
@@ -106,12 +140,12 @@ const Canvas = ({ fieldSize, fieldType }) => {
   }, [selectedObjectId]);
 
   const { 
-    redraw, 
-    drawLivePath, 
-    drawPreviewShape,
+    redrawStatic, 
+    drawLiveLayer,
+    clearActiveLayer,
     tempObjectDataRef,
     tempPathDataRef
-  } = useCanvasDrawing(canvasRef);
+  } = useCanvasDrawing(staticCanvasRef, activeCanvasRef);
 
   const {
     cursorStyle,
@@ -134,15 +168,13 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
   const {
     drawingRef,
-    currentPathRef,
-    shapeStartRef,
-    isDrawingShapeRef,
     startDrawing,
     continueDrawing,
     endDrawing,
+    shapeStartRef,
+    isDrawingShapeRef,
     startShape,
-    endShape,
-    cancelDrawing
+    endShape
   } = useDrawingTools();
 
   const BASE_SCREEN_WIDTH = 1500;
@@ -188,7 +220,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
   }, [fieldAspectRatio]);
 
   const getPointerPos = (e) => {
-    const canvas = canvasRef.current;
+    const canvas = activeCanvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
     let clientX, clientY;
@@ -221,8 +253,22 @@ const Canvas = ({ fieldSize, fieldType }) => {
     };
   };
 
-  
   const handleGlobalPointerMove = useCallback((e) => {
+    
+
+    if (activeTool === 'drawing' && cursorRef.current) {
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+        cursorRef.current.style.left = `${clientX}px`;
+        cursorRef.current.style.top = `${clientY}px`;
+    }
+
     if (!draggedObjectRef.current && !resizeHandleRef.current && !drawingRef.current && !isDrawingShapeRef.current) {
         return; 
     }
@@ -236,52 +282,59 @@ const Canvas = ({ fieldSize, fieldType }) => {
     if (resizeHandleRef.current) {
       const updatedObject = updateResize(rawPos);
       if (updatedObject) {
-        if (updatedObject.type === 'path') {
-          tempPathDataRef.current = updatedObject;
-        } else {
-          tempObjectDataRef.current = updatedObject;
-        }
-        redraw(paths, objects, selectedObjectIdRef.current, activeTool, drawColor, brushSize);
+        if (updatedObject.type === 'path') tempPathDataRef.current = updatedObject;
+        else tempObjectDataRef.current = updatedObject;
+        redrawStatic(paths, objects, selectedObjectIdRef.current, activeTool, drawColor, brushSize);
       }
     } else if (draggedObjectRef.current) {
-
       const updatedObject = updateDragPosition(rawPos, canvasSize.width, canvasSize.height);
-      
       if (updatedObject) {
-        if (updatedObject.type === 'path') {
-          tempPathDataRef.current = updatedObject;
-        } else {
-          tempObjectDataRef.current = updatedObject;
-        }
-        redraw(paths, objects, selectedObjectIdRef.current, activeTool, drawColor, brushSize);
+        if (updatedObject.type === 'path') tempPathDataRef.current = updatedObject;
+        else tempObjectDataRef.current = updatedObject;
+        redrawStatic(paths, objects, selectedObjectIdRef.current, activeTool, drawColor, brushSize);
       }
-    } else if (drawingRef.current) {
-     
-      const path = continueDrawing(clampedPos);
-      if (path && path.length >= 2) {
-        drawLivePath(path, drawColor, brushSize);
+    } 
+
+    else if (drawingRef.current) {
+      const pathPoints = continueDrawing(clampedPos);
+      
+      if (pathPoints && pathPoints.length >= 2) {
+        const livePath = {
+            id: 'live_drawing',
+            type: 'path',
+            points: pathPoints,
+            color: drawColor,
+            brushSize: brushSize,
+            opacity: brushOpacity,
+            brushStyle: brushStyle,
+            lineType: lineType
+        };
+
+        const isIncremental = lineType === 'solid'; 
+        
+        drawLiveLayer(livePath, null, isIncremental); 
       }
-    } else if (isDrawingShapeRef.current && shapeStartRef.current) {
-    
+    } 
+
+    else if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
-      redraw(paths, objects, selectedObjectIdRef.current, activeTool, drawColor, brushSize);
-      drawPreviewShape(
-        shapeType, 
-        shapeStartRef.current, 
-        clampedPos, 
-        shapeBorderColor, 
-        shapeBorderStyle,
-        shapeBorderWidth,
-        shapeFillColor,
-        shapeFillOpacity
-      );
+      drawLiveLayer(null, {
+          type: shapeType,
+          start: shapeStartRef.current,
+          end: clampedPos,
+          borderColor: shapeBorderColor,
+          borderStyle: shapeBorderStyle,
+          borderWidth: shapeBorderWidth,
+          fillColor: shapeFillColor,
+          fillOpacity: shapeFillOpacity
+      }, false);
     }
   }, [
     canvasSize, draggedObjectRef, resizeHandleRef, drawingRef, isDrawingShapeRef, 
-    updateDragPosition, updateResize, redraw, continueDrawing, drawLivePath, drawPreviewShape, 
+    updateDragPosition, updateResize, redrawStatic, drawLiveLayer, continueDrawing, 
     paths, objects, activeTool, drawColor, brushSize, shapeStartRef, 
-    shapeBorderColor, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity
-   
+    shapeBorderColor, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
+    brushOpacity, brushStyle, lineType
   ]);
 
   const handleGlobalPointerUp = useCallback((e) => {
@@ -293,17 +346,23 @@ const Canvas = ({ fieldSize, fieldType }) => {
     const rawPos = getPointerPos(e);
     const clampedPos = clampCoordinates(rawPos);
     
+    clearActiveLayer();
+
     if (drawingRef.current) {
       const path = endDrawing();
       if (path) {
         dispatch(addPath({
           points: path,
           color: drawColor,
-          brushSize: brushSize
+          brushSize: brushSize,
+          opacity: brushOpacity,
+          brushStyle: brushStyle,
+          lineType: lineType
         }));
       }
     }
     
+
     if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
       const shapeData = endShape(clampedPos, shapeType);
@@ -378,25 +437,20 @@ const Canvas = ({ fieldSize, fieldType }) => {
     resizeHandleRef, activeTool, endDrawing, endShape, endDrag, endResize, dispatch, 
     drawColor, brushSize, shapeBorderColor, shapeBorderOpacity, shapeBorderWidth, 
     shapeBorderStyle, shapeFillColor, shapeFillOpacity, shapeLineCapStart, 
-    shapeLineCapEnd, setCursorStyle, paths, objects, canvasSize 
+    shapeLineCapEnd, setCursorStyle, paths, objects, canvasSize,
+    brushOpacity, brushStyle, lineType, clearActiveLayer
   ]);
-
- 
 
   const handlePointerDown = (e) => {
     if (e.button !== undefined && e.button !== 0) return;
     
-    if (e.cancelable && activeTool !== 'cursor' && !isTextInput) {
-
-    }
-
     window.addEventListener('mousemove', handleGlobalPointerMove);
     window.addEventListener('mouseup', handleGlobalPointerUp);
     window.addEventListener('touchmove', handleGlobalPointerMove, { passive: false });
     window.addEventListener('touchend', handleGlobalPointerUp);
 
     const pos = getPointerPos(e);
-    const canvas = canvasRef.current;
+    const canvas = staticCanvasRef.current;
     
     if (isTextInput) {
       handleTextInputBlur();
@@ -404,6 +458,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     }
     
     if (activeTool === 'cursor') {
+
       const selectedObj = selectedObjectId ? 
         (selectedObjectId.startsWith('path_') ? 
           { ...paths[parseInt(selectedObjectId.replace('path_', ''))], type: 'path', id: selectedObjectId } :
@@ -431,9 +486,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
       
       const clickedObject = getObjectAtPosition(pos.x, pos.y, objects, paths, brushSize, canvas);
       if (clickedObject) {
-   
         selectedObjectIdRef.current = clickedObject.id;
-        
         dispatch(selectObject(clickedObject.id));
         
         const bounds = getObjectBounds(clickedObject, canvas);
@@ -442,26 +495,41 @@ const Canvas = ({ fieldSize, fieldType }) => {
           if (clickedObject.type === 'path') tempPathDataRef.current = { ...clickedObject };
           else tempObjectDataRef.current = { ...clickedObject };
           
-          redraw(paths, objects, clickedObject.id, activeTool, drawColor, brushSize);
+          redrawStatic(paths, objects, clickedObject.id, activeTool, drawColor, brushSize);
         }
       } else {
         selectedObjectIdRef.current = null;
         dispatch(deselectObject());
-        redraw(paths, objects, null, activeTool, drawColor, brushSize);
+        redrawStatic(paths, objects, null, activeTool, drawColor, brushSize);
       }
       
     } else if (activeTool === 'drawing') {
       startDrawing(pos);
+
+      const livePath = {
+        id: 'live_drawing',
+        type: 'path',
+        points: [pos],
+        color: drawColor,
+        brushSize: brushSize,
+        opacity: brushOpacity,
+        brushStyle: brushStyle,
+        lineType: lineType
+      };
+
+      drawLiveLayer(livePath, null, false);
     } else if (activeTool.startsWith('shape_')) {
       startShape(pos);
     } else if (activeTool.startsWith('figure_')) {
+
        const figureIcons = { 'player': '👤', 'goalkeeper': '🧤', 'coach': '🧠', 'referee': '⚖️', 'goal': '🥅', 'cone': '🟨' };
        const figureId = activeTool.replace('figure_', '');
        dispatch(addObject({ type: 'figure', figureType: figureId, icon: figureIcons[figureId], x: pos.x, y: pos.y, size: 30 }));
     } else if (activeTool === 'ball') {
       dispatch(addObject({ type: 'ball', x: pos.x, y: pos.y, radius: 10 }));
     } else if (activeTool === 'text') {
-      const newTextId = `text_${Date.now()}_${Math.random()}`;
+
+       const newTextId = `text_${Date.now()}_${Math.random()}`;
       setIsTextInput(true);
       setTextInputValue('');
       setTextInputPos(pos);
@@ -472,16 +540,117 @@ const Canvas = ({ fieldSize, fieldType }) => {
   };
 
   const handleCanvasMouseMove = (e) => {
+
     if (draggedObjectRef.current || resizeHandleRef.current || drawingRef.current || isDrawingShapeRef.current) return;
     if (e.touches) return;
+    
+    if (activeTool === 'drawing' && cursorRef.current) {
+        cursorRef.current.style.left = `${e.clientX}px`;
+        cursorRef.current.style.top = `${e.clientY}px`;
+    }
 
     const pos = getPointerPos(e);
-    const canvas = canvasRef.current;
+    const canvas = staticCanvasRef.current;
     
     if (activeTool === 'cursor') {
       updateCursor(pos, objects, paths, selectedObjectIdRef.current, brushSize, canvas);
     }
   };
+
+  const handleMouseEnter = () => setIsCursorVisible(true);
+  const handleMouseLeave = () => setIsCursorVisible(false);
+
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      const newSize = calculateCanvasSize();
+      setCanvasSize(newSize);
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, [calculateCanvasSize]);
+
+  useEffect(() => {
+    const staticCanvas = staticCanvasRef.current;
+    const activeCanvas = activeCanvasRef.current;
+    const container = containerRef.current;
+    
+    if (staticCanvas && activeCanvas && container) {
+      staticCanvas.width = canvasSize.width;
+      staticCanvas.height = canvasSize.height;
+      staticCanvas.style.width = `${canvasSize.width}px`;
+      staticCanvas.style.height = `${canvasSize.height}px`;
+
+      activeCanvas.width = canvasSize.width;
+      activeCanvas.height = canvasSize.height;
+      activeCanvas.style.width = `${canvasSize.width}px`;
+      activeCanvas.style.height = `${canvasSize.height}px`;
+
+      container.style.width = `${canvasSize.width}px`;
+      container.style.height = `${canvasSize.height}px`;
+      
+      if (!initializedRef.current) {
+        dispatch(initializePlayers({ 
+          canvasWidth: canvasSize.width, 
+          canvasHeight: canvasSize.height 
+        }));
+        initializedRef.current = true;
+      }
+      redrawStatic(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
+    }
+  }, [canvasSize, dispatch, redrawStatic, paths, objects, selectedObjectId, activeTool, drawColor, brushSize]);
+
+  useEffect(() => {
+    redrawStatic(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
+  }, [paths, objects, selectedObjectId, redrawStatic, activeTool, drawColor, brushSize]);
+
+  useEffect(() => {
+    if (canvasSize.width > 0 && canvasSize.height > 0) {
+        dispatch(updatePlayersPosition({ 
+          canvasWidth: canvasSize.width, 
+          canvasHeight: canvasSize.height 
+        }));
+    }
+  }, [canvasSize, dispatch]);
+
+  useEffect(() => {
+    if (isTextInput && textAreaRef.current && activeCanvasRef.current) {
+      const input = textAreaRef.current;
+      setTimeout(() => {
+        input.focus();
+        input.select();
+      }, 0);
+      const canvas = activeCanvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const screenX = textInputPos.x / scaleX;
+      const screenY = textInputPos.y / scaleY;
+      input.style.left = `${screenX}px`;
+      input.style.top = `${screenY}px`;
+      input.style.fontSize = `${textFontSize / scaleY}px`;
+      input.style.color = textColor;
+      input.style.width = 'auto';
+      input.style.height = 'auto';
+    }
+  }, [isTextInput, textInputPos, textColor, textFontSize]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !isTextInput) {
+        dispatch(deselectObject());
+        selectedObjectIdRef.current = null;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedObjectId, isTextInput, dispatch]);
+
+  useEffect(() => {
+    dispatch(deselectObject());
+    selectedObjectIdRef.current = null;
+  }, [activeTool, dispatch]);
 
   const handleTextInputChange = (e) => {
     setTextInputValue(e.target.value);
@@ -520,106 +689,32 @@ const Canvas = ({ fieldSize, fieldType }) => {
     }
   };
 
-  useEffect(() => {
-    const updateCanvasSize = () => {
-      const newSize = calculateCanvasSize();
-      setCanvasSize(newSize);
-    };
-
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
-  }, [calculateCanvasSize]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    
-    if (canvas && container) {
-      canvas.width = canvasSize.width;
-      canvas.height = canvasSize.height;
-      canvas.style.width = `${canvasSize.width}px`;
-      canvas.style.height = `${canvasSize.height}px`;
-      container.style.width = `${canvasSize.width}px`;
-      container.style.height = `${canvasSize.height}px`;
-      
-      if (!initializedRef.current) {
-        dispatch(initializePlayers({ 
-          canvasWidth: canvasSize.width, 
-          canvasHeight: canvasSize.height 
-        }));
-        initializedRef.current = true;
-      }
-      redraw(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
-    }
-  }, [canvasSize, dispatch, redraw, paths, objects, selectedObjectId, activeTool, drawColor, brushSize]);
-
-  useEffect(() => {
-    redraw(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
-  }, [paths, objects, selectedObjectId, redraw, activeTool, drawColor, brushSize]);
-
-  useEffect(() => {
-    if (canvasSize.width > 0 && canvasSize.height > 0) {
-      const players = objects.filter(obj => obj.type === 'player');
-      const team1Players = players.filter(p => p.team === 1);
-      const team2Players = players.filter(p => p.team === 2);
-      
-      if (team1Players.length !== team1.count || team2Players.length !== team2.count) {
-        dispatch(updatePlayersPosition({ 
-          canvasWidth: canvasSize.width, 
-          canvasHeight: canvasSize.height 
-        }));
-      }
-    }
-  }, [team1.count, team2.count, canvasSize, objects, dispatch]);
-
-  useEffect(() => {
-    if (isTextInput && textAreaRef.current && canvasRef.current) {
-      const input = textAreaRef.current;
-      setTimeout(() => {
-        input.focus();
-        input.select();
-      }, 0);
-      const canvas = canvasRef.current;
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const screenX = textInputPos.x / scaleX;
-      const screenY = textInputPos.y / scaleY;
-      input.style.left = `${screenX}px`;
-      input.style.top = `${screenY}px`;
-      input.style.fontSize = `${textFontSize / scaleY}px`;
-      input.style.color = textColor;
-      input.style.width = 'auto';
-      input.style.height = 'auto';
-    }
-  }, [isTextInput, textInputPos, textColor, textFontSize]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !isTextInput) {
-        dispatch(deselectObject());
-        selectedObjectIdRef.current = null;
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedObjectId, isTextInput, dispatch]);
-
-  useEffect(() => {
-    dispatch(deselectObject());
-    selectedObjectIdRef.current = null;
-  }, [activeTool, dispatch]);
-
   return (
     <OuterContainer>
-      <CanvasContainer ref={containerRef} cursor={cursorStyle}>
-        <StyledCanvas
-          ref={canvasRef}
+      {/* Кастомний курсор */}
+      <CustomCursor 
+        ref={cursorRef}
+        size={brushSize}
+        color={drawColor}
+        visible={activeTool === 'drawing' && isCursorVisible}
+      />
+
+      <CanvasContainer 
+        ref={containerRef} 
+        cursor={cursorStyle} 
+        $activeTool={activeTool}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <StaticCanvas ref={staticCanvasRef} />
+        
+        <ActiveCanvas
+          ref={activeCanvasRef}
           onMouseDown={handlePointerDown}
           onTouchStart={handlePointerDown}
           onMouseMove={handleCanvasMouseMove}
         />
+        
         {isTextInput && (
           <TextArea
             ref={textAreaRef}

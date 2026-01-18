@@ -126,11 +126,9 @@ const ToggleButton = styled.button`
 
 const TextPropertiesPanel = ({ selectedObject }) => {
   const dispatch = useDispatch();
-  
-  // Локальний стейт ЛИШЕ для textarea, щоб курсор не стрибав
+
   const [localText, setLocalText] = useState(selectedObject.text || '');
 
-  // Синхронізуємо локальний стейт, коли змінюється вибраний об'єкт
   useEffect(() => {
     setLocalText(selectedObject.text || '');
   }, [selectedObject.id, selectedObject.text]);
@@ -145,7 +143,6 @@ const TextPropertiesPanel = ({ selectedObject }) => {
   const handleTextChange = (e) => {
     const newValue = e.target.value;
     setLocalText(newValue);
-    // ВИПРАВЛЕНО: Оновлюємо Redux одразу при вводі (onChange), а не на onBlur
     handleObjectUpdate('text', newValue);
   };
 
@@ -158,7 +155,6 @@ const TextPropertiesPanel = ({ selectedObject }) => {
         <Textarea 
           value={localText}
           onChange={handleTextChange}
-          // onBlur прибираємо, бо зберігаємо на льоту
           placeholder="Введіть текст..."
           $fontFamily={selectedObject.fontFamily}
         />
@@ -231,14 +227,13 @@ const TextPropertiesPanel = ({ selectedObject }) => {
       <PropertyRow>
         <PropertyLabel>
           Міжрядковий інтервал
-          {/* Відображаємо значення з точністю до десятих */}
           <SliderValue>{(selectedObject.lineHeight || 0.9).toFixed(1)}</SliderValue>
         </PropertyLabel>
         <Slider
           min="0.5"
           max="3"
           step="0.1"
-          value={selectedObject.lineHeight || 0.9} // Дефолтне значення змінено на 0.9
+          value={selectedObject.lineHeight || 0.9}
           onChange={(e) => handleObjectUpdate('lineHeight', Number(e.target.value))}
         />
       </PropertyRow>

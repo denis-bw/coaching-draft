@@ -107,7 +107,6 @@ const OpacityLabel = styled.span`
   margin-top: 2px;
 `;
 
-// Хелпери
 const percentToAlpha = (percent) => Math.max(0, Math.min(1, percent / 100));
 const alphaToPercent = (alpha) => Math.round(Math.max(0, Math.min(100, alpha * 100)));
 
@@ -130,16 +129,13 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
   const colorInputRef = useRef(null);
   const debounceTimerRef = useRef(null);
   
-  // Додаємо ref для текстового інпута RGBA
   const textInputRef = useRef(null);
 
-  // Обчислюємо значення рядка
   const rgbaValue = useMemo(() => {
     const alpha = percentToAlpha(localOpacity);
     return hexToRgba(localColor, alpha);
   }, [localColor, localOpacity]);
 
-  // Локальний стан для тексту в інпуті
   const [inputValue, setInputValue] = useState(rgbaValue);
 
   const previewStyle = useMemo(() => {
@@ -148,7 +144,6 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
     return { backgroundColor: `rgba(${rgba})` };
   }, [localColor, localOpacity]);
 
-  // Скидаємо локальний стан, якщо пропси змінилися ззовні
   useEffect(() => {
     if (!debounceTimerRef.current) {
       setLocalColor(color || '#000000');
@@ -156,9 +151,6 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
     }
   }, [color, opacity]);
 
-  // Синхронізуємо текст в інпуті з кольором, АЛЕ ТІЛЬКИ якщо інпут не у фокусі.
-  // Це дозволяє змінювати колір піпеткою і бачити зміни в тексті,
-  // але не заважає користувачу друкувати (курсор не стрибатиме).
   useEffect(() => {
     if (document.activeElement !== textInputRef.current) {
       setInputValue(rgbaValue);
@@ -181,22 +173,20 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
     }, 150);
   };
 
-  // Змінено на onChange для миттєвої реакції
   const handleRgbaChange = (e) => {
     const newValue = e.target.value;
-    setInputValue(newValue); // Даємо користувачу друкувати що завгодно
+    setInputValue(newValue);
 
-    // Спробуємо розпарсити
+
     const values = newValue.split(',').map(val => parseFloat(val.trim()));
     
-    // Якщо введено валідні дані (3 числа + опціонально альфа), оновлюємо стан
+
     if (values.length >= 3 && !values.some(isNaN)) {
        const r = Math.max(0, Math.min(255, values[0] || 0));
        const g = Math.max(0, Math.min(255, values[1] || 0));
        const b = Math.max(0, Math.min(255, values[2] || 0));
        const alpha = values[3] !== undefined ? Math.max(0, Math.min(1, values[3])) : 1;
        
-       // Конвертуємо в HEX
        const newHex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
        const newPercent = alphaToPercent(alpha);
 
@@ -205,7 +195,6 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
        
        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
        
-       // Миттєве оновлення батьківського компонента
        if (onColorChange) onColorChange(newHex);
        if (onOpacityChange) onOpacityChange(newPercent);
     }
@@ -249,7 +238,7 @@ const ColorOpacityControl = ({ color, opacity, onColorChange, onOpacityChange, l
           <RGBInput 
             ref={textInputRef}
             type="text"
-            // Важливо: прибрано key={rgbaValue} та defaultValue
+
             value={inputValue}
             onChange={handleRgbaChange}
             placeholder="0, 0, 0, 1"

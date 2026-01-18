@@ -7,7 +7,6 @@ const MIN_BALL_SIZE = 5;
 const MAX_BALL_SIZE = 50;
 const MIN_FONT_SIZE = 5;
 
-// Допоміжна функція: отримати координати 4-х кутів у глобальному просторі
 const getCorners = (cx, cy, w, h, rotation) => {
   const rad = (rotation * Math.PI) / 180;
   const cos = Math.cos(rad);
@@ -16,8 +15,6 @@ const getCorners = (cx, cy, w, h, rotation) => {
   const dx = w / 2;
   const dy = h / 2;
 
-  // Локальні координати вершин (відносно центру)
-  // 0:TL, 1:TR, 2:BR, 3:BL
   const cornersLocal = [
     { x: -dx, y: -dy }, 
     { x: dx, y: -dy },  
@@ -25,7 +22,6 @@ const getCorners = (cx, cy, w, h, rotation) => {
     { x: -dx, y: dy }   
   ];
 
-  // Переводимо в глобальні
   return cornersLocal.map(p => ({
     x: cx + (p.x * cos - p.y * sin),
     y: cy + (p.x * sin + p.y * cos)
@@ -48,7 +44,7 @@ export const useResizeHandles = () => {
   const resizeHandleRef = useRef(null);
 
   const startResize = (handle, object, startPos, bounds) => {
-    // 1. Отримуємо точні початкові розміри
+
     let actualWidth, actualHeight;
     
     if (object.type === 'player' || object.type === 'ball') {
@@ -63,12 +59,11 @@ export const useResizeHandles = () => {
        actualWidth = bounds.originalWidth || bounds.width; 
        actualHeight = bounds.originalHeight || bounds.height;
     } else {
-       // Для інших фігур
+
        actualWidth = object.width !== undefined ? object.width : bounds.width;
        actualHeight = object.height !== undefined ? object.height : bounds.height;
     }
 
-    // 2. Визначаємо центр
     let cx, cy;
     if (object.shape === 'line' || object.shape === 'arrow') {
       cx = (object.startX + object.endX) / 2;
@@ -86,7 +81,6 @@ export const useResizeHandles = () => {
 
     const rotation = object.rotation || 0;
 
-    // 3. ВИЗНАЧЕННЯ ЯКОРЯ (Anchor Point)
     const corners = getCorners(cx, cy, actualWidth, actualHeight, rotation);
     let anchorPoint = { x: cx, y: cy }; 
     let handlePoint = { x: startPos.x, y: startPos.y }; 
@@ -104,7 +98,7 @@ export const useResizeHandles = () => {
         handlePoint = corners[3];
         anchorPoint = corners[1]; 
     } 
-    // Логіка для сторін
+
     else if (handle.name === 'top') {
         handlePoint = { x: (corners[0].x + corners[1].x)/2, y: (corners[0].y + corners[1].y)/2 };
         anchorPoint = { x: (corners[2].x + corners[3].x)/2, y: (corners[2].y + corners[3].y)/2 };
@@ -119,16 +113,13 @@ export const useResizeHandles = () => {
         anchorPoint = { x: (corners[0].x + corners[3].x)/2, y: (corners[0].y + corners[3].y)/2 };
     }
 
-    // 4. PRESS OFFSET (Зміщення кліку)
     const pressOffsetX = handlePoint.x - startPos.x;
     const pressOffsetY = handlePoint.y - startPos.y;
 
-    // 5. Вектор Діагоналі
     const startVectorX = handlePoint.x - anchorPoint.x;
     const startVectorY = handlePoint.y - anchorPoint.y;
     const startLengthSq = startVectorX * startVectorX + startVectorY * startVectorY;
 
-    // Зберігаємо початкові дані
     const startLocalMouse = rotatePoint(startPos.x, startPos.y, cx, cy, -rotation);
     const mx = startLocalMouse.x - cx;
     const my = startLocalMouse.y - cy;
@@ -196,9 +187,6 @@ export const useResizeHandles = () => {
 
     let updatedObject = { ...object };
 
-    // =========================================================
-    // 1. ТЕКСТ (МЕТОД ПРОЄКЦІЇ)
-    // =========================================================
     if (object.type === 'text') {
         const adjustedMouseX = pos.x + pressOffsetX;
         const adjustedMouseY = pos.y + pressOffsetY;
@@ -210,7 +198,7 @@ export const useResizeHandles = () => {
         let scale = dotProduct / startLengthSq;
 
         if (!['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].includes(handle)) {
-             // Для сторін простіша логіка (довжина вектора)
+
              const distStart = Math.sqrt(startLengthSq);
              const distCurrent = Math.sqrt(currentVectorX*currentVectorX + currentVectorY*currentVectorY);
              const sign = dotProduct > 0 ? 1 : -1;
@@ -247,9 +235,6 @@ export const useResizeHandles = () => {
         return updatedObject;
     }
 
-    // =========================================================
-    // 2. ЛІНІЇ ТА СТРІЛКИ
-    // =========================================================
     if (object.type === 'shape' && (object.shape === 'line' || object.shape === 'arrow')) {
        const globalStart = rotatePoint(lineStartX, lineStartY, startCenterX, startCenterY, rotation);
        const globalEnd = rotatePoint(lineEndX, lineEndY, startCenterX, startCenterY, rotation);
@@ -278,9 +263,6 @@ export const useResizeHandles = () => {
        return updatedObject;
     }
 
-    // =========================================================
-    // 3. ГРАВЦІ, М'ЯЧІ, ФІГУРИ
-    // =========================================================
     if (object.shape === 'circle' || ['player', 'ball', 'figure'].includes(object.type)) {
        const currentDist = Math.sqrt(
          Math.pow(pos.x - startCenterX, 2) + Math.pow(pos.y - startCenterY, 2)
@@ -311,9 +293,6 @@ export const useResizeHandles = () => {
        return updatedObject;
     }
 
-    // =========================================================
-    // 4. ГЕОМЕТРИЧНІ ФІГУРИ (Rect/Triangle)
-    // =========================================================
     if (object.type === 'shape') {
       const rad = (rotation * Math.PI) / 180;
       const cos = Math.cos(-rad);

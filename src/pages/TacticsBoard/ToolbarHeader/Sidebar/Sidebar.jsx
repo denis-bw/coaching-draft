@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { deselectObject, deleteObject, deletePath } from '../../../../redux/TacticsBoard/TacticsBoardSlice';
 import { ReactComponent as DoubleArrowRightBase } from '../../../../assets/doubleArrowRight.svg';
 
+import DrawingToolsPanel from './DrawingToolsPanel';
 import TextPropertiesPanel from './TextPropertiesPanel';
 import TextToolsPanel from './TextToolsPanel';
 import ShapePropertiesPanel from './ShapePropertiesPanel';
@@ -28,66 +29,56 @@ const SidebarContainer = styled.div`
   transition: right 0.3s ease;
   z-index: 99;
   overflow-y: auto;
-  padding-top: 48px;
-
+  
+  /* Стилізація скролбару */
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
   }
-
   &::-webkit-scrollbar-track {
     background: transparent;
-    margin-right: 2px;
   }
-
   &::-webkit-scrollbar-thumb {
-    background-color: ${({ theme }) => theme.lightGreen};
-    border-radius: 10px;
-    border: 2px solid ${({ theme }) => theme.ContainerBGColor};
+    background-color: #ccc;
+    border-radius: 3px;
   }
 `;
 
-const SidebarContent = styled.div`
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 16px;
-  height: calc(100% - 48px);
+  border-bottom: 1px solid ${({ theme }) => theme.lightGreen || '#E0E0E0'};
+`;
+
+const Title = styled.h2`
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  color: ${({ theme }) => theme.textBlack || '#333'};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 12px;
-  right: 280px;
-  width: 28px;
-  height: 28px;
-  border: 2px solid ${({ theme }) => theme.greenMain || '#4CAF50'};
-  background: ${({ theme }) => theme.lightGreen || '#E8F5E9'};
+  background: none;
+  border: none;
   cursor: pointer;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-  padding: 0;
-  z-index: 100;
+  opacity: 0.6;
+  transition: opacity 0.2s;
   
   &:hover {
-    border-color: ${({ theme }) => theme.darkGreen || '#2E7D32'};
-    background: ${({ theme }) => theme.darkGreen || '#2E7D32'};
-    
-    svg {
-      color: ${({ theme }) => theme.white || '#fff'};
-    }
-  }
-  
-  svg {
-    color: ${({ theme }) => theme.greenMain || '#4CAF50'};
-    transition: color 0.2s;
+    opacity: 1;
   }
 `;
 
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 40px 20px;
-  color: ${({ theme }) => theme.textGray || '#999'};
-  font-size: 14px;
+const Content = styled.div`
+  padding: 20px;
 `;
 
 const DeleteButton = styled.button`
@@ -122,27 +113,36 @@ const DeleteButton = styled.button`
   }
 `;
 
+const EmptyState = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #ccc;
+  text-align: center;
+`;
+
 const Sidebar = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
-  const { activeTool, selectedObjectId, objects, paths } = useSelector(state => state.tacticsBoard);
+  const { activeTool, selectedObjectId, objects, paths } = useSelector((state) => state.tacticsBoard);
 
-  const selectedObject = selectedObjectId 
-    ? selectedObjectId.startsWith('path_')
+  const selectedObject = selectedObjectId ? (
+    selectedObjectId.startsWith('path_') 
       ? { ...paths[parseInt(selectedObjectId.replace('path_', ''))], type: 'path', id: selectedObjectId }
       : objects.find(obj => obj.id === selectedObjectId)
-    : null;
+  ) : null;
 
   const handleDelete = () => {
-    if (!selectedObjectId) return;
-    
-    if (selectedObjectId.startsWith('path_')) {
-      const pathIndex = parseInt(selectedObjectId.replace('path_', ''));
-      dispatch(deletePath(pathIndex));
-    } else {
-      dispatch(deleteObject(selectedObjectId));
+    if (selectedObjectId) {
+      if (selectedObjectId.startsWith('path_')) {
+        const index = parseInt(selectedObjectId.replace('path_', ''));
+        dispatch(deletePath(index));
+      } else {
+        dispatch(deleteObject(selectedObjectId));
+      }
+      dispatch(deselectObject());
     }
-    
-    dispatch(deselectObject());
   };
 
   const renderContent = () => {
@@ -158,26 +158,24 @@ const Sidebar = ({ isOpen, onClose }) => {
             </>
           );
         case 'player':
-          return (
-            <>
-              <PlayerPropertiesPanel selectedObject={selectedObject} />
-              <DeleteButton onClick={handleDelete}>
-                Видалити гравця
-              </DeleteButton>
-            </>
-          );
-        case 'path':
-          return (
-            <DeleteButton onClick={handleDelete}>
-              Видалити малюнок
-            </DeleteButton>
-          );
+          return <PlayerPropertiesPanel selectedObject={selectedObject} />;
         case 'shape':
           return (
             <>
               <ShapePropertiesPanel selectedObject={selectedObject} />  
               <DeleteButton onClick={handleDelete}>
                 Видалити фігуру
+              </DeleteButton>
+            </>
+          );
+   
+        case 'path':
+          return (
+            <>
+              {/* Відображаємо ту саму панель, що й при малюванні, але вона буде в режимі редагування */}
+              <DrawingToolsPanel /> 
+              <DeleteButton onClick={handleDelete}>
+                Видалити лінію
               </DeleteButton>
             </>
           );
@@ -193,6 +191,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     switch (activeTool) {
       case 'text':
         return <TextToolsPanel />;
+      case 'drawing':
+        return <DrawingToolsPanel />;
       case 'shape_rectangle':
       case 'shape_circle':
       case 'shape_triangle':
@@ -214,12 +214,17 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   return (
     <SidebarContainer $isOpen={isOpen}>
-      <CloseButton title="Закрити панель інструментів" onClick={onClose}>
-        <DoubleArrowRight/>
-      </CloseButton>
-      <SidebarContent>
+      <Header>
+        <Title>
+          {selectedObject ? 'Властивості' : 'Інструменти'}
+        </Title>
+        <CloseButton title="Закрити панель інструментів" onClick={onClose}>
+          <DoubleArrowRight />
+        </CloseButton>
+      </Header>
+      <Content>
         {renderContent()}
-      </SidebarContent>
+      </Content>
     </SidebarContainer>
   );
 };

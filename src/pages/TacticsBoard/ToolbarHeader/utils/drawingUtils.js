@@ -1,5 +1,454 @@
 import { getResizeHandles } from './objectBoundsUtils';
 
+const hexToRgba = (hex, alpha = 1) => {
+  if (!hex) return 'rgba(0, 0, 0, 1)';
+  let cleanHex = hex.replace('#', '');
+  if (cleanHex.length === 3) {
+    cleanHex = cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2];
+  }
+  const r = parseInt(cleanHex.slice(0, 2), 16);
+  const g = parseInt(cleanHex.slice(2, 4), 16);
+  const b = parseInt(cleanHex.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+const hexToRgbObj = (hex) => {
+    let cleanHex = hex.replace('#', '');
+    if (cleanHex.length === 3) {
+      cleanHex = cleanHex[0] + cleanHex[0] + cleanHex[1] + cleanHex[1] + cleanHex[2] + cleanHex[2];
+    }
+    return {
+        r: parseInt(cleanHex.slice(0, 2), 16),
+        g: parseInt(cleanHex.slice(2, 4), 16),
+        b: parseInt(cleanHex.slice(4, 6), 16)
+    };
+};
+
+const pseudoRandom = (seed) => {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+};
+
+
+const drawGrainySpot = (ctx, cx, cy, r, rgb, opacity) => {
+    const density = Math.max(1, Math.floor(r * 1.5)); 
+    for (let k = 0; k < density; k++) {
+        const angle = pseudoRandom(cx * cy * k) * Math.PI * 2;
+        const dist = Math.sqrt(pseudoRandom(cx + cy + k)) * r;
+        const ox = Math.cos(angle) * dist;
+        const oy = Math.sin(angle) * dist;
+        
+        const grainOpacity = opacity * (0.2 + pseudoRandom(k) * 0.7);
+        ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${grainOpacity})`;
+        
+        const grainSize = 0.5 + pseudoRandom(k * 2); 
+        ctx.beginPath();
+        ctx.arc(cx + ox, cy + oy, grainSize, 0, Math.PI * 2);
+        ctx.fill();
+    }
+};
+
+const drawSegmentPencil = (ctx, p1, p2, color, opacity, size) => {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const rgb = hexToRgbObj(color);
+    
+    const dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    const stepSize = Math.max(1, size * 0.2); 
+    const steps = Math.ceil(dist / stepSize); 
+
+    for (let j = 0; j < steps; j++) {
+        const t = j / steps;
+        const x = p1.x + (p2.x - p1.x) * t;
+        const y = p1.y + (p2.y - p1.y) * t;
+        
+        const jitter = (pseudoRandom(x * y) - 0.5) * 0.5; 
+        drawGrainySpot(ctx, x + jitter, y + jitter, size / 2, rgb, opacity);
+    }
+};
+
+const drawSegmentOil = (ctx, p1, p2, color, opacity, size) => {
+    const rgb = hexToRgbObj(color);
+    ctx.lineCap = 'butt'; 
+    ctx.lineJoin = 'round';
+
+    const bristles = Math.max(12, size * 1.5); 
+    const spread = size * 0.8;
+
+    for (let i = 0; i < bristles; i++) {
+        const offset = (i / bristles - 0.5) * spread;
+        const lineAlpha = opacity * (0.8 + pseudoRandom(i) * 0.2);
+        
+        ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${lineAlpha})`;
+        ctx.lineWidth = (size / bristles) * 2; 
+
+        ctx.beginPath();
+        const jitter1 = (pseudoRandom(p1.x * i) - 0.5);
+        const jitter2 = (pseudoRandom(p2.x * i) - 0.5);
+        
+        ctx.moveTo(p1.x + offset + jitter1, p1.y + offset + jitter1);
+        ctx.lineTo(p2.x + offset + jitter2, p2.y + offset + jitter2);
+        ctx.stroke();
+    }
+};
+
+const drawSegmentCalligraphy = (ctx, p1, p2, color, opacity, size) => {
+    const rgb = hexToRgbObj(color);
+    ctx.lineCap = 'butt';
+    
+    const bristles = Math.max(6, size); 
+    const angle = Math.PI / 4; 
+    const dx = Math.cos(angle) * size;
+    const dy = Math.sin(angle) * size;
+
+    for (let i = 0; i < bristles; i++) {
+        const t = i / (bristles - 1);
+        const offsetX = dx * (t - 0.5);
+        const offsetY = dy * (t - 0.5);
+        
+        ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+        ctx.lineWidth = 1.5; 
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x + offsetX, p1.y + offsetY);
+        ctx.lineTo(p2.x + offsetX, p2.y + offsetY);
+        ctx.stroke();
+    }
+};
+
+const drawSegmentWatercolor = (ctx, p1, p2, color, opacity, size) => {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const rgb = hexToRgbObj(color);
+
+    const layers = [
+        { widthMult: 1.5, alphaMult: 0.15 },
+        { widthMult: 1.2, alphaMult: 0.25 },
+        { widthMult: 1.0, alphaMult: 0.35 },
+        { widthMult: 0.7, alphaMult: 0.45 }
+    ];
+
+    layers.forEach((layer, layerIndex) => {
+        const bristles = Math.max(3, Math.floor(size * 0.2));
+        for (let b = 0; b < bristles; b++) {
+            const offsetAngle = (b / bristles) * Math.PI * 2;
+            const offsetDist = (size * layer.widthMult * 0.15) * (b / bristles);
+            const ox = Math.cos(offsetAngle) * offsetDist;
+            const oy = Math.sin(offsetAngle) * offsetDist;
+            
+            const bristleAlpha = opacity * layer.alphaMult * (0.8 + pseudoRandom(b + layerIndex) * 0.2);
+            ctx.strokeStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${bristleAlpha})`;
+            ctx.lineWidth = size * layer.widthMult;
+
+            ctx.beginPath();
+            const jitter1 = (pseudoRandom(p1.x * b) - 0.5) * 0.5;
+            const jitter2 = (pseudoRandom(p2.x * b) - 0.5) * 0.5;
+
+            ctx.moveTo(p1.x + ox + jitter1, p1.y + oy + jitter1);
+            ctx.lineTo(p2.x + ox + jitter2, p2.y + oy + jitter2);
+            ctx.stroke();
+        }
+    });
+};
+
+const drawSegmentSplatter = (ctx, p1, p2, color, opacity, size) => {
+    const rgb = hexToRgbObj(color);
+    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`;
+    
+    const dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    const step = Math.max(5, size / 1.2);
+    
+    for (let currentPos = 0; currentPos < dist; currentPos += step) {
+        const t = currentPos / dist;
+        const tx = p1.x + (p2.x - p1.x) * t;
+        const ty = p1.y + (p2.y - p1.y) * t;
+
+        const blobSize = size * (0.3 + pseudoRandom(tx) * 0.6);
+        const shiftX = (pseudoRandom(ty) - 0.5) * size * 1.5;
+        const shiftY = (pseudoRandom(tx) - 0.5) * size * 1.5;
+        
+        ctx.beginPath();
+        ctx.arc(tx + shiftX, ty + shiftY, blobSize, 0, Math.PI * 2);
+        ctx.fill();
+
+        const droplets = Math.floor(pseudoRandom(tx * ty) * 4); 
+        for (let d = 0; d < droplets; d++) {
+            const angle = pseudoRandom(tx + d) * Math.PI * 2;
+            const dropDist = size * (0.5 + pseudoRandom(ty + d));
+            const dropRadius = size * (0.05 + pseudoRandom(d) * 0.1);
+            
+            const dx = tx + shiftX + Math.cos(angle) * dropDist;
+            const dy = ty + shiftY + Math.sin(angle) * dropDist;
+            
+            ctx.beginPath();
+            ctx.arc(dx, dy, dropRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+};
+
+const drawSegmentSimple = (ctx, p1, p2, color, opacity, size) => {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = size;
+    ctx.strokeStyle = hexToRgba(color, opacity);
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.stroke();
+};
+
+export const drawSegment = (ctx, p1, p2, options) => {
+    const { color, opacity, brushSize, brushStyle } = options;
+    const opVal = opacity !== undefined ? opacity / 100 : 1;
+    
+    ctx.save();
+    switch (brushStyle) {
+        case 'pencil':
+            drawSegmentPencil(ctx, p1, p2, color, opVal, brushSize);
+            break;
+        case 'calligraphy':
+            drawSegmentCalligraphy(ctx, p1, p2, color, opVal, brushSize);
+            break;
+        case 'oil':
+            drawSegmentOil(ctx, p1, p2, color, opVal, brushSize);
+            break;
+        case 'watercolor':
+            drawSegmentWatercolor(ctx, p1, p2, color, opVal, brushSize);
+            break;
+        case 'splatter':
+            drawSegmentSplatter(ctx, p1, p2, color, opVal, brushSize);
+            break;
+        case 'hard':
+        default:
+            drawSegmentSimple(ctx, p1, p2, color, opVal, brushSize);
+            break;
+    }
+    ctx.restore();
+};
+
+
+const drawRealPencil = (ctx, path, color, opacity, size, lineType) => {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    if (lineType === 'solid') {
+         const rgb = hexToRgbObj(color);
+         const stepSize = Math.max(1, size * 0.2); 
+
+         for (let i = 0; i < path.points.length - 1; i++) {
+            const p1 = path.points[i];
+            const p2 = path.points[i+1];
+
+            const distSq = (p2.x - p1.x)**2 + (p2.y - p1.y)**2;
+            if (distSq < 2 && i < path.points.length - 2) continue;
+
+            const dist = Math.sqrt(distSq);
+            const steps = Math.ceil(dist / stepSize);
+
+            for (let j = 0; j < steps; j++) {
+                const t = j / steps;
+                const x = p1.x + (p2.x - p1.x) * t;
+                const y = p1.y + (p2.y - p1.y) * t;
+                const jitter = (pseudoRandom(x * y) - 0.5) * 0.5; 
+                drawGrainySpot(ctx, x + jitter, y + jitter, size / 2, rgb, opacity);
+            }
+        }
+    } else {
+        const rgb = hexToRgbObj(color);
+        const isDot = lineType === 'dotted';
+        const dashLen = isDot ? size * 0.1 : size * 3;
+        const gapLen = isDot ? size * 1.1 : size * 2; 
+        const segmentLen = dashLen + gapLen;
+        let distAccum = 0;
+        
+        for (let i = 0; i < path.points.length - 1; i++) {
+            const p1 = path.points[i];
+            const p2 = path.points[i+1];
+            const dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+            
+            let currentPos = 0;
+            const checkStep = Math.max(1, size * 0.1); 
+
+            while (currentPos < dist) {
+                const totalDist = distAccum + currentPos;
+                const phase = totalDist % segmentLen;
+                if (phase < dashLen || (isDot && phase < size)) {
+                    const t = currentPos / dist;
+                    const x = p1.x + (p2.x - p1.x) * t;
+                    const y = p1.y + (p2.y - p1.y) * t;
+                    drawGrainySpot(ctx, x, y, size / 2, rgb, opacity);
+                }
+                currentPos += checkStep; 
+            }
+            distAccum += dist;
+        }
+    }
+};
+
+const drawOilPaint = (ctx, path, color, opacity, size) => {
+    if(path.points.length > 1) {
+
+        const step = Math.max(2, size * 0.15); 
+        
+        let distAccum = 0;
+
+        for(let i=0; i<path.points.length-1; i++) {
+            const p1 = path.points[i];
+            const p2 = path.points[i+1];
+            
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+
+            if (distAccum + dist < step && i < path.points.length - 2) {
+                distAccum += dist;
+                continue;
+            }
+
+            drawSegmentOil(ctx, p1, p2, color, opacity, size);
+
+            distAccum = 0;
+        }
+        
+        const lastP1 = path.points[path.points.length - 2];
+        const lastP2 = path.points[path.points.length - 1];
+        drawSegmentOil(ctx, lastP1, lastP2, color, opacity, size);
+    }
+};
+
+const drawCalligraphy = (ctx, path, color, opacity, size) => {
+    if(path.points.length > 1) {
+        for(let i=0; i<path.points.length-1; i++) {
+            const p1 = path.points[i];
+            const p2 = path.points[i+1];
+            const distSq = (p2.x - p1.x)**2 + (p2.y - p1.y)**2;
+
+            if (distSq < 2 && i < path.points.length - 2) continue;
+            drawSegmentCalligraphy(ctx, p1, p2, color, opacity, size);
+        }
+    }
+};
+
+const drawWatercolor = (ctx, path, color, opacity, size) => {
+    if(path.points.length > 1) {
+        for(let i=0; i<path.points.length-1; i++) {
+            const p1 = path.points[i];
+            const p2 = path.points[i+1];
+
+            const distSq = (p2.x - p1.x)**2 + (p2.y - p1.y)**2;
+            if (distSq < 2.25 && i < path.points.length - 2) continue;
+            drawSegmentWatercolor(ctx, p1, p2, color, opacity, size);
+        }
+    }
+};
+
+const drawSplatter = (ctx, path, color, opacity, size) => {
+    if(path.points.length > 1) {
+        for(let i=0; i<path.points.length-1; i++) {
+            const p1 = path.points[i];
+            const p2 = path.points[i+1];
+            const distSq = (p2.x - p1.x)**2 + (p2.y - p1.y)**2;
+            if (distSq < 1 && i < path.points.length - 2) continue;
+            drawSegmentSplatter(ctx, p1, p2, color, opacity, size);
+        }
+    }
+};
+
+const drawHardRound = (ctx, path, color, opacity, size, lineType) => {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = size;
+    ctx.strokeStyle = hexToRgba(color, opacity);
+    
+    if (lineType === 'solid') {
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        if (path.points.length > 0) {
+            ctx.moveTo(path.points[0].x, path.points[0].y);
+            for (let i = 1; i < path.points.length; i++) {
+                const p = path.points[i];
+
+                const prev = path.points[i-1];
+                if (Math.abs(p.x - prev.x) < 0.5 && Math.abs(p.y - prev.y) < 0.5 && i < path.points.length - 1) continue;
+                
+                ctx.lineTo(p.x, p.y);
+            }
+        }
+        ctx.stroke();
+        return;
+    }
+
+    const isDot = lineType === 'dotted';
+    const dashLen = isDot ? 0.1 : size * 3; 
+    const gapLen = size * 2; 
+    
+    ctx.setLineDash([dashLen, gapLen]);
+    ctx.lineCap = isDot ? 'round' : 'butt'; 
+
+    ctx.beginPath();
+    if (path.points.length > 0) {
+        ctx.moveTo(path.points[0].x, path.points[0].y);
+        for (let i = 1; i < path.points.length; i++) {
+            ctx.lineTo(path.points[i].x, path.points[i].y);
+        }
+    }
+    ctx.stroke();
+    ctx.setLineDash([]); 
+};
+
+
+export const drawPath = (ctx, path, isSelected = false) => {
+  if (path.points.length < 2) return;
+  
+  ctx.save();
+  
+  const opacity = path.opacity !== undefined ? path.opacity / 100 : 1;
+  const color = isSelected ? '#FFD700' : path.color;
+  const brushStyle = path.brushStyle || 'hard';
+  const lineType = path.lineType || 'solid';
+  const size = path.brushSize;
+
+  if (isSelected) {
+      ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+      ctx.lineWidth = size + 6;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(path.points[0].x, path.points[0].y);
+      for (let i = 1; i < path.points.length; i++) {
+          ctx.lineTo(path.points[i].x, path.points[i].y);
+      }
+      ctx.stroke();
+  }
+
+  switch (brushStyle) {
+      case 'pencil':
+          drawRealPencil(ctx, path, color, opacity, size, lineType);
+          break;
+      case 'calligraphy':
+          drawCalligraphy(ctx, path, color, opacity, size);
+          break;
+      case 'oil':
+          drawOilPaint(ctx, path, color, opacity, size);
+          break;
+      case 'watercolor':
+          drawWatercolor(ctx, path, color, opacity, size);
+          break;
+      case 'splatter':
+          drawSplatter(ctx, path, color, opacity, size);
+          break;
+      case 'hard':
+      default:
+          drawHardRound(ctx, path, color, opacity, size, lineType);
+          break;
+  }
+  
+  ctx.restore();
+};
+
 const drawCorner = (ctx, x1, y1, x2, y2, x3, y3, strokeStyle, lineWidth) => {
   ctx.save();
   ctx.strokeStyle = strokeStyle;
@@ -48,7 +497,6 @@ const drawStyledLine = (ctx, x1, y1, x2, y2, borderStyle, borderWidth, strokeSty
     const numSegments = Math.max(2, Math.floor(adjustedLength / totalSegmentInitial));
     
     if (numSegments === 2 && adjustedLength < totalSegmentInitial * 2) {
-
       const scaledDash = adjustedLength * 0.35; 
       const scaledGap = adjustedLength * 0.3;  
       
@@ -100,7 +548,6 @@ const drawStyledLine = (ctx, x1, y1, x2, y2, borderStyle, borderWidth, strokeSty
       ctx.fill();
     }
   } else {
- 
     ctx.beginPath();
     ctx.moveTo(sx, sy);
     ctx.lineTo(x2 - dirX * endOffset, y2 - dirY * endOffset);
@@ -323,22 +770,18 @@ const drawLineCap = (ctx, x, y, angle, capType, size, color, opacity, lineWidth)
   let offset = 0;
   
   if (capType === 'round') {
- 
     const circleRadius = Math.max(lineWidth * 0.75, 4);
     ctx.beginPath();
     ctx.arc(0, 0, circleRadius, 0, Math.PI * 2);
     ctx.fill();
     offset = 0; 
   } else if (capType === 'arrow') {
-   
     ctx.beginPath();
-   
     ctx.moveTo(0, 0); 
     ctx.lineTo(-size, -size * 0.5);
     ctx.lineTo(-size, size * 0.5);
     ctx.closePath();
     ctx.fill();
- 
     offset = size; 
   } else if (capType === 'circle') {
     ctx.beginPath();
@@ -393,7 +836,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   const PADDING = 2;
 
   if (textObj.rotation) {
-
     const centerX = textObj.x + maxWidth / 2;
     const centerY = textObj.y + totalHeight / 2;
     
@@ -452,30 +894,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   
   ctx.restore();
   return textObj;
-};
-
-export const drawPath = (ctx, path, isSelected = false) => {
-  if (path.points.length < 2) return;
-  
-  ctx.strokeStyle = isSelected ? '#FFD700' : path.color;
-  ctx.lineWidth = path.brushSize;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  
-  if (isSelected) {
-    ctx.shadowColor = '#FFD700';
-    ctx.shadowBlur = 5;
-  }
-  
-  ctx.beginPath();
-  ctx.moveTo(path.points[0].x, path.points[0].y);
-  
-  for (let i = 1; i < path.points.length; i++) {
-    ctx.lineTo(path.points[i].x, path.points[i].y);
-  }
-  
-  ctx.stroke();
-  ctx.shadowBlur = 0;
 };
 
 
@@ -727,7 +1145,6 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
       ctx.stroke();
     }
     
-  
     if (lineCapStart !== 'butt') {
       drawLineCap(ctx, shape.startX, shape.startY, angle + Math.PI, lineCapStart, arrowSize, borderColor, borderOpacity, borderWidth);
     }
