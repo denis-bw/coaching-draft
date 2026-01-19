@@ -117,16 +117,10 @@ const BrushButton = styled.button`
   padding: 8px;
   overflow: hidden;
 
-  /* Стиль для картинки всередині */
   img {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Картинка впишеться, не обрізаючись */
-    
-    /* Якщо треба, щоб картинка ставала білою на активній кнопці, розкоментуйте це: */
-    /* filter: ${({ active }) => active ? 'brightness(0) invert(1)' : 'none'}; */
-    
-    /* Але краще залишити як є, якщо штрихи чорні, а активна кнопка світло-зелена */
+    object-fit: contain; 
   }
 
   &:hover {
@@ -244,32 +238,26 @@ const DrawingToolsPanel = () => {
           {selectedPath ? 'Пензель' : 'Тип пензля'}
         </SectionTitle>
         <BrushGrid>
-          {/* 1. МАРКЕР */}
           <BrushButton active={currentStyle === 'hard'} onClick={() => handleBrushSelect('hard')} title="Маркер">
             <img src={markerImg} alt="Маркер" />
           </BrushButton>
 
-          {/* 2. ОЛІВЕЦЬ */}
           <BrushButton active={currentStyle === 'pencil'} onClick={() => handleBrushSelect('pencil')} title="Олівець">
             <img src={pencilImg} alt="Олівець" />
           </BrushButton>
 
-          {/* 3. ПЕРО */}
           <BrushButton active={currentStyle === 'calligraphy'} onClick={() => handleBrushSelect('calligraphy')} title="Перо">
             <img src={penImg} alt="Перо" />
           </BrushButton>
 
-          {/* 4. ОЛІЯ */}
           <BrushButton active={currentStyle === 'oil'} onClick={() => handleBrushSelect('oil')} title="Олія">
             <img src={oilImg} alt="Олія" />
           </BrushButton>
 
-          {/* 5. АКВАРЕЛЬ */}
           <BrushButton active={currentStyle === 'watercolor'} onClick={() => handleBrushSelect('watercolor')} title="Акварель">
             <img src={watercolorImg} alt="Акварель" />
           </BrushButton>
 
-          {/* 6. СПРЕЙ */}
           <BrushButton active={currentStyle === 'splatter'} onClick={() => handleBrushSelect('splatter')} title="Спрей">
             <img src={sprayImg} alt="Спрей" />
           </BrushButton>

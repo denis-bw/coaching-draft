@@ -58,12 +58,10 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
       }
 
       const currentHash = JSON.stringify(obj);
-      
       const cachedData = smartCacheRef.current.get(obj.id);
 
       if (cachedData && cachedData.hash === currentHash && cachedData.cache) {
           const { cache } = cachedData;
-
           const bounds = getObjectBounds(obj, canvas);
           if (bounds) {
              const padding = (obj.brushSize || obj.borderWidth || 10) * 2 + 20;
@@ -75,13 +73,11 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
       }
 
       const newCache = createObjectCache(obj, canvas);
-      
       if (newCache) {
           smartCacheRef.current.set(obj.id, {
               hash: currentHash,
               cache: newCache
           });
-          
           const bounds = getObjectBounds(obj, canvas);
           if (bounds) {
              const padding = (obj.brushSize || obj.borderWidth || 10) * 2 + 20;
@@ -92,7 +88,7 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
       }
   }, []);
 
-  const redrawStatic = useCallback((paths, objects, activeTool, drawColor, brushSize, excludeObjectId = null) => {
+  const redrawStatic = useCallback((paths, objects, activeTool, drawColor, brushSize, excludeObjectId = null, hiddenIds = new Set()) => {
     const canvas = staticCanvasRef.current;
     if (!canvas) return;
     
@@ -100,8 +96,9 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
     const ctx = canvas.getContext('2d');
 
     paths.forEach((path, index) => {
-      const pathId = `path_${index}`;
-      if (pathId === excludeObjectId) return;
+        const pathId = `path_${index}`;
+        
+      if (pathId === excludeObjectId || hiddenIds.has(pathId)) return;
       if (path.points.length < 2) return;
       
       const pathObj = { ...path, type: 'path', id: pathId };
@@ -109,7 +106,7 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
     });
 
     objects.forEach(obj => {
-      if (obj.id === excludeObjectId) return;
+      if (obj.id === excludeObjectId || hiddenIds.has(obj.id)) return;
       drawCachedOrReal(ctx, obj, drawColor, false, canvas);
     });
 
@@ -121,7 +118,6 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
     const ctx = canvas.getContext('2d');
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     ctx.save();
     
     if (obj._cache) {
@@ -196,12 +192,10 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
                  lineCapEnd: lineCapEnd,
                  rotation: 0
              };
-             
              drawShape(ctx, tempShape, false, borderColor);
          } else {
              const width = end.x - start.x;
              const height = end.y - start.y;
-
              const tempShape = {
                  type: 'shape',
                  shape: type,
@@ -218,7 +212,6 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
                  rotation: 0,
                  ignoreMinSize: true 
              };
-
              drawShape(ctx, tempShape, false, borderColor);
          }
       }

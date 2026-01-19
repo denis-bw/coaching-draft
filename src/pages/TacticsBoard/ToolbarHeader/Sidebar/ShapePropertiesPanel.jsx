@@ -125,21 +125,10 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
     const sign = (selectedObject[dimension] || 1) < 0 ? -1 : 1;
     numValue *= sign;
 
-    if (selectedObject.shape === 'circle') {
-      dispatch(updateObject({
-        id: selectedObject.id,
-        updates: {
-          width: numValue,
-          height: numValue
-        }
-      }));
-    } else {
-      handleObjectUpdate(dimension, numValue);
-    }
+    handleObjectUpdate(dimension, numValue);
   };
 
   const isLineOrArrow = selectedObject.shape === 'line' || selectedObject.shape === 'arrow';
-  const isCircle = selectedObject.shape === 'circle';
 
   return (
     <Section>
@@ -147,36 +136,27 @@ const ShapePropertiesPanel = ({ selectedObject }) => {
       
       {!isLineOrArrow && (
         <PropertyRow>
-          <PropertyLabel>{isCircle ? 'Діаметр' : 'Розміри'}</PropertyLabel>
-          {isCircle ? (
-            <Input 
-              type="number"
-              min={MIN_ALLOWED_SIZE}
-              value={Math.abs(selectedObject.width || 50)}
-              onChange={(e) => handleSizeChange('width', e.target.value)}
-            />
-          ) : (
-            <DimensionsGrid>
-              <div>
-                <PropertyLabel style={{ fontSize: '10px', marginBottom: '4px' }}>Ширина</PropertyLabel>
-                <Input 
-                  type="number"
-                  min={MIN_ALLOWED_SIZE}
-                  value={Math.abs(selectedObject.width || 50)}
-                  onChange={(e) => handleSizeChange('width', e.target.value)}
-                />
-              </div>
-              <div>
-                <PropertyLabel style={{ fontSize: '10px', marginBottom: '4px' }}>Висота</PropertyLabel>
-                <Input 
-                  type="number"
-                  min={MIN_ALLOWED_SIZE}
-                  value={Math.abs(selectedObject.height || 30)}
-                  onChange={(e) => handleSizeChange('height', e.target.value)}
-                />
-              </div>
-            </DimensionsGrid>
-          )}
+          <PropertyLabel>Розміри</PropertyLabel>
+          <DimensionsGrid>
+            <div>
+              <PropertyLabel style={{ fontSize: '10px', marginBottom: '4px' }}>Ширина</PropertyLabel>
+              <Input 
+                type="number"
+                min={MIN_ALLOWED_SIZE}
+                value={Math.abs(selectedObject.width || 50)}
+                onChange={(e) => handleSizeChange('width', e.target.value)}
+              />
+            </div>
+            <div>
+              <PropertyLabel style={{ fontSize: '10px', marginBottom: '4px' }}>Висота</PropertyLabel>
+              <Input 
+                type="number"
+                min={MIN_ALLOWED_SIZE}
+                value={Math.abs(selectedObject.height || 30)}
+                onChange={(e) => handleSizeChange('height', e.target.value)}
+              />
+            </div>
+          </DimensionsGrid>
         </PropertyRow>
       )}
 

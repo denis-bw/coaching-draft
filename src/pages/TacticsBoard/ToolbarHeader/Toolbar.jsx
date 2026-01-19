@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { ReactComponent as FieldIcon } from '../../../assets/field.svg';
 import { ReactComponent as CursorIconBase } from '../../../assets/cursor.svg';
 import { ReactComponent as PencilIconBase } from '../../../assets/pencil.svg';
+import { ReactComponent as EraserIconBase } from '../../../assets/EraserIcon.svg';
 import { ReactComponent as СancelIconBase } from '../../../assets/cancel.svg';
 import { ReactComponent as ForwardIconBase } from '../../../assets/forward.svg';
 import { ReactComponent as TextIconBase } from '../../../assets/text.svg';
@@ -65,6 +66,12 @@ const CursorIcon = styled(CursorIconBase)`
 `;
 
 const PencilIcon = styled(PencilIconBase)`
+  width: 70%;  
+  height: 70%;
+  fill: ${({ theme }) => theme.textBlack};
+`;
+
+const EraserIcon = styled(EraserIconBase)`
   width: 70%;  
   height: 70%;
   fill: ${({ theme }) => theme.textBlack};
@@ -272,13 +279,10 @@ const ColorPickerStyled = styled.input`
   }
 `;
 
-// Оптимізований компонент ColorPicker з Debounce логікою
 const DebouncedColorPicker = ({ value, onChange, ...props }) => {
   const [localValue, setLocalValue] = useState(value);
   const debounceTimerRef = useRef(null);
 
-  // Синхронізація з зовнішніми змінами (наприклад, Undo/Redo)
-  // Оновлюємо локальний стейт тільки якщо не тягнемо повзунок (таймер не активний)
   useEffect(() => {
     if (!debounceTimerRef.current) {
       setLocalValue(value);
@@ -287,15 +291,12 @@ const DebouncedColorPicker = ({ value, onChange, ...props }) => {
 
   const handleChange = (e) => {
     const newValue = e.target.value;
-    // 1. Миттєво оновлюємо UI інпута
     setLocalValue(newValue);
 
-    // 2. Скасовуємо попередній таймер
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
-    // 3. Відкладаємо відправку в Redux на 200 мс після зупинки руху
     debounceTimerRef.current = setTimeout(() => {
       onChange(newValue);
       debounceTimerRef.current = null;
@@ -421,6 +422,14 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
               <PencilIcon/>
             </ToolButton>
           
+            {/* Ластик (Додано) */}
+            <ToolButton 
+              title="Ластик"
+              active={activeTool === 'eraser'}
+              onClick={() => handleToolClick('eraser')}
+            >
+              <EraserIcon />
+            </ToolButton>
           
             {/* Геометричні фігури */}
             <GeometricShapesTool 

@@ -62,6 +62,7 @@ const initialState = {
   activeTool: 'cursor',
   drawColor: '#000000',
   brushSize: 4,
+  eraserSize: 30, 
   brushOpacity: 100,
   brushStyle: 'hard',
   lineType: 'solid',
@@ -165,6 +166,10 @@ const TacticsBoardSlice = createSlice({
         if (state.brushSettings[state.brushStyle]) {
             state.brushSettings[state.brushStyle].size = newSize;
         }
+    },
+
+    setEraserSize: (state, action) => {
+        state.eraserSize = action.payload;
     },
 
     setBrushOpacity: (state, action) => { 
@@ -284,6 +289,39 @@ const TacticsBoardSlice = createSlice({
       if (state.selectedObjectId === idToDelete) state.selectedObjectId = null;
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
+
+    deleteObjects: (state, action) => {
+        const idsToDelete = new Set(action.payload);
+        
+        if (idsToDelete.size === 0) return;
+
+        const objectsToDelete = state.objects.filter(obj => idsToDelete.has(obj.id));
+        objectsToDelete.forEach(obj => {
+             if (obj.type === 'player') {
+                if (obj.team === 1) state.team1.count = Math.max(0, state.team1.count - 1);
+                else if (obj.team === 2) state.team2.count = Math.max(0, state.team2.count - 1);
+             }
+        });
+        state.objects = state.objects.filter(obj => !idsToDelete.has(obj.id));
+
+        const pathIndicesToDelete = new Set();
+        idsToDelete.forEach(id => {
+            if (id.startsWith('path_')) {
+                pathIndicesToDelete.add(parseInt(id.replace('path_', '')));
+            }
+        });
+
+        if (pathIndicesToDelete.size > 0) {
+             state.paths = state.paths.filter((_, index) => !pathIndicesToDelete.has(index));
+        }
+
+        if (state.selectedObjectId && idsToDelete.has(state.selectedObjectId)) {
+            state.selectedObjectId = null;
+        }
+
+        TacticsBoardSlice.caseReducers.saveToHistory(state);
+    },
+
     selectObject: (state, action) => { state.selectedObjectId = action.payload; },
     deselectObject: (state) => { state.selectedObjectId = null; },
     moveObject: (state, action) => {
@@ -509,7 +547,8 @@ const TacticsBoardSlice = createSlice({
         textFontStyle: state.textFontStyle,
         textDecoration: state.textDecoration,
         textLineHeight: state.textLineHeight,
-        textLetterSpacing: state.textLetterSpacing
+        textLetterSpacing: state.textLetterSpacing,
+        eraserSize: state.eraserSize
       };
       state.history = state.history.slice(0, state.historyIndex + 1);
       state.history.push(snapshot);
@@ -535,6 +574,7 @@ const TacticsBoardSlice = createSlice({
         state.textDecoration = snapshot.textDecoration || 'none';
         state.textLineHeight = snapshot.textLineHeight || 1.1;
         state.textLetterSpacing = snapshot.textLetterSpacing || 0;
+        state.eraserSize = snapshot.eraserSize || 30;
         state.selectedObjectId = null;
       }
     },
@@ -557,6 +597,7 @@ const TacticsBoardSlice = createSlice({
         state.textDecoration = snapshot.textDecoration || 'none';
         state.textLineHeight = snapshot.textLineHeight || 1.1;
         state.textLetterSpacing = snapshot.textLetterSpacing || 0;
+        state.eraserSize = snapshot.eraserSize || 30;
         state.selectedObjectId = null;
       }
     },
@@ -633,8 +674,8 @@ const TacticsBoardSlice = createSlice({
 });
 
 export const {
-  setActiveTool, setDrawColor, setBrushSize, 
-  setTextFontSize, setTextColor, setTextOpacity, 
+  setActiveTool, setDrawColor, setBrushSize,
+  setEraserSize, deleteObjects, setTextFontSize, setTextColor, setTextOpacity, 
   setTextFontFamily, setTextFontWeight, setTextFontStyle, 
   setTextDecoration, setTextLineHeight, setTextLetterSpacing,
   setShapeBorderWidth, setShapeColor, setShapeBorderColor, setShapeBorderOpacity,

@@ -29,7 +29,6 @@ const pseudoRandom = (seed) => {
     return x - Math.floor(x);
 };
 
-
 const drawGrainySpot = (ctx, cx, cy, r, rgb, opacity) => {
     const density = Math.max(1, Math.floor(r * 1.5)); 
     for (let k = 0; k < density; k++) {
@@ -228,7 +227,6 @@ export const drawSegment = (ctx, p1, p2, options) => {
     ctx.restore();
 };
 
-
 const drawRealPencil = (ctx, path, color, opacity, size, lineType) => {
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -397,7 +395,6 @@ const drawHardRound = (ctx, path, color, opacity, size, lineType) => {
     ctx.stroke();
     ctx.setLineDash([]); 
 };
-
 
 export const drawPath = (ctx, path, isSelected = false) => {
   if (path.points.length < 2) return;
@@ -896,7 +893,6 @@ export const drawText = (ctx, textObj, isSelected = false) => {
   return textObj;
 };
 
-
 export const drawPlayer = (ctx, player, isSelected) => {
   ctx.save();
   
@@ -1178,10 +1174,11 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
       if (shape.shape === 'rectangle') {
         ctx.rect(x, y, actualW, actualH);
       } else if (shape.shape === 'circle') {
-        const radius = Math.max(Math.abs(actualW), Math.abs(actualH)) / 2;
         const centerX = x + actualW / 2;
         const centerY = y + actualH / 2;
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        const radiusX = Math.abs(actualW) / 2;
+        const radiusY = Math.abs(actualH) / 2;
+        ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
       } else if (shape.shape === 'triangle') {
         ctx.moveTo(x + actualW/2, y);
         ctx.lineTo(x, y + actualH);
@@ -1208,90 +1205,50 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
         ];
         drawStyledLineWithCorners(ctx, points, borderStyle, borderWidth, strokeStyle);
       } else if (shape.shape === 'circle') {
-        const radius = Math.max(Math.abs(actualW), Math.abs(actualH)) / 2;
-        const centerX = x + actualW / 2;
-        const centerY = y + actualH / 2;
-        const circumference = 2 * Math.PI * radius;
-        
-        const dashLength = Math.max(borderWidth * 2.5, Math.min(borderWidth * 4, circumference / 25));
-        const minGapLength = Math.max(borderWidth * 1.5, dashLength * 0.5);
-        const totalSegmentInitial = dashLength + minGapLength;
-        
-        if (circumference < 30) {
-          ctx.strokeStyle = strokeStyle;
-          ctx.lineWidth = borderWidth;
-          ctx.beginPath();
-          ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-          ctx.stroke();
-        } else if (borderStyle === 'dashed') {
-          const numFullSegments = Math.floor(circumference / totalSegmentInitial);
-          
-          if (numFullSegments === 0) {
-            ctx.strokeStyle = strokeStyle;
-            ctx.lineWidth = borderWidth;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.stroke();
-          } else {
-            const totalGapLength = circumference - (numFullSegments * dashLength);
-            const adjustedGap = totalGapLength / numFullSegments;
-            const actualSegmentAngle = (dashLength + adjustedGap) / radius;
-            const dashAngle = dashLength / radius;
-            const fullSegmentLength = dashLength + adjustedGap;
-            const totalSegmentsLength = numFullSegments * fullSegmentLength - adjustedGap;
-            const remainingArc = circumference - totalSegmentsLength;
-            const startPhase = remainingArc / 2; 
-            const startAngleOffset = startPhase / radius;
-            
-            ctx.strokeStyle = strokeStyle;
-            ctx.lineWidth = borderWidth;
-            ctx.lineCap = 'butt';
-            
-            for (let i = 0; i < numFullSegments; i++) {
-              const startAngle = startAngleOffset + i * actualSegmentAngle;
-              const endAngle = startAngle + dashAngle;
-              ctx.beginPath();
-              ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-              ctx.stroke();
-            }
-          }
-        } else if (borderStyle === 'dotted') {
-          const dotRadius = borderWidth / 2;
-          const dotSpacing = Math.max(borderWidth * 2, circumference / 60);
-          const numDots = Math.max(8, Math.round(circumference / dotSpacing));
-          const angleStep = (2 * Math.PI) / numDots;
-          
-          ctx.fillStyle = strokeStyle;
-          for (let i = 0; i < numDots; i++) {
-            const angle = i * angleStep;
-            const dotX = centerX + radius * Math.cos(angle);
-            const dotY = centerY + radius * Math.sin(angle);
-            ctx.beginPath();
-            ctx.arc(dotX, dotY, dotRadius, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
+           const centerX = x + actualW / 2;
+           const centerY = y + actualH / 2;
+           const radiusX = Math.abs(actualW) / 2;
+           const radiusY = Math.abs(actualH) / 2;
+
+           const h_val = Math.pow(radiusX - radiusY, 2) / Math.pow(radiusX + radiusY, 2);
+           const perimeter = Math.PI * (radiusX + radiusY) * (1 + (3 * h_val) / (10 + Math.sqrt(4 - 3 * h_val)));
+
+           ctx.beginPath();
+           if (borderStyle === 'dashed') {
+               const dashLen = Math.max(borderWidth * 2.5, Math.min(borderWidth * 4, perimeter / 25));
+               const minGapLength = Math.max(borderWidth * 1.5, dashLen * 0.5);
+               const totalPatternLen = dashLen + minGapLength;
+               const numSegments = Math.max(2, Math.round(perimeter / totalPatternLen));
+               const adjustedPatternLen = perimeter / numSegments;
+               const adjustedGap = adjustedPatternLen - dashLen;
+               
+               ctx.setLineDash([dashLen, adjustedGap]);
+               ctx.lineCap = 'butt';
+           } else if (borderStyle === 'dotted') {
+               const dotSpacing = Math.max(borderWidth * 2, perimeter / 60);
+               const numDots = Math.round(perimeter / dotSpacing);
+               const adjustedSpacing = perimeter / numDots;
+               
+               ctx.setLineDash([0, adjustedSpacing]);
+               ctx.lineCap = 'round';
+           }
+           
+           ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
+           ctx.stroke();
+           ctx.setLineDash([]);
+           ctx.lineCap = 'butt';
       }
     } else {
       ctx.beginPath();
       if (shape.shape === 'rectangle') {
-        const x = shape.x;
-        const y = shape.y;
-        const w = shape.width || 50;
-        const h = shape.height || 30;
         ctx.rect(x, y, actualW, actualH);
       } else if (shape.shape === 'circle') {
-        const x = shape.x;
-        const y = shape.y;
-        const w = shape.width || 50;
-        const h = shape.height || 30;
-        const radius = Math.max(Math.abs(actualW), Math.abs(actualH)) / 2;
         const centerX = x + actualW / 2;
         const centerY = y + actualH / 2;
-        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        const radiusX = Math.abs(actualW) / 2;
+        const radiusY = Math.abs(actualH) / 2;
+        ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, 2 * Math.PI);
       } else if (shape.shape === 'triangle') {
-        const x = shape.x;
-        const y = shape.y;
         ctx.moveTo(x + actualW/2, y);
         ctx.lineTo(x, y + actualH);
         ctx.lineTo(x + actualW, y + actualH);

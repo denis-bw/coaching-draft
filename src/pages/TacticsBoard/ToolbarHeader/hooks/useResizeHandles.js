@@ -5,7 +5,6 @@ const MIN_PLAYER_SIZE = 8;
 const MAX_PLAYER_SIZE = 70;
 const MIN_BALL_SIZE = 5;
 const MAX_BALL_SIZE = 50;
-const MIN_FONT_SIZE = 5;
 
 const getCorners = (cx, cy, w, h, rotation) => {
   const rad = (rotation * Math.PI) / 180;
@@ -54,12 +53,9 @@ export const useResizeHandles = () => {
        actualWidth = object.size || 30;
        actualHeight = object.size || 30;
     } else if (object.type === 'text') {
-
-      
        actualWidth = bounds.originalWidth || bounds.width; 
        actualHeight = bounds.originalHeight || bounds.height;
     } else {
-
        actualWidth = object.width !== undefined ? object.width : bounds.width;
        actualHeight = object.height !== undefined ? object.height : bounds.height;
     }
@@ -125,7 +121,7 @@ export const useResizeHandles = () => {
     const my = startLocalMouse.y - cy;
     
     let startDistanceFromCenter = 0;
-    if (object.shape === 'circle' || ['player', 'ball', 'figure'].includes(object.type)) {
+    if (['player', 'ball', 'figure'].includes(object.type)) {
       startDistanceFromCenter = Math.sqrt(Math.pow(startPos.x - cx, 2) + Math.pow(startPos.y - cy, 2));
     }
 
@@ -181,7 +177,7 @@ export const useResizeHandles = () => {
       rotation, lineStartX, lineStartY, lineEndX, lineEndY,
       startPos, startLocalLeft, startLocalRight, startLocalTop, startLocalBottom,
       isHandleLeft, isHandleRight, isHandleTop, isHandleBottom,
-      startFlippedX, startFlippedY, startWidth, startHeight, startX, startY,
+      startFlippedX, startFlippedY, startWidth, startHeight,
       anchorPoint, startVectorX, startVectorY, startLengthSq, pressOffsetX, pressOffsetY
     } = resizeHandleRef.current;
 
@@ -198,20 +194,19 @@ export const useResizeHandles = () => {
         let scale = dotProduct / startLengthSq;
 
         if (!['topLeft', 'topRight', 'bottomLeft', 'bottomRight'].includes(handle)) {
-
              const distStart = Math.sqrt(startLengthSq);
              const distCurrent = Math.sqrt(currentVectorX*currentVectorX + currentVectorY*currentVectorY);
              const sign = dotProduct > 0 ? 1 : -1;
              scale = (distCurrent / distStart) * sign;
         }
 
-      const MIN_FONT_LIMIT = 8;
+        const MIN_FONT_LIMIT = 8;
         let newFontSize = startFontSize * scale;
 
         if (newFontSize < MIN_FONT_LIMIT) {
           newFontSize = MIN_FONT_LIMIT;
           scale = MIN_FONT_LIMIT / startFontSize;
-      }
+        }
       
         if (scale < 0.1) scale = 0.1;
 
@@ -263,21 +258,14 @@ export const useResizeHandles = () => {
        return updatedObject;
     }
 
-    if (object.shape === 'circle' || ['player', 'ball', 'figure'].includes(object.type)) {
+    if (['player', 'ball', 'figure'].includes(object.type)) {
        const currentDist = Math.sqrt(
          Math.pow(pos.x - startCenterX, 2) + Math.pow(pos.y - startCenterY, 2)
        );
        const scale = startDistanceFromCenter > 0 ? currentDist / startDistanceFromCenter : 1;
        const absStartWidth = Math.abs(startWidth);
 
-       if (object.shape === 'circle') {
-           const s = Math.max(MIN_SHAPE_SIZE, absStartWidth * scale);
-           updatedObject.width = s; 
-           updatedObject.height = s;
-           updatedObject.x = startCenterX - s / 2; 
-           updatedObject.y = startCenterY - s / 2;
-       } 
-       else if (object.type === 'player') {
+       if (object.type === 'player') {
            const r = (absStartWidth / 2) * scale;
            updatedObject.radius = Math.max(MIN_PLAYER_SIZE, Math.min(MAX_PLAYER_SIZE, r));
        } 

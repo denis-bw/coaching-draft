@@ -10,6 +10,7 @@ import TextToolsPanel from './TextToolsPanel';
 import ShapePropertiesPanel from './ShapePropertiesPanel';
 import ShapeToolsPanel from './ShapeToolsPanel';
 import PlayerPropertiesPanel from './PlayerPropertiesPanel';
+import EraserToolsPanel from './EraserToolsPanel';
 
 const DoubleArrowRight = styled(DoubleArrowRightBase)`
   width: 100%;
@@ -141,6 +142,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         dispatch(deleteObject(selectedObjectId));
       }
       dispatch(deselectObject());
+      onClose();
     }
   };
 
@@ -198,6 +200,8 @@ const Sidebar = ({ isOpen, onClose }) => {
         return <TextToolsPanel />;
       case 'drawing':
         return <DrawingToolsPanel />;
+      case 'eraser':
+        return <EraserToolsPanel />;
       case 'shape_rectangle':
       case 'shape_circle':
       case 'shape_triangle':

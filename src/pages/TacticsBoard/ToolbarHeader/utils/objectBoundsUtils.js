@@ -122,17 +122,6 @@ export const getObjectBounds = (obj, canvas) => {
     const h = obj.height || 30;
     const rotation = obj.rotation || 0;
     
-    if (obj.shape === 'circle') {
-      const maxSize = Math.max(Math.abs(w), Math.abs(h));
-      const centerX = obj.x + w / 2;
-      const centerY = obj.y + h / 2;
-      return {
-        x: centerX - maxSize / 2, y: centerY - maxSize / 2, width: maxSize, height: maxSize,
-        centerX: centerX, centerY: centerY, radius: maxSize / 2,
-        originalX: obj.x, originalY: obj.y, originalWidth: w, originalHeight: h, rotation: rotation
-      };
-    }
-    
     if (rotation !== 0) {
       const angle = (rotation * Math.PI) / 180;
       const centerX = obj.x + w / 2;
@@ -176,15 +165,25 @@ export const getObjectBounds = (obj, canvas) => {
   
   if (obj.type === 'path') {
     if (!obj.points || obj.points.length === 0) return null;
-    let minX = obj.points[0].x, minY = obj.points[0].y;
-    let maxX = obj.points[0].x, maxY = obj.points[0].y;
-    obj.points.forEach(p => {
-      minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
-      maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y);
-    });
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    
+    for (let i = 0; i < obj.points.length; i += 5) {
+        const p = obj.points[i];
+        if(p.x < minX) minX = p.x;
+        if(p.x > maxX) maxX = p.x;
+        if(p.y < minY) minY = p.y;
+        if(p.y > maxY) maxY = p.y;
+    }
+    const last = obj.points[obj.points.length -1];
+    if(last.x < minX) minX = last.x; if(last.x > maxX) maxX = last.x;
+    if(last.y < minY) minY = last.y; if(last.y > maxY) maxY = last.y;
+
+    const padding = (obj.brushSize || 5) / 2;
+
     return {
-      x: minX, y: minY, width: maxX - minX, height: maxY - minY,
-      points: obj.points, centerX: (minX + maxX) / 2, centerY: (minY + maxY) / 2
+      x: minX - padding, y: minY - padding, width: (maxX - minX) + padding*2, height: (maxY - minY) + padding*2,
+      points: obj.points
     };
   } 
   
@@ -271,7 +270,7 @@ export const getObjectBounds = (obj, canvas) => {
   return null;
 };
 
-export const isPointInBoundingBox = (x, y, bounds) => {
+export const isPointInBoundingBox = (x, y, bounds, tolerance = 0) => {
   if (!bounds) return false;
 
   if (bounds.rotatedCorners && bounds.rotatedCorners.length > 0) {
@@ -287,16 +286,22 @@ export const isPointInBoundingBox = (x, y, bounds) => {
     return inside;
   }
 
-  return x >= bounds.x && x <= bounds.x + bounds.width &&
-         y >= bounds.y && y <= bounds.y + bounds.height;
+  return x >= bounds.x - tolerance && x <= bounds.x + bounds.width + tolerance &&
+         y >= bounds.y - tolerance && y <= bounds.y + bounds.height + tolerance;
 };
 
 export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
   const bounds = getObjectBounds(obj, canvas);
   if (!bounds) return false;
+
+  if (!isPointInBoundingBox(x, y, bounds, brushSize)) {
+      return false;
+  }
  
   if (obj.type === 'path') {
-    const tolerance = Math.max(brushSize, 10);
+
+    const tolerance = (obj.brushSize / 2) + brushSize; 
+    
     for (let i = 0; i < obj.points.length - 1; i++) {
       const p1 = obj.points[i];
       const p2 = obj.points[i + 1];
@@ -312,9 +317,10 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
     }
     return false;
   }
-  
+
   if (obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
-    const tolerance = 10;
+
+    const tolerance = (obj.borderWidth / 2) + brushSize;
     const dx = bounds.endX - bounds.startX;
     const dy = bounds.endY - bounds.startY;
     const length = Math.sqrt(dx * dx + dy * dy);
@@ -325,16 +331,27 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
     const distance = Math.sqrt(Math.pow(x - projX, 2) + Math.pow(y - projY, 2));
     return distance <= tolerance;
   }
-  
+
   if (obj.type === 'shape' && obj.shape === 'circle') {
     const centerX = bounds.centerX || bounds.x + bounds.width / 2;
     const centerY = bounds.centerY || bounds.y + bounds.height / 2;
-    const radius = bounds.radius || Math.max(bounds.width, bounds.height) / 2;
-    const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-    return distance <= radius;
+    
+    const rx = ((bounds.originalWidth ? Math.abs(bounds.originalWidth) : bounds.width) / 2) + brushSize;
+    const ry = ((bounds.originalHeight ? Math.abs(bounds.originalHeight) : bounds.height) / 2) + brushSize;
+    
+    if (bounds.rotation) {
+        const angle = -(bounds.rotation * Math.PI) / 180;
+        const dx = x - centerX;
+        const dy = y - centerY;
+        const rxPos = dx * Math.cos(angle) - dy * Math.sin(angle);
+        const ryPos = dx * Math.sin(angle) + dy * Math.cos(angle);
+        return (rxPos * rxPos) / (rx * rx) + (ryPos * ryPos) / (ry * ry) <= 1;
+    }
+    
+    return (Math.pow(x - centerX, 2) / Math.pow(rx, 2)) + (Math.pow(y - centerY, 2) / Math.pow(ry, 2)) <= 1;
   }
   
-  return isPointInBoundingBox(x, y, bounds);
+  return isPointInBoundingBox(x, y, bounds, brushSize);
 };
 
 export const getResizeHandles = (bounds, obj) => {
@@ -413,17 +430,26 @@ export const getHandleAtPosition = (x, y, bounds, obj) => {
   return null;
 };
 
-export const getObjectAtPosition = (x, y, objects, paths, brushSize, canvas) => {
+export const getCollidingObjects = (x, y, objects, paths, brushSize, canvas) => {
+  const hits = [];
+  
   for (let i = objects.length - 1; i >= 0; i--) {
     if (isPointInObject(x, y, objects[i], brushSize, canvas)) {
-      return objects[i];
+      hits.push(objects[i]);
     }
   }
+  
   for (let i = paths.length - 1; i >= 0; i--) {
     const pathObj = { ...paths[i], type: 'path', id: `path_${i}` };
     if (isPointInObject(x, y, pathObj, brushSize, canvas)) {
-      return pathObj;
+      hits.push(pathObj);
     }
   }
-  return null;
+  
+  return hits;
+};
+
+export const getObjectAtPosition = (x, y, objects, paths, brushSize, canvas) => {
+    const hits = getCollidingObjects(x, y, objects, paths, brushSize, canvas);
+    return hits.length > 0 ? hits[0] : null;
 };

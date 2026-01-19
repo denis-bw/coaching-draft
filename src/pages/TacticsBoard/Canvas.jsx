@@ -13,7 +13,10 @@ import {
   addText,
   updatePlayersPosition,
   setActiveTool,
-  setShapeLineCapEnd
+  setShapeLineCapEnd,
+  deleteObject, 
+  deletePath,
+  deleteObjects
 } from '../../redux/TacticsBoard/TacticsBoardSlice';
 
 import { useCanvasDrawing } from './ToolbarHeader/hooks/useCanvasDrawing';
@@ -21,7 +24,7 @@ import { useObjectInteraction } from './ToolbarHeader/hooks/useObjectInteraction
 import { useResizeHandles } from './ToolbarHeader/hooks/useResizeHandles';
 import { useDrawingTools } from './ToolbarHeader/hooks/useDrawingTools';
 
-import { getObjectAtPosition, getObjectBounds } from './ToolbarHeader/utils/objectBoundsUtils';
+import { getCollidingObjects, getObjectAtPosition, getObjectBounds } from './ToolbarHeader/utils/objectBoundsUtils';
 
 const OuterContainer = styled.div`
   display: flex;
@@ -29,6 +32,7 @@ const OuterContainer = styled.div`
   align-items: center;
   width: 100%;
 `;
+
 const CanvasContainer = styled.div`
   border: 2px solid #ddd;
   margin-top: 10px;
@@ -37,8 +41,12 @@ const CanvasContainer = styled.div`
   display: inline-block;
   max-width: 100%;
   position: relative;
-  cursor: ${props => props.$activeTool === 'drawing' ? 'none' : props.cursor};
+  cursor: ${props => {
+    if (props.$activeTool === 'drawing' || props.$activeTool === 'eraser') return 'none';
+    return props.cursor;
+  }};
 `;
+
 const StaticCanvas = styled.canvas`
   display: block;
   background: white;
@@ -47,6 +55,7 @@ const StaticCanvas = styled.canvas`
   left: 0;
   z-index: 1;
 `;
+
 const ActiveCanvas = styled.canvas`
   display: block;
   background: transparent;
@@ -56,6 +65,7 @@ const ActiveCanvas = styled.canvas`
   z-index: 2;
   touch-action: none; 
 `;
+
 const TextArea = styled.textarea`
   position: absolute;
   z-index: 10;
@@ -74,16 +84,18 @@ const TextArea = styled.textarea`
   white-space: pre-wrap;
   word-wrap: break-word;
 `;
+
 const CustomCursor = styled.div`
   position: fixed;
   pointer-events: none;
   z-index: 9999;
   border-radius: 50%;
-  border: 2px solid ${props => props.color};
+  border: 2px solid ${props => props.isEraser ? '#000' : props.color}; 
+  background-color: ${props => props.isEraser ? 'rgba(255, 255, 255, 0.8)' : 'transparent'}; 
   width: ${props => props.size}px;
   height: ${props => props.size}px;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8), 0 0 4px rgba(0,0,0,0.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 4px rgba(0,0,0,0.2);
   display: ${props => props.$visible ? 'block' : 'none'};
   transition: width 0.1s, height 0.1s;
 `;
@@ -97,6 +109,9 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const textIdRef = useRef(null);
   const selectedObjectIdRef = useRef(null);
   const cursorRef = useRef(null);
+  
+  const lastEraserPosRef = useRef(null);
+  const tempErasedIdsRef = useRef(new Set());
 
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 500 });
   const [isTextInput, setIsTextInput] = useState(false);
@@ -116,6 +131,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     activeTool, 
     drawColor, 
     brushSize,
+    eraserSize, 
     brushOpacity,
     brushStyle,
     lineType,
@@ -237,8 +253,60 @@ const Canvas = ({ fieldSize, fieldType }) => {
     };
   };
 
+  const handleEraserMove = useCallback((currentPos) => {
+    const lastPos = lastEraserPosRef.current || currentPos;
+    
+    const dx = currentPos.x - lastPos.x;
+    const dy = currentPos.y - lastPos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    const steps = Math.max(1, Math.ceil(dist / (eraserSize / 5))); 
+    
+    let hasNewDeletions = false;
+
+    const effectiveRadius = (eraserSize / 2) * 0.85;
+
+    for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = lastPos.x + dx * t;
+        const y = lastPos.y + dy * t;
+        
+        const hittingObjects = getCollidingObjects(
+            x, 
+            y, 
+            objects, 
+            paths, 
+            effectiveRadius, 
+            staticCanvasRef.current
+        );
+
+        hittingObjects.forEach(obj => {
+            if (!tempErasedIdsRef.current.has(obj.id)) {
+                tempErasedIdsRef.current.add(obj.id);
+                hasNewDeletions = true;
+            }
+        });
+    }
+    
+    if (hasNewDeletions) {
+        requestAnimationFrame(() => {
+            redrawStatic(
+                paths, 
+                objects, 
+                activeTool, 
+                drawColor, 
+                brushSize, 
+                null, 
+                tempErasedIdsRef.current
+            );
+        });
+    }
+    
+    lastEraserPosRef.current = currentPos;
+  }, [objects, paths, eraserSize, activeTool, drawColor, brushSize, redrawStatic]);
+
   const handleGlobalPointerMove = useCallback((e) => {
-    if (activeTool === 'drawing' && cursorRef.current) {
+    if ((activeTool === 'drawing' || activeTool === 'eraser') && cursorRef.current) {
         let clientX, clientY;
         if (e.touches && e.touches.length > 0) {
             clientX = e.touches[0].clientX;
@@ -251,18 +319,21 @@ const Canvas = ({ fieldSize, fieldType }) => {
         cursorRef.current.style.top = `${clientY}px`;
     }
 
-    if (!draggedObjectRef.current && !resizeHandleRef.current && !drawingRef.current && !isDrawingShapeRef.current) {
+    if (!draggedObjectRef.current && !resizeHandleRef.current && !drawingRef.current && !isDrawingShapeRef.current && !(activeTool === 'eraser' && isDraggingRef.current)) {
         return; 
     }
     if(e.cancelable) e.preventDefault(); 
     const rawPos = getPointerPos(e);
     const clampedPos = clampCoordinates(rawPos);
     
-    if ((draggedObjectRef.current || resizeHandleRef.current) && !isDraggingRef.current) {
+    if ((draggedObjectRef.current || resizeHandleRef.current || activeTool === 'eraser') && !isDraggingRef.current) {
         isDraggingRef.current = true;
     }
 
-    if (resizeHandleRef.current) {
+    if (activeTool === 'eraser' && isDraggingRef.current) {
+        handleEraserMove(clampedPos);
+    }
+    else if (resizeHandleRef.current) {
       const updatedObject = updateResize(rawPos);
       if (updatedObject) {
         drawSingleObjectOnActive(updatedObject, drawColor, true);
@@ -303,9 +374,9 @@ const Canvas = ({ fieldSize, fieldType }) => {
   }, [
     canvasSize, draggedObjectRef, resizeHandleRef, drawingRef, isDrawingShapeRef, 
     updateDragPosition, updateResize, drawLiveLayer, drawSingleObjectOnActive, continueDrawing, 
-    activeTool, drawColor, brushSize, shapeStartRef, 
+    activeTool, drawColor, brushSize, eraserSize, shapeStartRef,
     shapeBorderColor, shapeBorderOpacity, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
-    brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd
+    brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd, handleEraserMove
   ]);
 
   const handleGlobalPointerUp = useCallback((e) => {
@@ -315,6 +386,14 @@ const Canvas = ({ fieldSize, fieldType }) => {
     window.removeEventListener('touchend', handleGlobalPointerUp);
 
     isDraggingRef.current = false;
+    lastEraserPosRef.current = null;
+
+    if (activeTool === 'eraser' && tempErasedIdsRef.current.size > 0) {
+        const idsToDelete = Array.from(tempErasedIdsRef.current);
+        dispatch(deleteObjects(idsToDelete));
+        tempErasedIdsRef.current.clear();
+    }
+
     const rawPos = getPointerPos(e);
     const clampedPos = clampCoordinates(rawPos);
     
@@ -446,6 +525,10 @@ const Canvas = ({ fieldSize, fieldType }) => {
         brushStyle: brushStyle, lineType: lineType
       };
       drawLiveLayer(livePath, null, false);
+    } else if (activeTool === 'eraser') {
+      isDraggingRef.current = true;
+      lastEraserPosRef.current = pos; 
+      handleEraserMove(pos); 
     } else if (activeTool.startsWith('shape_')) {
       startShape(pos);
     } else if (activeTool.startsWith('figure_')) {
@@ -466,10 +549,10 @@ const Canvas = ({ fieldSize, fieldType }) => {
   };
 
   const handleCanvasMouseMove = (e) => {
-    if (draggedObjectRef.current || resizeHandleRef.current || drawingRef.current || isDrawingShapeRef.current) return;
+    if (draggedObjectRef.current || resizeHandleRef.current || drawingRef.current || isDrawingShapeRef.current || isDraggingRef.current) return;
     if (e.touches) return;
     
-    if (activeTool === 'drawing' && cursorRef.current) {
+    if ((activeTool === 'drawing' || activeTool === 'eraser') && cursorRef.current) {
         cursorRef.current.style.left = `${e.clientX}px`;
         cursorRef.current.style.top = `${e.clientY}px`;
     }
@@ -559,7 +642,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     if (isOnlySelectedChanged && changedObject) {
         drawSingleObjectOnActive(changedObject, drawColor, true);
     } else {
-        redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId);
+        redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId, tempErasedIdsRef.current);
         
         if (selectedObjectId) {
             let selObj = null;
@@ -630,6 +713,9 @@ const Canvas = ({ fieldSize, fieldType }) => {
   useEffect(() => {
     dispatch(deselectObject());
     selectedObjectIdRef.current = null;
+    if (activeTool === 'shape_arrow') {
+       dispatch(setShapeLineCapEnd('arrow'));
+    }
   }, [activeTool, dispatch]);
 
   const handleTextInputChange = (e) => {
@@ -673,9 +759,10 @@ const Canvas = ({ fieldSize, fieldType }) => {
     <OuterContainer>
       <CustomCursor 
         ref={cursorRef}
-        size={brushSize}
+        size={activeTool === 'eraser' ? eraserSize : brushSize} 
         color={drawColor}
-        $visible={activeTool === 'drawing' && isCursorVisible}
+        $visible={(activeTool === 'drawing' || activeTool === 'eraser') && isCursorVisible} 
+        isEraser={activeTool === 'eraser'} 
       />
 
       <CanvasContainer 
