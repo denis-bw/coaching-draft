@@ -60,7 +60,6 @@ export const useDrawingTools = () => {
         };
       }
     } else {
-      // Для геометричних фігур (rectangle, circle, triangle)
       const width = endPos.x - startPos.x;
       const height = endPos.y - startPos.y;
       

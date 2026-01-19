@@ -47,6 +47,17 @@ const calculateGridPosition = (index, teamId, currentCanvasWidth, currentCanvasH
   return { x: baseX * scaleX, y: baseY * scaleY };
 };
 
+const defaultShapeConfig = {
+    borderColor: '#000000',
+    borderOpacity: 100,
+    borderWidth: 2,
+    borderStyle: 'solid',
+    fillColor: '#ffffff',
+    fillOpacity: 0,
+    lineCapStart: 'butt',
+    lineCapEnd: 'butt'
+};
+
 const initialState = {
   activeTool: 'cursor',
   drawColor: '#000000',
@@ -54,7 +65,7 @@ const initialState = {
   brushOpacity: 100,
   brushStyle: 'hard',
   lineType: 'solid',
-brushSettings: {
+  brushSettings: {
     hard: { size: 4, opacity: 100 },
     pencil: { size: 9, opacity: 100 }, 
     calligraphy: { size: 10, opacity: 100 },
@@ -62,18 +73,35 @@ brushSettings: {
     watercolor: { size: 12, opacity: 60 },
     splatter: { size: 6, opacity: 100 }
   },
-  textFontSize: 17,
+  
+  textFontSize: 16,
   textColor: '#000000',
   textOpacity: 100,
+  textFontFamily: 'Arial',
+  textFontWeight: 'normal',
+  textFontStyle: 'normal',
+  textDecoration: 'none',
+  textLineHeight: 1.1,
+  textLetterSpacing: 0,
+
   shapeBorderWidth: 2,
-  shapeColor: '#000000',
+  shapeColor: '#000000', 
   shapeBorderColor: '#000000',
   shapeBorderOpacity: 100,
   shapeFillColor: '#ffffff',
-  shapeFillOpacity: 50,
+  shapeFillOpacity: 0, 
   shapeBorderStyle: 'solid',
   shapeLineCapStart: 'butt',
   shapeLineCapEnd: 'butt',
+
+  toolSettings: {
+      shape_rectangle: { ...defaultShapeConfig, fillOpacity: 50 },
+      shape_circle: { ...defaultShapeConfig, fillOpacity: 50 },
+      shape_triangle: { ...defaultShapeConfig, fillOpacity: 50 },
+      shape_line: { ...defaultShapeConfig },
+      shape_arrow: { ...defaultShapeConfig, lineCapEnd: 'arrow' }
+  },
+
   paths: [],
   objects: [],
   selectedObjectId: null,
@@ -89,7 +117,37 @@ const TacticsBoardSlice = createSlice({
   name: 'tacticsBoard',
   initialState,
   reducers: {
-    setActiveTool: (state, action) => { state.activeTool = action.payload; },
+    setActiveTool: (state, action) => { 
+        const newTool = action.payload;
+        const oldTool = state.activeTool;
+
+        if (oldTool.startsWith('shape_') && state.toolSettings[oldTool]) {
+            state.toolSettings[oldTool] = {
+                borderColor: state.shapeBorderColor,
+                borderOpacity: state.shapeBorderOpacity,
+                borderWidth: state.shapeBorderWidth,
+                borderStyle: state.shapeBorderStyle,
+                fillColor: state.shapeFillColor,
+                fillOpacity: state.shapeFillOpacity,
+                lineCapStart: state.shapeLineCapStart,
+                lineCapEnd: state.shapeLineCapEnd
+            };
+        }
+
+        state.activeTool = newTool; 
+
+        if (newTool.startsWith('shape_') && state.toolSettings[newTool]) {
+            const settings = state.toolSettings[newTool];
+            state.shapeBorderColor = settings.borderColor;
+            state.shapeBorderOpacity = settings.borderOpacity;
+            state.shapeBorderWidth = settings.borderWidth;
+            state.shapeBorderStyle = settings.borderStyle;
+            state.shapeFillColor = settings.fillColor;
+            state.shapeFillOpacity = settings.fillOpacity;
+            state.shapeLineCapStart = settings.lineCapStart;
+            state.shapeLineCapEnd = settings.lineCapEnd;
+        }
+    },
     setDrawColor: (state, action) => { state.drawColor = action.payload; },
     
     setBrushStyle: (state, action) => { 
@@ -122,15 +180,63 @@ const TacticsBoardSlice = createSlice({
     setTextFontSize: (state, action) => { state.textFontSize = action.payload; },
     setTextColor: (state, action) => { state.textColor = action.payload; },
     setTextOpacity: (state, action) => { state.textOpacity = action.payload; },
-    setShapeBorderWidth: (state, action) => { state.shapeBorderWidth = action.payload; },
-    setShapeColor: (state, action) => { state.shapeColor = action.payload; },
-    setShapeBorderColor: (state, action) => { state.shapeBorderColor = action.payload; },
-    setShapeBorderOpacity: (state, action) => { state.shapeBorderOpacity = action.payload; },
-    setShapeFillColor: (state, action) => { state.shapeFillColor = action.payload; },
-    setShapeFillOpacity: (state, action) => { state.shapeFillOpacity = action.payload; },
-    setShapeBorderStyle: (state, action) => { state.shapeBorderStyle = action.payload; },
-    setShapeLineCapStart: (state, action) => { state.shapeLineCapStart = action.payload; },
-    setShapeLineCapEnd: (state, action) => { state.shapeLineCapEnd = action.payload; },
+    setTextFontFamily: (state, action) => { state.textFontFamily = action.payload; },
+    setTextFontWeight: (state, action) => { state.textFontWeight = action.payload; },
+    setTextFontStyle: (state, action) => { state.textFontStyle = action.payload; },
+    setTextDecoration: (state, action) => { state.textDecoration = action.payload; },
+    setTextLineHeight: (state, action) => { state.textLineHeight = action.payload; },
+    setTextLetterSpacing: (state, action) => { state.textLetterSpacing = action.payload; },
+
+    setShapeBorderWidth: (state, action) => { 
+        state.shapeBorderWidth = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].borderWidth = action.payload;
+        }
+    },
+    setShapeColor: (state, action) => { state.shapeColor = action.payload; }, 
+    
+    setShapeBorderColor: (state, action) => { 
+        state.shapeBorderColor = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].borderColor = action.payload;
+        }
+    },
+    setShapeBorderOpacity: (state, action) => { 
+        state.shapeBorderOpacity = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].borderOpacity = action.payload;
+        }
+    },
+    setShapeFillColor: (state, action) => { 
+        state.shapeFillColor = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].fillColor = action.payload;
+        }
+    },
+    setShapeFillOpacity: (state, action) => { 
+        state.shapeFillOpacity = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].fillOpacity = action.payload;
+        }
+    },
+    setShapeBorderStyle: (state, action) => { 
+        state.shapeBorderStyle = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].borderStyle = action.payload;
+        }
+    },
+    setShapeLineCapStart: (state, action) => { 
+        state.shapeLineCapStart = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].lineCapStart = action.payload;
+        }
+    },
+    setShapeLineCapEnd: (state, action) => { 
+        state.shapeLineCapEnd = action.payload; 
+        if (state.activeTool.startsWith('shape_') && state.toolSettings[state.activeTool]) {
+            state.toolSettings[state.activeTool].lineCapEnd = action.payload;
+        }
+    },
 
     addPath: (state, action) => {
       state.paths.push(action.payload);
@@ -200,25 +306,36 @@ const TacticsBoardSlice = createSlice({
       const h = state.boardDimensions.height || REF_HEIGHT;
 
       if (newCount > currentCount) {
-        const template = getTemplatePlayer(state.objects, 1, state.team1.color);
         const needed = newCount - currentCount;
-        for (let i = 0; i < needed; i++) {
-            const newIndex = currentCount + i; 
-            const pos = calculateGridPosition(newIndex, 1, w, h);
-            
-            state.objects.push({
-                id: `player_team1_${Date.now()}_${i}`,
-                type: 'player',
-                team: 1,
-                number: newIndex + 1,
-                x: pos.x,
-                y: pos.y,
-                ...template
-            });
+        const existingNumbers = new Set(currentTeamObjects.map(o => o.number));
+        const template = getTemplatePlayer(state.objects, 1, state.team1.color);
+
+        let added = 0;
+        let numToCheck = 1;
+        
+        while (added < needed) {
+            if (!existingNumbers.has(numToCheck)) {
+                const pos = calculateGridPosition(numToCheck - 1, 1, w, h);
+                state.objects.push({
+                    id: `player_team1_${Date.now()}_${added}`,
+                    type: 'player',
+                    team: 1,
+                    number: numToCheck,
+                    x: pos.x,
+                    y: pos.y,
+                    ...template
+                });
+                added++;
+            }
+            numToCheck++;
         }
+
       } else if (newCount < currentCount) {
         const toRemove = currentCount - newCount;
-        const idsToRemove = currentTeamObjects.slice(-toRemove).map(o => o.id);
+        const sortedTeamObjects = [...currentTeamObjects].sort((a, b) => b.number - a.number);
+        const objectsToRemove = sortedTeamObjects.slice(0, toRemove);
+        const idsToRemove = objectsToRemove.map(o => o.id);
+        
         state.objects = state.objects.filter(obj => !idsToRemove.includes(obj.id));
       }
       TacticsBoardSlice.caseReducers.saveToHistory(state);
@@ -240,25 +357,36 @@ const TacticsBoardSlice = createSlice({
       const h = state.boardDimensions.height || REF_HEIGHT;
 
       if (newCount > currentCount) {
-        const template = getTemplatePlayer(state.objects, 2, state.team2.color);
         const needed = newCount - currentCount;
-        for (let i = 0; i < needed; i++) {
-            const newIndex = currentCount + i;
-            const pos = calculateGridPosition(newIndex, 2, w, h);
-            
-            state.objects.push({
-                id: `player_team2_${Date.now()}_${i}`,
-                type: 'player',
-                team: 2,
-                number: newIndex + 1,
-                x: pos.x,
-                y: pos.y,
-                ...template
-            });
+        const existingNumbers = new Set(currentTeamObjects.map(o => o.number));
+        const template = getTemplatePlayer(state.objects, 2, state.team2.color);
+
+        let added = 0;
+        let numToCheck = 1;
+
+        while (added < needed) {
+             if (!existingNumbers.has(numToCheck)) {
+                const pos = calculateGridPosition(numToCheck - 1, 2, w, h);
+                state.objects.push({
+                    id: `player_team2_${Date.now()}_${added}`,
+                    type: 'player',
+                    team: 2,
+                    number: numToCheck,
+                    x: pos.x,
+                    y: pos.y,
+                    ...template
+                });
+                added++;
+             }
+             numToCheck++;
         }
+
       } else if (newCount < currentCount) {
         const toRemove = currentCount - newCount;
-        const idsToRemove = currentTeamObjects.slice(-toRemove).map(o => o.id);
+        const sortedTeamObjects = [...currentTeamObjects].sort((a, b) => b.number - a.number);
+        const objectsToRemove = sortedTeamObjects.slice(0, toRemove);
+        const idsToRemove = objectsToRemove.map(o => o.id);
+        
         state.objects = state.objects.filter(obj => !idsToRemove.includes(obj.id));
       }
       TacticsBoardSlice.caseReducers.saveToHistory(state);
@@ -347,12 +475,20 @@ const TacticsBoardSlice = createSlice({
       const { id, x, y, text, fontSize, color, opacity, fontFamily, fontWeight, fontStyle, textDecoration, lineHeight, letterSpacing, rotation } = action.payload;
       const newText = {
         id: id || `text_${Date.now()}_${Math.random()}`,
-        type: 'text', x, y, text: text || '',
-        fontSize: fontSize || state.textFontSize, color: color || state.textColor,
+        type: 'text', 
+        x, 
+        y, 
+        text: text || '',
+        fontSize: fontSize || state.textFontSize, 
+        color: color || state.textColor,
         opacity: opacity !== undefined ? opacity : state.textOpacity,
-        fontFamily: fontFamily || 'Arial', fontWeight: fontWeight || 'normal',
-        fontStyle: fontStyle || 'normal', textDecoration: textDecoration || 'none',
-        lineHeight: lineHeight || 1.1, letterSpacing: letterSpacing || 0, rotation: rotation || 0
+        fontFamily: fontFamily || state.textFontFamily, 
+        fontWeight: fontWeight || state.textFontWeight,
+        fontStyle: fontStyle || state.textFontStyle, 
+        textDecoration: textDecoration || state.textDecoration,
+        lineHeight: lineHeight || state.textLineHeight, 
+        letterSpacing: letterSpacing || state.textLetterSpacing, 
+        rotation: rotation || 0
       };
       state.objects.push(newText);
       TacticsBoardSlice.caseReducers.saveToHistory(state);
@@ -367,7 +503,13 @@ const TacticsBoardSlice = createSlice({
         activeTool: state.activeTool,
         textColor: state.textColor,
         textOpacity: state.textOpacity,
-        textFontSize: state.textFontSize
+        textFontSize: state.textFontSize,
+        textFontFamily: state.textFontFamily,
+        textFontWeight: state.textFontWeight,
+        textFontStyle: state.textFontStyle,
+        textDecoration: state.textDecoration,
+        textLineHeight: state.textLineHeight,
+        textLetterSpacing: state.textLetterSpacing
       };
       state.history = state.history.slice(0, state.historyIndex + 1);
       state.history.push(snapshot);
@@ -387,6 +529,12 @@ const TacticsBoardSlice = createSlice({
         state.textColor = snapshot.textColor || '#000000';
         state.textOpacity = snapshot.textOpacity !== undefined ? snapshot.textOpacity : 100;
         state.textFontSize = snapshot.textFontSize || 16;
+        state.textFontFamily = snapshot.textFontFamily || 'Arial';
+        state.textFontWeight = snapshot.textFontWeight || 'normal';
+        state.textFontStyle = snapshot.textFontStyle || 'normal';
+        state.textDecoration = snapshot.textDecoration || 'none';
+        state.textLineHeight = snapshot.textLineHeight || 1.1;
+        state.textLetterSpacing = snapshot.textLetterSpacing || 0;
         state.selectedObjectId = null;
       }
     },
@@ -403,6 +551,12 @@ const TacticsBoardSlice = createSlice({
         state.textColor = snapshot.textColor || '#000000';
         state.textOpacity = snapshot.textOpacity !== undefined ? snapshot.textOpacity : 100;
         state.textFontSize = snapshot.textFontSize || 16;
+        state.textFontFamily = snapshot.textFontFamily || 'Arial';
+        state.textFontWeight = snapshot.textFontWeight || 'normal';
+        state.textFontStyle = snapshot.textFontStyle || 'normal';
+        state.textDecoration = snapshot.textDecoration || 'none';
+        state.textLineHeight = snapshot.textLineHeight || 1.1;
+        state.textLetterSpacing = snapshot.textLetterSpacing || 0;
         state.selectedObjectId = null;
       }
     },
@@ -419,7 +573,10 @@ const TacticsBoardSlice = createSlice({
       paths: state.paths, objects: state.objects,
       team1: state.team1, team2: state.team2,
       drawColor: state.drawColor, brushSize: state.brushSize,
-      textColor: state.textColor, textOpacity: state.textOpacity, textFontSize: state.textFontSize,
+      textColor: state.textColor, 
+      textOpacity: state.textOpacity, 
+      textFontSize: state.textFontSize,
+      textFontFamily: state.textFontFamily,
       boardDimensions: state.boardDimensions
     }),
     setFormation: (state, action) => {
@@ -476,7 +633,10 @@ const TacticsBoardSlice = createSlice({
 });
 
 export const {
-  setActiveTool, setDrawColor, setBrushSize, setTextFontSize, setTextColor, setTextOpacity,
+  setActiveTool, setDrawColor, setBrushSize, 
+  setTextFontSize, setTextColor, setTextOpacity, 
+  setTextFontFamily, setTextFontWeight, setTextFontStyle, 
+  setTextDecoration, setTextLineHeight, setTextLetterSpacing,
   setShapeBorderWidth, setShapeColor, setShapeBorderColor, setShapeBorderOpacity,
   setShapeFillColor, setShapeFillOpacity, setShapeBorderStyle, setShapeLineCapStart, setShapeLineCapEnd,
   addPath, addObject, updateObject, deleteObject, selectObject, deselectObject, moveObject, resizeObject,

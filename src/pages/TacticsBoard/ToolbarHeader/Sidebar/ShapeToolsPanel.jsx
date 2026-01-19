@@ -71,15 +71,6 @@ const Slider = styled.input.attrs({ type: 'range' })`
     box-shadow: 0 0 2px rgba(0,0,0,0.3);
     border: none;
   }
-
-  &::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: ${({ theme }) => theme.greenMain};
-    cursor: pointer;
-    border: none;
-  }
 `;
 
 const SliderValue = styled.span`
@@ -92,14 +83,16 @@ const SliderValue = styled.span`
 
 const InfoText = styled.p`
   font-size: 12px;
-  color: ${({ theme }) => theme.textGray || '#777'};
-  margin: 8px 0 0 0;
+  color: #888;
   font-style: italic;
+  margin-top: 12px;
+  line-height: 1.4;
 `;
 
 const ShapeToolsPanel = () => {
   const dispatch = useDispatch();
   const { 
+    activeTool,
     shapeBorderColor, 
     shapeBorderOpacity, 
     shapeFillColor, 
@@ -107,8 +100,7 @@ const ShapeToolsPanel = () => {
     shapeBorderWidth,
     shapeBorderStyle,
     shapeLineCapStart,
-    shapeLineCapEnd,
-    activeTool 
+    shapeLineCapEnd
   } = useSelector(state => state.tacticsBoard);
 
   const isLineOrArrow = activeTool === 'shape_line' || activeTool === 'shape_arrow';
@@ -123,13 +115,13 @@ const ShapeToolsPanel = () => {
           opacity={shapeBorderOpacity}
           onColorChange={(color) => dispatch(setShapeBorderColor(color))}
           onOpacityChange={(opacity) => dispatch(setShapeBorderOpacity(opacity))}
-          label={isLineOrArrow ? "Колір лінії і прозорість" : "Колір обводки і прозорість"}
+          label="Колір обводки та прозорість"
         />
       </PropertyRow>
 
       <PropertyRow>
         <PropertyLabel>
-          {isLineOrArrow ? "Товщина лінії" : "Товщина обводки"}
+          Товщина обводки
           <SliderValue>{shapeBorderWidth}px</SliderValue>
         </PropertyLabel>
         <Slider
@@ -142,7 +134,7 @@ const ShapeToolsPanel = () => {
       </PropertyRow>
 
       <PropertyRow>
-        <PropertyLabel>Тип обводки</PropertyLabel>
+        <PropertyLabel>Стиль обводки</PropertyLabel>
         <CustomSelect
           value={shapeBorderStyle}
           onChange={(value) => dispatch(setShapeBorderStyle(value))}
@@ -151,7 +143,7 @@ const ShapeToolsPanel = () => {
             { value: 'dashed', label: 'Пунктирна' },
             { value: 'dotted', label: 'Точкова' }
           ]}
-          placeholder="Оберіть тип"
+          placeholder="Оберіть стиль"
         />
       </PropertyRow>
 
@@ -166,7 +158,7 @@ const ShapeToolsPanel = () => {
                 { value: 'butt', label: 'Без закінчення' },
                 { value: 'round', label: 'Точка' },
                 { value: 'arrow', label: 'Стрілка' },
-                { value: 'perp', label: 'Тупик' }
+                { value: 'bar', label: 'Тупик' }
               ]}
               placeholder="Оберіть тип"
             />
@@ -181,7 +173,7 @@ const ShapeToolsPanel = () => {
                 { value: 'butt', label: 'Без закінчення' },
                 { value: 'round', label: 'Точка' },
                 { value: 'arrow', label: 'Стрілка' },
-                { value: 'perp', label: 'Тупик' }
+                { value: 'bar', label: 'Тупик' }
               ]}
               placeholder="Оберіть тип"
             />
@@ -203,8 +195,8 @@ const ShapeToolsPanel = () => {
 
       <InfoText>
         {isLineOrArrow 
-          ? 'Клікніть і потягніть, щоб намалювати лінію.'
-          : 'Клікніть і потягніть, щоб намалювати фігуру.'}
+          ? 'Клікніть і потягніть, щоб намалювати лінію' 
+          : 'Клікніть і потягніть, щоб створити фігуру'}
       </InfoText>
     </Section>
   );

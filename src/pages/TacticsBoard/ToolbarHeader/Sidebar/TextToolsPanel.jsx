@@ -2,14 +2,15 @@ import React from 'react';
 import styled from 'styled-components';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  setShapeBorderColor, 
-  setShapeBorderOpacity, 
-  setShapeFillColor, 
-  setShapeFillOpacity, 
-  setShapeBorderWidth,
-  setShapeBorderStyle,
-  setShapeLineCapStart,
-  setShapeLineCapEnd
+  setTextColor, 
+  setTextOpacity, 
+  setTextFontSize,
+  setTextFontFamily,
+  setTextFontWeight,
+  setTextFontStyle,
+  setTextDecoration,
+  setTextLineHeight,
+  setTextLetterSpacing
 } from '../../../../redux/TacticsBoard/TacticsBoardSlice';
 import ColorOpacityControl from './ColorOpacityControl';
 import CustomSelect from './CustomSelect';
@@ -90,124 +91,143 @@ const SliderValue = styled.span`
   margin-left: 8px;
 `;
 
-const InfoText = styled.p`
-  font-size: 12px;
-  color: ${({ theme }) => theme.textGray || '#777'};
-  margin: 8px 0 0 0;
-  font-style: italic;
+const ButtonGroup = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 `;
 
-const ShapeToolsPanel = () => {
+const ToggleButton = styled.button`
+  padding: 8px 12px;
+  border: 1px solid ${({ theme }) => theme.lightGreen || '#ccc'};
+  background: ${props => props.$active ? props.theme.greenMain || '#4CAF50' : props.theme.ContainerBGColor || 'white'};
+  color: ${props => props.$active ? 'white' : props.theme.textBlack || '#333'};
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: ${props => props.$active ? '600' : '500'};
+  transition: all 0.2s;
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.greenMain || '#4CAF50'};
+    background: ${props => props.$active ? props.theme.greenMain || '#4CAF50' : props.theme.lightGreen || '#E8F5E9'};
+  }
+`;
+
+const TextToolsPanel = () => {
   const dispatch = useDispatch();
   const { 
-    shapeBorderColor, 
-    shapeBorderOpacity, 
-    shapeFillColor, 
-    shapeFillOpacity, 
-    shapeBorderWidth,
-    shapeBorderStyle,
-    shapeLineCapStart,
-    shapeLineCapEnd,
-    activeTool 
+    textColor, 
+    textOpacity, 
+    textFontSize,
+    textFontFamily,
+    textFontWeight,
+    textFontStyle,
+    textDecoration,
+    textLineHeight,
+    textLetterSpacing
   } = useSelector(state => state.tacticsBoard);
-
-  const isLineOrArrow = activeTool === 'shape_line' || activeTool === 'shape_arrow';
 
   return (
     <Section>
-      <SectionTitle>Налаштування фігури</SectionTitle>
+      <SectionTitle>Налаштування тексту</SectionTitle>
       
       <PropertyRow>
         <ColorOpacityControl
-          color={shapeBorderColor}
-          opacity={shapeBorderOpacity}
-          onColorChange={(color) => dispatch(setShapeBorderColor(color))}
-          onOpacityChange={(opacity) => dispatch(setShapeBorderOpacity(opacity))}
-          label={isLineOrArrow ? "Колір лінії і прозорість" : "Колір обводки і прозорість"}
+          color={textColor}
+          opacity={textOpacity}
+          onColorChange={(color) => dispatch(setTextColor(color))}
+          onOpacityChange={(opacity) => dispatch(setTextOpacity(opacity))}
+          label="Колір і прозорість"
         />
       </PropertyRow>
 
       <PropertyRow>
         <PropertyLabel>
-          {isLineOrArrow ? "Товщина лінії" : "Товщина обводки"}
-          <SliderValue>{shapeBorderWidth}px</SliderValue>
+          Розмір шрифту
+          <SliderValue>{textFontSize}px</SliderValue>
         </PropertyLabel>
         <Slider
           type="range"
-          min="1"
-          max="20"
-          value={shapeBorderWidth}
-          onChange={(e) => dispatch(setShapeBorderWidth(Number(e.target.value)))}
+          min="8"
+          max="200"
+          value={textFontSize}
+          onChange={(e) => dispatch(setTextFontSize(Number(e.target.value)))}
         />
       </PropertyRow>
 
       <PropertyRow>
-        <PropertyLabel>Тип обводки</PropertyLabel>
+        <PropertyLabel>Тип шрифту</PropertyLabel>
         <CustomSelect
-          value={shapeBorderStyle}
-          onChange={(value) => dispatch(setShapeBorderStyle(value))}
+          value={textFontFamily}
+          onChange={(value) => dispatch(setTextFontFamily(value))}
           options={[
-            { value: 'solid', label: 'Суцільна' },
-            { value: 'dashed', label: 'Пунктирна' },
-            { value: 'dotted', label: 'Точкова' }
+            { value: 'Arial', label: 'Arial' },
+            { value: 'Times New Roman', label: 'Times New Roman' },
+            { value: 'Courier New', label: 'Courier New' },
+            { value: 'Georgia', label: 'Georgia' },
+            { value: 'Verdana', label: 'Verdana' },
+            { value: 'Comic Sans MS', label: 'Comic Sans MS' }
           ]}
-          placeholder="Оберіть тип"
+          placeholder="Оберіть шрифт"
         />
       </PropertyRow>
 
-      {isLineOrArrow && (
-        <>
-          <PropertyRow>
-            <PropertyLabel>Початок лінії</PropertyLabel>
-            <CustomSelect
-              value={shapeLineCapStart}
-              onChange={(value) => dispatch(setShapeLineCapStart(value))}
-              options={[
-                { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Точка' },
-                { value: 'arrow', label: 'Стрілка' },
-                { value: 'bar', label: 'Тупик' }
-              ]}
-              placeholder="Оберіть тип"
-            />
-          </PropertyRow>
+      <PropertyRow>
+        <PropertyLabel>Стиль тексту</PropertyLabel>
+        <ButtonGroup>
+          <ToggleButton 
+            $active={textFontWeight === 'bold'}
+            onClick={() => dispatch(setTextFontWeight(textFontWeight === 'bold' ? 'normal' : 'bold'))}
+          >
+            <strong>B</strong>
+          </ToggleButton>
+          <ToggleButton 
+            $active={textFontStyle === 'italic'}
+            onClick={() => dispatch(setTextFontStyle(textFontStyle === 'italic' ? 'normal' : 'italic'))}
+          >
+            <em>I</em>
+          </ToggleButton>
+          <ToggleButton 
+            $active={textDecoration === 'underline'}
+            onClick={() => dispatch(setTextDecoration(textDecoration === 'underline' ? 'none' : 'underline'))}
+          >
+            <u>U</u>
+          </ToggleButton>
+        </ButtonGroup>
+      </PropertyRow>
 
-          <PropertyRow>
-            <PropertyLabel>Кінець лінії</PropertyLabel>
-            <CustomSelect
-              value={shapeLineCapEnd || (activeTool === 'shape_arrow' ? 'arrow' : 'butt')}
-              onChange={(value) => dispatch(setShapeLineCapEnd(value))}
-              options={[
-                { value: 'butt', label: 'Без закінчення' },
-                { value: 'round', label: 'Точка' },
-                { value: 'arrow', label: 'Стрілка' },
-                { value: 'bar', label: 'Тупик' }
-              ]}
-              placeholder="Оберіть тип"
-            />
-          </PropertyRow>
-        </>
-      )}
+      <PropertyRow>
+        <PropertyLabel>
+          Міжрядковий інтервал
+          <SliderValue>{textLineHeight}</SliderValue>
+        </PropertyLabel>
+        <Slider
+          type="range"
+          min="0.5"
+          max="3"
+          step="0.1"
+          value={textLineHeight}
+          onChange={(e) => dispatch(setTextLineHeight(Number(e.target.value)))}
+        />
+      </PropertyRow>
 
-      {!isLineOrArrow && (
-        <PropertyRow>
-          <ColorOpacityControl
-            color={shapeFillColor}
-            opacity={shapeFillOpacity}
-            onColorChange={(color) => dispatch(setShapeFillColor(color))}
-            onOpacityChange={(opacity) => dispatch(setShapeFillOpacity(opacity))}
-            label="Колір заливки і прозорість"
-          />
-        </PropertyRow>
-      )}
-
-      <InfoText>
-        {isLineOrArrow 
-          ? 'Клікніть і потягніть, щоб намалювати лінію.'
-          : 'Клікніть і потягніть, щоб намалювати фігуру.'}
-      </InfoText>
+      <PropertyRow>
+        <PropertyLabel>
+          Міжлітерний інтервал
+          <SliderValue>{textLetterSpacing}px</SliderValue>
+        </PropertyLabel>
+        <Slider
+          type="range"
+          min="-2"
+          max="10"
+          step="0.5"
+          value={textLetterSpacing}
+          onChange={(e) => dispatch(setTextLetterSpacing(Number(e.target.value)))}
+        />
+      </PropertyRow>
     </Section>
   );
 };
 
-export default ShapeToolsPanel;
+export default TextToolsPanel;

@@ -30,7 +30,6 @@ const SidebarContainer = styled.div`
   z-index: 99;
   overflow-y: auto;
   
-  /* Стилізація скролбару */
   &::-webkit-scrollbar {
     width: 6px;
   }
@@ -158,7 +157,14 @@ const Sidebar = ({ isOpen, onClose }) => {
             </>
           );
         case 'player':
-          return <PlayerPropertiesPanel selectedObject={selectedObject} />;
+          return (
+            <>
+              <PlayerPropertiesPanel selectedObject={selectedObject} />
+              <DeleteButton onClick={handleDelete}>
+                Видалити гравця
+              </DeleteButton>
+            </>
+          );
         case 'shape':
           return (
             <>
@@ -172,7 +178,6 @@ const Sidebar = ({ isOpen, onClose }) => {
         case 'path':
           return (
             <>
-              {/* Відображаємо ту саму панель, що й при малюванні, але вона буде в режимі редагування */}
               <DrawingToolsPanel /> 
               <DeleteButton onClick={handleDelete}>
                 Видалити лінію

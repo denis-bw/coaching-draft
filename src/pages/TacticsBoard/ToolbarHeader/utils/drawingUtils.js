@@ -1156,10 +1156,11 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
 
     const x = shape.x;
     const y = shape.y;
-    const w = shape.width || 50;
-    const h = shape.height || 30;
+    const w = shape.width !== undefined ? shape.width : 50;
+    const h = shape.height !== undefined ? shape.height : 30;
     
-    const minSize = 10;
+    const minSize = shape.ignoreMinSize ? 0 : 10;
+    
     const actualW = Math.abs(w) < minSize ? (w < 0 ? -minSize : minSize) : w;
     const actualH = Math.abs(h) < minSize ? (h < 0 ? -minSize : minSize) : h;
     
@@ -1284,8 +1285,6 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
         const y = shape.y;
         const w = shape.width || 50;
         const h = shape.height || 30;
-        const actualW = w;
-        const actualH = h;
         const radius = Math.max(Math.abs(actualW), Math.abs(actualH)) / 2;
         const centerX = x + actualW / 2;
         const centerY = y + actualH / 2;
@@ -1293,10 +1292,6 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
       } else if (shape.shape === 'triangle') {
         const x = shape.x;
         const y = shape.y;
-        const w = shape.width || 50;
-        const h = shape.height || 30;
-        const actualW = w;
-        const actualH = h;
         ctx.moveTo(x + actualW/2, y);
         ctx.lineTo(x, y + actualH);
         ctx.lineTo(x + actualW, y + actualH);

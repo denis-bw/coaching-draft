@@ -12,7 +12,8 @@ import {
   updatePath,
   addText,
   updatePlayersPosition,
-  setActiveTool
+  setActiveTool,
+  setShapeLineCapEnd
 } from '../../redux/TacticsBoard/TacticsBoardSlice';
 
 import { useCanvasDrawing } from './ToolbarHeader/hooks/useCanvasDrawing';
@@ -286,17 +287,25 @@ const Canvas = ({ fieldSize, fieldType }) => {
     else if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
       drawLiveLayer(null, {
-          type: shapeType, start: shapeStartRef.current, end: clampedPos,
-          borderColor: shapeBorderColor, borderStyle: shapeBorderStyle, borderWidth: shapeBorderWidth,
-          fillColor: shapeFillColor, fillOpacity: shapeFillOpacity
+          type: shapeType, 
+          start: shapeStartRef.current, 
+          end: clampedPos,
+          borderColor: shapeBorderColor, 
+          borderOpacity: shapeBorderOpacity, 
+          borderStyle: shapeBorderStyle, 
+          borderWidth: shapeBorderWidth,
+          fillColor: shapeFillColor, 
+          fillOpacity: shapeFillOpacity,
+          lineCapStart: shapeLineCapStart,
+          lineCapEnd: shapeLineCapEnd
       }, false);
     }
   }, [
     canvasSize, draggedObjectRef, resizeHandleRef, drawingRef, isDrawingShapeRef, 
     updateDragPosition, updateResize, drawLiveLayer, drawSingleObjectOnActive, continueDrawing, 
     activeTool, drawColor, brushSize, shapeStartRef, 
-    shapeBorderColor, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
-    brushOpacity, brushStyle, lineType
+    shapeBorderColor, shapeBorderOpacity, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
+    brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd
   ]);
 
   const handleGlobalPointerUp = useCallback((e) => {
@@ -335,7 +344,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
         };
         if (shapeType === 'line' || shapeType === 'arrow') {
           baseShapeData.lineCapStart = shapeLineCapStart;
-          baseShapeData.lineCapEnd = shapeType === 'arrow' ? 'arrow' : shapeLineCapEnd;
+          baseShapeData.lineCapEnd = shapeLineCapEnd;
         } else {
           baseShapeData.fillColor = shapeFillColor;
           baseShapeData.fillOpacity = shapeFillOpacity;
