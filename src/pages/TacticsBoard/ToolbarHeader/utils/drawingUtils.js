@@ -1,4 +1,4 @@
-import { getResizeHandles } from './objectBoundsUtils';
+import { getResizeHandles, getObjectBounds } from './objectBoundsUtils';
 
 const hexToRgba = (hex, alpha = 1) => {
   if (!hex) return 'rgba(0, 0, 0, 1)';
@@ -1360,4 +1360,54 @@ export const drawResizeHandles = (ctx, bounds, obj) => {
     ctx.strokeRect(handle.x - handleSize/2, handle.y - handleSize/2, handleSize, handleSize);
     ctx.restore();
   });
+};
+
+export const createObjectCache = (object, canvas) => {
+  if (!object || !canvas) return null;
+
+  const bounds = getObjectBounds(object, canvas);
+  if (!bounds) return null;
+
+  const padding = (object.brushSize || object.borderWidth || 10) * 2 + 20;
+  
+  const MAX_CACHE_SIZE = 2000; 
+  let width = bounds.width + padding * 2;
+  let height = bounds.height + padding * 2;
+
+  if (width > MAX_CACHE_SIZE || height > MAX_CACHE_SIZE) {
+      return null;
+  }
+
+  const cacheCanvas = document.createElement('canvas');
+  cacheCanvas.width = width;
+  cacheCanvas.height = height;
+  const ctx = cacheCanvas.getContext('2d');
+
+  const offsetX = bounds.x - padding;
+  const offsetY = bounds.y - padding;
+
+  ctx.translate(-offsetX, -offsetY);
+
+  if (object.type === 'path') {
+      drawPath(ctx, object, false);
+  } else if (object.type === 'player') {
+      drawPlayer(ctx, object, false);
+  } else if (object.type === 'ball') {
+      drawBall(ctx, object, false);
+  } else if (object.type === 'shape') {
+      const color = object.borderColor || object.color || '#000000';
+      drawShape(ctx, object, false, color);
+  } else if (object.type === 'figure') {
+      drawFigure(ctx, object, false);
+  } else if (object.type === 'text') {
+      drawText(ctx, object, false);
+  }
+
+  return {
+    canvas: cacheCanvas,
+    offsetX: offsetX,
+    offsetY: offsetY,
+    originalWidth: width,
+    originalHeight: height
+  };
 };

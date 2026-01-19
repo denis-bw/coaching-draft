@@ -28,7 +28,6 @@ const OuterContainer = styled.div`
   align-items: center;
   width: 100%;
 `;
-
 const CanvasContainer = styled.div`
   border: 2px solid #ddd;
   margin-top: 10px;
@@ -37,10 +36,8 @@ const CanvasContainer = styled.div`
   display: inline-block;
   max-width: 100%;
   position: relative;
-  /* Приховуємо системний курсор, якщо активне малювання */
   cursor: ${props => props.$activeTool === 'drawing' ? 'none' : props.cursor};
 `;
-
 const StaticCanvas = styled.canvas`
   display: block;
   background: white;
@@ -49,7 +46,6 @@ const StaticCanvas = styled.canvas`
   left: 0;
   z-index: 1;
 `;
-
 const ActiveCanvas = styled.canvas`
   display: block;
   background: transparent;
@@ -59,7 +55,6 @@ const ActiveCanvas = styled.canvas`
   z-index: 2;
   touch-action: none; 
 `;
-
 const TextArea = styled.textarea`
   position: absolute;
   z-index: 10;
@@ -78,7 +73,6 @@ const TextArea = styled.textarea`
   white-space: pre-wrap;
   word-wrap: break-word;
 `;
-
 const CustomCursor = styled.div`
   position: fixed;
   pointer-events: none;
@@ -88,9 +82,9 @@ const CustomCursor = styled.div`
   width: ${props => props.size}px;
   height: ${props => props.size}px;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8), 0 0 4px rgba(0,0,0,0.2); /* Контраст */
-  display: ${props => props.visible ? 'block' : 'none'};
-  transition: width 0.1s, height 0.1s; /* Плавна зміна розміру */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8), 0 0 4px rgba(0,0,0,0.2);
+  display: ${props => props.$visible ? 'block' : 'none'};
+  transition: width 0.1s, height 0.1s;
 `;
 
 const Canvas = ({ fieldSize, fieldType }) => {
@@ -101,15 +95,19 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const initializedRef = useRef(false);
   const textIdRef = useRef(null);
   const selectedObjectIdRef = useRef(null);
-
   const cursorRef = useRef(null);
 
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 500 });
   const [isTextInput, setIsTextInput] = useState(false);
   const [textInputValue, setTextInputValue] = useState('');
   const [textInputPos, setTextInputPos] = useState({ x: 0, y: 0 });
-  
   const [isCursorVisible, setIsCursorVisible] = useState(false);
+  
+  const isDraggingRef = useRef(false);
+  
+  const prevObjectsRef = useRef([]);
+  const prevPathsRef = useRef([]);
+  const prevSelectedIdRef = useRef(null);
 
   const dispatch = useDispatch();
   
@@ -142,6 +140,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const { 
     redrawStatic, 
     drawLiveLayer,
+    drawSingleObjectOnActive, 
     clearActiveLayer,
     tempObjectDataRef,
     tempPathDataRef
@@ -185,19 +184,15 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const calculateCanvasSize = useCallback(() => {
     const container = containerRef.current;
     if (!container) return { width: 800, height: 500 };
-
     const containerWidth = container.parentElement?.clientWidth || window.innerWidth;
     const scale = containerWidth / BASE_SCREEN_WIDTH;
     const maxAvailableWidth = MAX_CANVAS_WIDTH * scale;
     const maxAvailableHeight = BASE_CANVAS_HEIGHT * scale;
-    
     const widthBasedWidth = maxAvailableWidth;
     const widthBasedHeight = widthBasedWidth / fieldAspectRatio;
     const heightBasedHeight = maxAvailableHeight;
     const heightBasedWidth = heightBasedHeight * fieldAspectRatio;
-    
     let finalWidth, finalHeight;
-    
     if (widthBasedHeight <= maxAvailableHeight) {
       finalWidth = widthBasedWidth;
       finalHeight = widthBasedHeight;
@@ -205,26 +200,19 @@ const Canvas = ({ fieldSize, fieldType }) => {
       finalWidth = heightBasedWidth;
       finalHeight = heightBasedHeight;
     }
-    
     const maxContainerWidth = containerWidth * 0.95;
     if (finalWidth > maxContainerWidth) {
       const widthScale = maxContainerWidth / finalWidth;
       finalWidth = maxContainerWidth;
       finalHeight = finalHeight * widthScale;
     }
-    
-    return { 
-      width: Math.floor(finalWidth), 
-      height: Math.floor(finalHeight) 
-    };
+    return { width: Math.floor(finalWidth), height: Math.floor(finalHeight) };
   }, [fieldAspectRatio]);
 
   const getPointerPos = (e) => {
     const canvas = activeCanvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
-
     let clientX, clientY;
-
     if (e.changedTouches && e.changedTouches.length > 0) {
       clientX = e.changedTouches[0].clientX;
       clientY = e.changedTouches[0].clientY;
@@ -235,15 +223,10 @@ const Canvas = ({ fieldSize, fieldType }) => {
       clientX = e.clientX;
       clientY = e.clientY;
     }
-    
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY,
-    };
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
   };
 
   const clampCoordinates = (pos) => {
@@ -254,8 +237,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
   };
 
   const handleGlobalPointerMove = useCallback((e) => {
-    
-
     if (activeTool === 'drawing' && cursorRef.current) {
         let clientX, clientY;
         if (e.touches && e.touches.length > 0) {
@@ -272,67 +253,48 @@ const Canvas = ({ fieldSize, fieldType }) => {
     if (!draggedObjectRef.current && !resizeHandleRef.current && !drawingRef.current && !isDrawingShapeRef.current) {
         return; 
     }
-    
     if(e.cancelable) e.preventDefault(); 
-
     const rawPos = getPointerPos(e);
     const clampedPos = clampCoordinates(rawPos);
     
+    if ((draggedObjectRef.current || resizeHandleRef.current) && !isDraggingRef.current) {
+        isDraggingRef.current = true;
+    }
 
     if (resizeHandleRef.current) {
       const updatedObject = updateResize(rawPos);
       if (updatedObject) {
-        if (updatedObject.type === 'path') tempPathDataRef.current = updatedObject;
-        else tempObjectDataRef.current = updatedObject;
-        redrawStatic(paths, objects, selectedObjectIdRef.current, activeTool, drawColor, brushSize);
+        drawSingleObjectOnActive(updatedObject, drawColor, true);
       }
     } else if (draggedObjectRef.current) {
       const updatedObject = updateDragPosition(rawPos, canvasSize.width, canvasSize.height);
       if (updatedObject) {
-        if (updatedObject.type === 'path') tempPathDataRef.current = updatedObject;
-        else tempObjectDataRef.current = updatedObject;
-        redrawStatic(paths, objects, selectedObjectIdRef.current, activeTool, drawColor, brushSize);
+        drawSingleObjectOnActive(updatedObject, drawColor, true);
       }
     } 
-
     else if (drawingRef.current) {
       const pathPoints = continueDrawing(clampedPos);
-      
       if (pathPoints && pathPoints.length >= 2) {
         const livePath = {
-            id: 'live_drawing',
-            type: 'path',
-            points: pathPoints,
-            color: drawColor,
-            brushSize: brushSize,
-            opacity: brushOpacity,
-            brushStyle: brushStyle,
-            lineType: lineType
+            id: 'live_drawing', type: 'path', points: pathPoints,
+            color: drawColor, brushSize: brushSize, opacity: brushOpacity,
+            brushStyle: brushStyle, lineType: lineType
         };
-
-        const isIncremental = lineType === 'solid'; 
-        
-        drawLiveLayer(livePath, null, isIncremental); 
+        drawLiveLayer(livePath, null, lineType === 'solid'); 
       }
     } 
-
     else if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
       drawLiveLayer(null, {
-          type: shapeType,
-          start: shapeStartRef.current,
-          end: clampedPos,
-          borderColor: shapeBorderColor,
-          borderStyle: shapeBorderStyle,
-          borderWidth: shapeBorderWidth,
-          fillColor: shapeFillColor,
-          fillOpacity: shapeFillOpacity
+          type: shapeType, start: shapeStartRef.current, end: clampedPos,
+          borderColor: shapeBorderColor, borderStyle: shapeBorderStyle, borderWidth: shapeBorderWidth,
+          fillColor: shapeFillColor, fillOpacity: shapeFillOpacity
       }, false);
     }
   }, [
     canvasSize, draggedObjectRef, resizeHandleRef, drawingRef, isDrawingShapeRef, 
-    updateDragPosition, updateResize, redrawStatic, drawLiveLayer, continueDrawing, 
-    paths, objects, activeTool, drawColor, brushSize, shapeStartRef, 
+    updateDragPosition, updateResize, drawLiveLayer, drawSingleObjectOnActive, continueDrawing, 
+    activeTool, drawColor, brushSize, shapeStartRef, 
     shapeBorderColor, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
     brushOpacity, brushStyle, lineType
   ]);
@@ -343,42 +305,34 @@ const Canvas = ({ fieldSize, fieldType }) => {
     window.removeEventListener('touchmove', handleGlobalPointerMove);
     window.removeEventListener('touchend', handleGlobalPointerUp);
 
+    isDraggingRef.current = false;
     const rawPos = getPointerPos(e);
     const clampedPos = clampCoordinates(rawPos);
     
-    clearActiveLayer();
+    if (!selectedObjectIdRef.current && !drawingRef.current && !isDrawingShapeRef.current) {
+        clearActiveLayer();
+    }
 
     if (drawingRef.current) {
       const path = endDrawing();
       if (path) {
         dispatch(addPath({
-          points: path,
-          color: drawColor,
-          brushSize: brushSize,
-          opacity: brushOpacity,
-          brushStyle: brushStyle,
-          lineType: lineType
+          points: path, color: drawColor, brushSize: brushSize,
+          opacity: brushOpacity, brushStyle: brushStyle, lineType: lineType
         }));
       }
+      clearActiveLayer(); 
     }
     
-
     if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
       const shapeData = endShape(clampedPos, shapeType);
-      
       if (shapeData) {
         const baseShapeData = {
-          type: 'shape',
-          shape: shapeType,
-          ...shapeData,
-          borderColor: shapeBorderColor,
-          borderOpacity: shapeBorderOpacity,
-          borderWidth: shapeBorderWidth,
-          borderStyle: shapeBorderStyle,
-          color: shapeBorderColor
+          type: 'shape', shape: shapeType, ...shapeData,
+          borderColor: shapeBorderColor, borderOpacity: shapeBorderOpacity, borderWidth: shapeBorderWidth,
+          borderStyle: shapeBorderStyle, color: shapeBorderColor
         };
-
         if (shapeType === 'line' || shapeType === 'arrow') {
           baseShapeData.lineCapStart = shapeLineCapStart;
           baseShapeData.lineCapEnd = shapeType === 'arrow' ? 'arrow' : shapeLineCapEnd;
@@ -386,9 +340,9 @@ const Canvas = ({ fieldSize, fieldType }) => {
           baseShapeData.fillColor = shapeFillColor;
           baseShapeData.fillOpacity = shapeFillOpacity;
         }
-
         dispatch(addObject(baseShapeData));
       }
+      clearActiveLayer();
     }
     
     if (draggedObjectRef.current) {
@@ -396,39 +350,23 @@ const Canvas = ({ fieldSize, fieldType }) => {
       if (draggedObject) {
         if (draggedObject.type === 'path') {
           const pathIndex = parseInt(draggedObject.id.replace('path_', ''));
-          dispatch(updatePath({
-            index: pathIndex,
-            updates: draggedObject
-          }));
+          dispatch(updatePath({ index: pathIndex, updates: draggedObject }));
         } else {
-          dispatch(updateObject({
-            id: draggedObject.id,
-            updates: draggedObject
-          }));
+          dispatch(updateObject({ id: draggedObject.id, updates: draggedObject }));
         }
       }
-      tempObjectDataRef.current = null;
-      tempPathDataRef.current = null;
     }
     
     if (resizeHandleRef.current) {
       const resizeData = endResize();
-      if (resizeData && tempObjectDataRef.current) {
+      if (resizeData && resizeData.id) {
         if (resizeData.type === 'path') {
           const pathIndex = parseInt(resizeData.id.replace('path_', ''));
-          dispatch(updatePath({
-            index: pathIndex,
-            updates: tempPathDataRef.current
-          }));
+          dispatch(updatePath({ index: pathIndex, updates: resizeData }));
         } else {
-          dispatch(updateObject({
-            id: tempObjectDataRef.current.id,
-            updates: tempObjectDataRef.current
-          }));
+          dispatch(updateObject({ id: resizeData.id, updates: resizeData }));
         }
       }
-      tempObjectDataRef.current = null;
-      tempPathDataRef.current = null;
     }
     
     setCursorStyle('default');
@@ -437,8 +375,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     resizeHandleRef, activeTool, endDrawing, endShape, endDrag, endResize, dispatch, 
     drawColor, brushSize, shapeBorderColor, shapeBorderOpacity, shapeBorderWidth, 
     shapeBorderStyle, shapeFillColor, shapeFillOpacity, shapeLineCapStart, 
-    shapeLineCapEnd, setCursorStyle, paths, objects, canvasSize,
-    brushOpacity, brushStyle, lineType, clearActiveLayer
+    shapeLineCapEnd, setCursorStyle, clearActiveLayer
   ]);
 
   const handlePointerDown = (e) => {
@@ -458,7 +395,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
     }
     
     if (activeTool === 'cursor') {
-
       const selectedObj = selectedObjectId ? 
         (selectedObjectId.startsWith('path_') ? 
           { ...paths[parseInt(selectedObjectId.replace('path_', ''))], type: 'path', id: selectedObjectId } :
@@ -471,14 +407,10 @@ const Canvas = ({ fieldSize, fieldType }) => {
           const handle = checkForHandle(pos, selectedObj, canvas);
           if (handle) {
             startResize(handle, selectedObj, pos, bounds);
-            if (selectedObj.type === 'path') tempPathDataRef.current = { ...selectedObj };
-            else tempObjectDataRef.current = { ...selectedObj };
             return;
           }
           if (checkIfPointInSelectedBounds(pos, selectedObj, canvas)) {
             startDrag(selectedObj, pos, canvas);
-            if (selectedObj.type === 'path') tempPathDataRef.current = { ...selectedObj };
-            else tempObjectDataRef.current = { ...selectedObj };
             return;
           }
         }
@@ -488,48 +420,33 @@ const Canvas = ({ fieldSize, fieldType }) => {
       if (clickedObject) {
         selectedObjectIdRef.current = clickedObject.id;
         dispatch(selectObject(clickedObject.id));
-        
         const bounds = getObjectBounds(clickedObject, canvas);
         if (bounds) {
           startDrag(clickedObject, pos, canvas);
-          if (clickedObject.type === 'path') tempPathDataRef.current = { ...clickedObject };
-          else tempObjectDataRef.current = { ...clickedObject };
-          
-          redrawStatic(paths, objects, clickedObject.id, activeTool, drawColor, brushSize);
         }
       } else {
         selectedObjectIdRef.current = null;
         dispatch(deselectObject());
-        redrawStatic(paths, objects, null, activeTool, drawColor, brushSize);
       }
       
     } else if (activeTool === 'drawing') {
       startDrawing(pos);
-
-      const livePath = {
-        id: 'live_drawing',
-        type: 'path',
-        points: [pos],
-        color: drawColor,
-        brushSize: brushSize,
-        opacity: brushOpacity,
-        brushStyle: brushStyle,
-        lineType: lineType
+       const livePath = {
+        id: 'live_drawing', type: 'path', points: [pos],
+        color: drawColor, brushSize: brushSize, opacity: brushOpacity,
+        brushStyle: brushStyle, lineType: lineType
       };
-
       drawLiveLayer(livePath, null, false);
     } else if (activeTool.startsWith('shape_')) {
       startShape(pos);
     } else if (activeTool.startsWith('figure_')) {
-
        const figureIcons = { 'player': '👤', 'goalkeeper': '🧤', 'coach': '🧠', 'referee': '⚖️', 'goal': '🥅', 'cone': '🟨' };
        const figureId = activeTool.replace('figure_', '');
        dispatch(addObject({ type: 'figure', figureType: figureId, icon: figureIcons[figureId], x: pos.x, y: pos.y, size: 30 }));
     } else if (activeTool === 'ball') {
       dispatch(addObject({ type: 'ball', x: pos.x, y: pos.y, radius: 10 }));
     } else if (activeTool === 'text') {
-
-       const newTextId = `text_${Date.now()}_${Math.random()}`;
+      const newTextId = `text_${Date.now()}_${Math.random()}`;
       setIsTextInput(true);
       setTextInputValue('');
       setTextInputPos(pos);
@@ -540,7 +457,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
   };
 
   const handleCanvasMouseMove = (e) => {
-
     if (draggedObjectRef.current || resizeHandleRef.current || drawingRef.current || isDrawingShapeRef.current) return;
     if (e.touches) return;
     
@@ -551,7 +467,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
     const pos = getPointerPos(e);
     const canvas = staticCanvasRef.current;
-    
     if (activeTool === 'cursor') {
       updateCursor(pos, objects, paths, selectedObjectIdRef.current, brushSize, canvas);
     }
@@ -597,13 +512,69 @@ const Canvas = ({ fieldSize, fieldType }) => {
         }));
         initializedRef.current = true;
       }
-      redrawStatic(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
+      redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId);
     }
   }, [canvasSize, dispatch, redrawStatic, paths, objects, selectedObjectId, activeTool, drawColor, brushSize]);
 
   useEffect(() => {
-    redrawStatic(paths, objects, selectedObjectId, activeTool, drawColor, brushSize);
-  }, [paths, objects, selectedObjectId, redrawStatic, activeTool, drawColor, brushSize]);
+    if (isDraggingRef.current) return;
+
+    const prevObjects = prevObjectsRef.current;
+    const prevPaths = prevPathsRef.current;
+    const prevSelectedId = prevSelectedIdRef.current;
+
+    let isOnlySelectedChanged = false;
+    let changedObject = null;
+
+    if (selectedObjectId && selectedObjectId === prevSelectedId) {
+        if (selectedObjectId.startsWith('path_')) {
+             const idx = parseInt(selectedObjectId.replace('path_', ''));
+             if (paths[idx] !== prevPaths[idx]) {
+                 isOnlySelectedChanged = true;
+                 changedObject = { ...paths[idx], type: 'path', id: selectedObjectId };
+             }
+        } else {
+             const newObj = objects.find(o => o.id === selectedObjectId);
+             const oldObj = prevObjects.find(o => o.id === selectedObjectId);
+             if (newObj !== oldObj) {
+                 isOnlySelectedChanged = true;
+                 changedObject = newObj;
+             }
+        }
+        
+        if (objects.length !== prevObjects.length || paths.length !== prevPaths.length) {
+            isOnlySelectedChanged = false;
+        }
+    }
+
+    if (isOnlySelectedChanged && changedObject) {
+        drawSingleObjectOnActive(changedObject, drawColor, true);
+    } else {
+        redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId);
+        
+        if (selectedObjectId) {
+            let selObj = null;
+            if (selectedObjectId.startsWith('path_')) {
+                const idx = parseInt(selectedObjectId.replace('path_', ''));
+                if (paths[idx]) selObj = { ...paths[idx], type: 'path', id: selectedObjectId };
+            } else {
+                selObj = objects.find(o => o.id === selectedObjectId);
+            }
+            if (selObj) {
+                drawSingleObjectOnActive(selObj, drawColor, true);
+            } else {
+                clearActiveLayer();
+            }
+        } else {
+            clearActiveLayer();
+        }
+    }
+
+    prevObjectsRef.current = objects;
+    prevPathsRef.current = paths;
+    prevSelectedIdRef.current = selectedObjectId;
+
+  }, [paths, objects, selectedObjectId, redrawStatic, drawSingleObjectOnActive, clearActiveLayer, activeTool, drawColor, brushSize]);
 
   useEffect(() => {
     if (canvasSize.width > 0 && canvasSize.height > 0) {
@@ -691,12 +662,11 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
   return (
     <OuterContainer>
-      {/* Кастомний курсор */}
       <CustomCursor 
         ref={cursorRef}
         size={brushSize}
         color={drawColor}
-        visible={activeTool === 'drawing' && isCursorVisible}
+        $visible={activeTool === 'drawing' && isCursorVisible}
       />
 
       <CanvasContainer 

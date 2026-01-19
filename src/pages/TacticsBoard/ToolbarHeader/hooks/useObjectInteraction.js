@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { getObjectBounds, getObjectAtPosition, getHandleAtPosition, isPointInBoundingBox } from '../utils/objectBoundsUtils';
+import { createObjectCache } from '../utils/drawingUtils';
 
 export const useObjectInteraction = () => {
   const draggedObjectRef = useRef(null);
@@ -8,14 +9,30 @@ export const useObjectInteraction = () => {
   const [cursorStyle, setCursorStyle] = useState('default');
 
   const startDrag = (clickedObject, pos, canvas) => {
-
     const bounds = getObjectBounds(clickedObject, canvas);
     
-    draggedObjectRef.current = JSON.parse(JSON.stringify(clickedObject));
+    let objectCopy;
+    if (clickedObject.type === 'path') {
+        objectCopy = { 
+            ...clickedObject, 
+            points: clickedObject.points.map(p => ({ ...p })) 
+        };
+    } else {
+        objectCopy = { ...clickedObject };
+    }
+
+    const cache = createObjectCache(clickedObject, canvas);
+    
+    draggedObjectRef.current = {
+      ...objectCopy,
+      _cache: cache
+    };
     
     initialDragStateRef.current = {
       mouseStart: { ...pos },
-      objectStart: JSON.parse(JSON.stringify(clickedObject)),
+      objectStart: clickedObject.type === 'path' 
+          ? { ...clickedObject, points: clickedObject.points.map(p => ({ ...p })) }
+          : { ...clickedObject },
       cachedBounds: bounds || { x: 0, y: 0, width: 0, height: 0 }
     };
 
@@ -52,21 +69,24 @@ export const useObjectInteraction = () => {
     const totalDeltaX = pos.x - initialDragStateRef.current.mouseStart.x;
     const totalDeltaY = pos.y - initialDragStateRef.current.mouseStart.y;
 
-    let candidateObject = JSON.parse(JSON.stringify(objectStart));
+    let candidateObject = draggedObjectRef.current; 
     
     if (candidateObject.type === 'path') {
-      candidateObject.points = candidateObject.points.map(p => ({
-        x: p.x + totalDeltaX,
-        y: p.y + totalDeltaY
-      }));
+        const startPoints = objectStart.points;
+        const currentPoints = candidateObject.points;
+        
+        for(let i = 0; i < startPoints.length; i++) {
+            currentPoints[i].x = startPoints[i].x + totalDeltaX;
+            currentPoints[i].y = startPoints[i].y + totalDeltaY;
+        }
     } else if (candidateObject.type === 'shape' && (candidateObject.shape === 'line' || candidateObject.shape === 'arrow')) {
-      candidateObject.startX += totalDeltaX;
-      candidateObject.endX += totalDeltaX;
-      candidateObject.startY += totalDeltaY;
-      candidateObject.endY += totalDeltaY;
+        candidateObject.startX = objectStart.startX + totalDeltaX;
+        candidateObject.endX = objectStart.endX + totalDeltaX;
+        candidateObject.startY = objectStart.startY + totalDeltaY;
+        candidateObject.endY = objectStart.endY + totalDeltaY;
     } else {
-      candidateObject.x += totalDeltaX;
-      candidateObject.y += totalDeltaY;
+        candidateObject.x = objectStart.x + totalDeltaX;
+        candidateObject.y = objectStart.y + totalDeltaY;
     }
 
     const currentBoundsCenterX = (cachedBounds.x + cachedBounds.width / 2) + totalDeltaX;
@@ -75,41 +95,39 @@ export const useObjectInteraction = () => {
     let correctionX = 0;
     let correctionY = 0;
 
-    if (currentBoundsCenterX < 0) {
-      correctionX = 0 - currentBoundsCenterX;
-    } else if (currentBoundsCenterX > canvasWidth) {
-      correctionX = canvasWidth - currentBoundsCenterX;
-    }
+    if (currentBoundsCenterX < 0) correctionX = 0 - currentBoundsCenterX;
+    else if (currentBoundsCenterX > canvasWidth) correctionX = canvasWidth - currentBoundsCenterX;
 
-    if (currentBoundsCenterY < 0) {
-      correctionY = 0 - currentBoundsCenterY;
-    } else if (currentBoundsCenterY > canvasHeight) {
-      correctionY = canvasHeight - currentBoundsCenterY;
-    }
+    if (currentBoundsCenterY < 0) correctionY = 0 - currentBoundsCenterY;
+    else if (currentBoundsCenterY > canvasHeight) correctionY = canvasHeight - currentBoundsCenterY;
 
     if (correctionX !== 0 || correctionY !== 0) {
-      if (candidateObject.type === 'path') {
-        candidateObject.points = candidateObject.points.map(p => ({
-          x: p.x + correctionX,
-          y: p.y + correctionY
-        }));
-      } else if (candidateObject.type === 'shape' && (candidateObject.shape === 'line' || candidateObject.shape === 'arrow')) {
-        candidateObject.startX += correctionX;
-        candidateObject.endX += correctionX;
-        candidateObject.startY += correctionY;
-        candidateObject.endY += correctionY;
-      } else {
-        candidateObject.x += correctionX;
-        candidateObject.y += correctionY;
-      }
+        if (candidateObject.type === 'path') {
+             for(let i = 0; i < candidateObject.points.length; i++) {
+                candidateObject.points[i].x += correctionX;
+                candidateObject.points[i].y += correctionY;
+            }
+        } else if (candidateObject.type === 'shape' && (candidateObject.shape === 'line' || candidateObject.shape === 'arrow')) {
+            candidateObject.startX += correctionX;
+            candidateObject.endX += correctionX;
+            candidateObject.startY += correctionY;
+            candidateObject.endY += correctionY;
+        } else {
+            candidateObject.x += correctionX;
+            candidateObject.y += correctionY;
+        }
     }
 
-    draggedObjectRef.current = candidateObject;
     return candidateObject;
   };
 
   const endDrag = () => {
     const draggedObject = draggedObjectRef.current;
+    
+    if (draggedObject && draggedObject._cache) {
+        delete draggedObject._cache;
+    }
+
     draggedObjectRef.current = null;
     initialDragStateRef.current = null;
     dragOffsetRef.current = { x: 0, y: 0 };
@@ -117,6 +135,8 @@ export const useObjectInteraction = () => {
   };
 
   const updateCursor = (pos, objects, paths, selectedObjectId, brushSize, canvas) => {
+    if (draggedObjectRef.current) return;
+
     if (selectedObjectId) {
       const selectedObj = selectedObjectId ? 
         (selectedObjectId.startsWith('path_') ? 
