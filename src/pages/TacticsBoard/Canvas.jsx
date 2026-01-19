@@ -41,8 +41,12 @@ const CanvasContainer = styled.div`
   display: inline-block;
   max-width: 100%;
   position: relative;
+  
   cursor: ${props => {
-    if (props.$activeTool === 'drawing' || props.$activeTool === 'eraser') return 'none';
+    if (props.$isTextInput) return 'default';
+    
+    if (props.$activeTool === 'drawing' || props.$activeTool === 'eraser' || props.$activeTool === 'text') return 'none';
+    
     return props.cursor;
   }};
 `;
@@ -89,15 +93,29 @@ const CustomCursor = styled.div`
   position: fixed;
   pointer-events: none;
   z-index: 9999;
-  border-radius: 50%;
-  border: 2px solid ${props => props.isEraser ? '#000' : props.color}; 
+  
+  border-radius: ${props => props.isText ? '0' : '50%'};
+  border: ${props => props.isText ? 'none' : `2px solid ${props.isEraser ? '#000' : props.color}`};
   background-color: ${props => props.isEraser ? 'rgba(255, 255, 255, 0.8)' : 'transparent'}; 
-  width: ${props => props.size}px;
-  height: ${props => props.size}px;
+  
+  width: ${props => props.isText ? 'auto' : `${props.size}px`};
+  height: ${props => props.isText ? 'auto' : `${props.size}px`};
+  
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 4px rgba(0,0,0,0.2);
-  display: ${props => props.$visible ? 'block' : 'none'};
+  
+  box-shadow: ${props => props.isText ? 'none' : '0 0 0 1px rgba(255, 255, 255, 0.5), 0 0 4px rgba(0,0,0,0.2)'};
+  
+  display: ${props => props.$visible ? 'flex' : 'none'};
+  align-items: center;
+  justify-content: center;
   transition: width 0.1s, height 0.1s;
+
+  font-family: 'Times New Roman', serif;
+  font-weight: bold;
+  font-size: 24px;
+  color: ${props => props.color || 'black'};
+  text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+  white-space: nowrap;
 `;
 
 const Canvas = ({ fieldSize, fieldType }) => {
@@ -263,7 +281,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
     const steps = Math.max(1, Math.ceil(dist / (eraserSize / 5))); 
     
     let hasNewDeletions = false;
-
     const effectiveRadius = (eraserSize / 2) * 0.85;
 
     for (let i = 0; i <= steps; i++) {
@@ -306,7 +323,8 @@ const Canvas = ({ fieldSize, fieldType }) => {
   }, [objects, paths, eraserSize, activeTool, drawColor, brushSize, redrawStatic]);
 
   const handleGlobalPointerMove = useCallback((e) => {
-    if ((activeTool === 'drawing' || activeTool === 'eraser') && cursorRef.current) {
+
+    if ((activeTool === 'drawing' || activeTool === 'eraser' || activeTool === 'text') && cursorRef.current && !isTextInput) {
         let clientX, clientY;
         if (e.touches && e.touches.length > 0) {
             clientX = e.touches[0].clientX;
@@ -376,7 +394,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     updateDragPosition, updateResize, drawLiveLayer, drawSingleObjectOnActive, continueDrawing, 
     activeTool, drawColor, brushSize, eraserSize, shapeStartRef,
     shapeBorderColor, shapeBorderOpacity, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
-    brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd, handleEraserMove
+    brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd, handleEraserMove, isTextInput
   ]);
 
   const handleGlobalPointerUp = useCallback((e) => {
@@ -552,7 +570,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     if (draggedObjectRef.current || resizeHandleRef.current || drawingRef.current || isDrawingShapeRef.current || isDraggingRef.current) return;
     if (e.touches) return;
     
-    if ((activeTool === 'drawing' || activeTool === 'eraser') && cursorRef.current) {
+    if ((activeTool === 'drawing' || activeTool === 'eraser' || activeTool === 'text') && cursorRef.current && !isTextInput) {
         cursorRef.current.style.left = `${e.clientX}px`;
         cursorRef.current.style.top = `${e.clientY}px`;
     }
@@ -757,18 +775,27 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
   return (
     <OuterContainer>
+      {/* ОНОВЛЕНО: CustomCursor ховається, коли isTextInput === true (щоб не заважати) */}
       <CustomCursor 
         ref={cursorRef}
         size={activeTool === 'eraser' ? eraserSize : brushSize} 
-        color={drawColor}
-        $visible={(activeTool === 'drawing' || activeTool === 'eraser') && isCursorVisible} 
-        isEraser={activeTool === 'eraser'} 
-      />
+        color={activeTool === 'text' ? textColor : drawColor} 
+        $visible={
+          (activeTool === 'drawing' || activeTool === 'eraser' || (activeTool === 'text' && !isTextInput)) 
+          && isCursorVisible
+        } 
+        isEraser={activeTool === 'eraser'}
+        isText={activeTool === 'text'}
+      >
+        {activeTool === 'text' && 'T'}
+      </CustomCursor>
 
+      {/* ОНОВЛЕНО: Передаємо $isTextInput у CanvasContainer */}
       <CanvasContainer 
         ref={containerRef} 
         cursor={cursorStyle} 
         $activeTool={activeTool}
+        $isTextInput={isTextInput} 
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

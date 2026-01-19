@@ -9,6 +9,22 @@ const rotatePoint = (x, y, centerX, centerY, angle) => {
   };
 };
 
+const getCursorForRotation = (baseAngle, objectRotation) => {
+  const totalAngle = (baseAngle + objectRotation) % 360;
+  const normalized = (totalAngle < 0 ? totalAngle + 360 : totalAngle);
+  
+  const step = Math.round(normalized / 45) % 4;
+  
+  const cursors = [
+    'ns-resize',
+    'nesw-resize',
+    'ew-resize',
+    'nwse-resize'
+  ];
+  
+  return cursors[step];
+};
+
 export const getObjectBounds = (obj, canvas) => {
   if (obj.type === 'player') {
     const radius = obj.radius || 20;
@@ -90,32 +106,16 @@ export const getObjectBounds = (obj, canvas) => {
   
   if (obj.type === 'shape') {
     if (obj.shape === 'line' || obj.shape === 'arrow') {
-      const rotation = obj.rotation || 0;
-      if (rotation !== 0) {
-        const angle = (rotation * Math.PI) / 180;
-        const centerX = (obj.startX + obj.endX) / 2;
-        const centerY = (obj.startY + obj.endY) / 2;
-        const rotatedStart = rotatePoint(obj.startX, obj.startY, centerX, centerY, angle);
-        const rotatedEnd = rotatePoint(obj.endX, obj.endY, centerX, centerY, angle);
-        const minX = Math.min(rotatedStart.x, rotatedEnd.x);
-        const maxX = Math.max(rotatedStart.x, rotatedEnd.x);
-        const minY = Math.min(rotatedStart.y, rotatedEnd.y);
-        const maxY = Math.max(rotatedStart.y, rotatedEnd.y);
+        const minX = Math.min(obj.startX, obj.endX);
+        const maxX = Math.max(obj.startX, obj.endX);
+        const minY = Math.min(obj.startY, obj.endY);
+        const maxY = Math.max(obj.startY, obj.endY);
+        const padding = (obj.borderWidth || 2) + 10;
         return {
-          x: minX, y: minY, width: maxX - minX, height: maxY - minY,
-          startX: rotatedStart.x, startY: rotatedStart.y, endX: rotatedEnd.x, endY: rotatedEnd.y,
-          originalStartX: obj.startX, originalStartY: obj.startY, originalEndX: obj.endX, originalEndY: obj.endY,
-          centerX: centerX, centerY: centerY, rotation: rotation, rotatedCorners: [rotatedStart, rotatedEnd]
+          x: minX - padding, y: minY - padding, 
+          width: (maxX - minX) + padding * 2, height: (maxY - minY) + padding * 2,
+          startX: obj.startX, startY: obj.startY, endX: obj.endX, endY: obj.endY
         };
-      }
-      const minX = Math.min(obj.startX, obj.endX);
-      const maxX = Math.max(obj.startX, obj.endX);
-      const minY = Math.min(obj.startY, obj.endY);
-      const maxY = Math.max(obj.startY, obj.endY);
-      return {
-        x: minX, y: minY, width: maxX - minX, height: maxY - minY,
-        startX: obj.startX, startY: obj.startY, endX: obj.endX, endY: obj.endY, rotation: obj.rotation || 0
-      };
     }
     
     const w = obj.width || 50;
@@ -293,15 +293,13 @@ export const isPointInBoundingBox = (x, y, bounds, tolerance = 0) => {
 export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
   const bounds = getObjectBounds(obj, canvas);
   if (!bounds) return false;
-
+  
   if (!isPointInBoundingBox(x, y, bounds, brushSize)) {
       return false;
   }
  
   if (obj.type === 'path') {
-
     const tolerance = (obj.brushSize / 2) + brushSize; 
-    
     for (let i = 0; i < obj.points.length - 1; i++) {
       const p1 = obj.points[i];
       const p2 = obj.points[i + 1];
@@ -317,25 +315,24 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
     }
     return false;
   }
-
+  
   if (obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
-
     const tolerance = (obj.borderWidth / 2) + brushSize;
     const dx = bounds.endX - bounds.startX;
     const dy = bounds.endY - bounds.startY;
-    const length = Math.sqrt(dx * dx + dy * dy);
-    if (length === 0) return false;
-    const t = Math.max(0, Math.min(1, ((x - bounds.startX) * dx + (y - bounds.startY) * dy) / (length * length)));
+    const lenSq = dx * dx + dy * dy;
+    let t = 0;
+    if (lenSq > 0) t = ((x - bounds.startX) * dx + (y - bounds.startY) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
     const projX = bounds.startX + t * dx;
     const projY = bounds.startY + t * dy;
-    const distance = Math.sqrt(Math.pow(x - projX, 2) + Math.pow(y - projY, 2));
-    return distance <= tolerance;
+    const distSq = (x - projX) ** 2 + (y - projY) ** 2;
+    return distSq <= tolerance * tolerance;
   }
-
+  
   if (obj.type === 'shape' && obj.shape === 'circle') {
     const centerX = bounds.centerX || bounds.x + bounds.width / 2;
     const centerY = bounds.centerY || bounds.y + bounds.height / 2;
-    
     const rx = ((bounds.originalWidth ? Math.abs(bounds.originalWidth) : bounds.width) / 2) + brushSize;
     const ry = ((bounds.originalHeight ? Math.abs(bounds.originalHeight) : bounds.height) / 2) + brushSize;
     
@@ -347,7 +344,6 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
         const ryPos = dx * Math.sin(angle) + dy * Math.cos(angle);
         return (rxPos * rxPos) / (rx * rx) + (ryPos * ryPos) / (ry * ry) <= 1;
     }
-    
     return (Math.pow(x - centerX, 2) / Math.pow(rx, 2)) + (Math.pow(y - centerY, 2) / Math.pow(ry, 2)) <= 1;
   }
   
@@ -355,6 +351,8 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
 };
 
 export const getResizeHandles = (bounds, obj) => {
+  const rotation = (obj && obj.rotation) || 0;
+
   if (obj && obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
     return {
       start: { x: bounds.startX, y: bounds.startY, cursor: 'crosshair' },
@@ -366,35 +364,18 @@ export const getResizeHandles = (bounds, obj) => {
     return {};
   }
   
-  if (obj && obj.type === 'text') {
-    if (bounds.rotatedCorners && bounds.rotatedCorners.length === 4) {
-      const c = bounds.rotatedCorners;
-      return {
-        topLeft: { x: c[0].x, y: c[0].y, cursor: 'nwse-resize' },
-        topRight: { x: c[1].x, y: c[1].y, cursor: 'nesw-resize' },
-        bottomRight: { x: c[2].x, y: c[2].y, cursor: 'nwse-resize' },
-        bottomLeft: { x: c[3].x, y: c[3].y, cursor: 'nesw-resize' },
-      };
-    }
-    return {
-      topLeft: { x: bounds.x, y: bounds.y, cursor: 'nwse-resize' },
-      topRight: { x: bounds.x + bounds.width, y: bounds.y, cursor: 'nesw-resize' },
-      bottomLeft: { x: bounds.x, y: bounds.y + bounds.height, cursor: 'nesw-resize' },
-      bottomRight: { x: bounds.x + bounds.width, y: bounds.y + bounds.height, cursor: 'nwse-resize' },
-    };
-  }
-  
   if (bounds.rotatedCorners && bounds.rotatedCorners.length === 4) {
     const corners = bounds.rotatedCorners;
     return {
-      topLeft: { x: corners[0].x, y: corners[0].y, cursor: 'nwse-resize' },
-      topRight: { x: corners[1].x, y: corners[1].y, cursor: 'nesw-resize' },
-      bottomRight: { x: corners[2].x, y: corners[2].y, cursor: 'nwse-resize' },
-      bottomLeft: { x: corners[3].x, y: corners[3].y, cursor: 'nesw-resize' },
-      top: { x: (corners[0].x + corners[1].x) / 2, y: (corners[0].y + corners[1].y) / 2, cursor: 'ns-resize' },
-      bottom: { x: (corners[2].x + corners[3].x) / 2, y: (corners[2].y + corners[3].y) / 2, cursor: 'ns-resize' },
-      left: { x: (corners[0].x + corners[3].x) / 2, y: (corners[0].y + corners[3].y) / 2, cursor: 'ew-resize' },
-      right: { x: (corners[1].x + corners[2].x) / 2, y: (corners[1].y + corners[2].y) / 2, cursor: 'ew-resize' }
+      topLeft: { x: corners[0].x, y: corners[0].y, cursor: getCursorForRotation(315, rotation) },
+      topRight: { x: corners[1].x, y: corners[1].y, cursor: getCursorForRotation(45, rotation) },
+      bottomRight: { x: corners[2].x, y: corners[2].y, cursor: getCursorForRotation(135, rotation) },
+      bottomLeft: { x: corners[3].x, y: corners[3].y, cursor: getCursorForRotation(225, rotation) },
+      
+      top: { x: (corners[0].x + corners[1].x) / 2, y: (corners[0].y + corners[1].y) / 2, cursor: getCursorForRotation(0, rotation) },
+      bottom: { x: (corners[2].x + corners[3].x) / 2, y: (corners[2].y + corners[3].y) / 2, cursor: getCursorForRotation(180, rotation) },
+      left: { x: (corners[0].x + corners[3].x) / 2, y: (corners[0].y + corners[3].y) / 2, cursor: getCursorForRotation(270, rotation) },
+      right: { x: (corners[1].x + corners[2].x) / 2, y: (corners[1].y + corners[2].y) / 2, cursor: getCursorForRotation(90, rotation) }
     };
   }
   
