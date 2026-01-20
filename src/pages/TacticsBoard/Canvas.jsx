@@ -16,7 +16,9 @@ import {
   setShapeLineCapEnd,
   deleteObject, 
   deletePath,
-  deleteObjects
+  deleteObjects,
+  undo,
+  redo
 } from '../../redux/TacticsBoard/TacticsBoardSlice';
 
 import { useCanvasDrawing } from './ToolbarHeader/hooks/useCanvasDrawing';
@@ -322,6 +324,106 @@ const Canvas = ({ fieldSize, fieldType }) => {
     lastEraserPosRef.current = currentPos;
   }, [objects, paths, eraserSize, activeTool, drawColor, brushSize, redrawStatic]);
 
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (isTextInput) return;
+
+      const isCmdOrCtrl = e.ctrlKey || e.metaKey;
+      
+      if (isCmdOrCtrl && !e.shiftKey && e.code === 'KeyZ') {
+         e.preventDefault();
+         dispatch(undo());
+         return;
+      }
+      
+      if ((isCmdOrCtrl && e.code === 'KeyY') || (isCmdOrCtrl && e.shiftKey && e.code === 'KeyZ')) {
+         e.preventDefault();
+         dispatch(redo());
+         return;
+      }
+
+      if (e.key === 'Delete') {
+          if (selectedObjectId) {
+              if (selectedObjectId.startsWith('path_')) {
+                  const idx = parseInt(selectedObjectId.replace('path_', ''));
+                  dispatch(deletePath(idx));
+              } else {
+                  dispatch(deleteObject(selectedObjectId));
+              }
+              dispatch(deselectObject());
+          }
+          return;
+      }
+
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          if (selectedObjectId) {
+             e.preventDefault();
+             const step = e.shiftKey ? 10 : 1; 
+             let dx = 0;
+             let dy = 0;
+             if (e.key === 'ArrowUp') dy = -step;
+             if (e.key === 'ArrowDown') dy = step;
+             if (e.key === 'ArrowLeft') dx = -step;
+             if (e.key === 'ArrowRight') dx = step;
+
+             let objToMove = null;
+             if (selectedObjectId.startsWith('path_')) {
+                 const idx = parseInt(selectedObjectId.replace('path_', ''));
+                 objToMove = { ...paths[idx], type: 'path' }; 
+             } else {
+                 objToMove = objects.find(o => o.id === selectedObjectId);
+             }
+
+             if (objToMove) {
+                 const bounds = getObjectBounds(objToMove, staticCanvasRef.current);
+                 if (bounds) {
+                     const canvasW = canvasSize.width;
+                     const canvasH = canvasSize.height;
+                     
+                     const halfW = bounds.width / 2;
+                     const halfH = bounds.height / 2;
+                     
+                     const minX = -halfW;
+                     const maxX = canvasW - halfW;
+                     const minY = -halfH;
+                     const maxY = canvasH - halfH;
+
+                     const nextX = bounds.x + dx;
+                     const nextY = bounds.y + dy;
+                     
+                     if (nextX < minX) dx = minX - bounds.x;
+                     if (nextX > maxX) dx = maxX - bounds.x;
+                     if (nextY < minY) dy = minY - bounds.y;
+                     if (nextY > maxY) dy = maxY - bounds.y;
+                 }
+
+                 if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
+                     if (selectedObjectId.startsWith('path_')) {
+                        const idx = parseInt(selectedObjectId.replace('path_', ''));
+                        const newPoints = paths[idx].points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+                        dispatch(updatePath({ index: idx, updates: { points: newPoints } }));
+                     } else {
+                        if (objToMove.type === 'shape' && (objToMove.shape === 'line' || objToMove.shape === 'arrow')) {
+                           dispatch(updateObject({ id: selectedObjectId, updates: { 
+                              startX: objToMove.startX + dx, 
+                              startY: objToMove.startY + dy,
+                              endX: objToMove.endX + dx,
+                              endY: objToMove.endY + dy
+                           }}));
+                        } else {
+                           dispatch(updateObject({ id: selectedObjectId, updates: { x: objToMove.x + dx, y: objToMove.y + dy } }));
+                        }
+                     }
+                 }
+             }
+          }
+      }
+    };
+    
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [selectedObjectId, isTextInput, dispatch, objects, paths, canvasSize]);
+
   const handleGlobalPointerMove = useCallback((e) => {
 
     if ((activeTool === 'drawing' || activeTool === 'eraser' || activeTool === 'text') && cursorRef.current && !isTextInput) {
@@ -352,7 +454,8 @@ const Canvas = ({ fieldSize, fieldType }) => {
         handleEraserMove(clampedPos);
     }
     else if (resizeHandleRef.current) {
-      const updatedObject = updateResize(rawPos);
+
+      const updatedObject = updateResize(rawPos, e.shiftKey, e.altKey);
       if (updatedObject) {
         drawSingleObjectOnActive(updatedObject, drawColor, true);
       }
@@ -375,10 +478,36 @@ const Canvas = ({ fieldSize, fieldType }) => {
     } 
     else if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
+      let endPos = clampedPos;
+
+      if (e.shiftKey) {
+         if (shapeType === 'line' || shapeType === 'arrow') {
+
+             const dx = endPos.x - shapeStartRef.current.x;
+             const dy = endPos.y - shapeStartRef.current.y;
+             const angle = Math.atan2(dy, dx);
+             const dist = Math.sqrt(dx*dx + dy*dy);
+             const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+             endPos = {
+                 x: shapeStartRef.current.x + Math.cos(snapAngle) * dist,
+                 y: shapeStartRef.current.y + Math.sin(snapAngle) * dist
+             };
+         } else {
+
+             const dx = endPos.x - shapeStartRef.current.x;
+             const dy = endPos.y - shapeStartRef.current.y;
+             const maxDim = Math.max(Math.abs(dx), Math.abs(dy));
+             endPos = {
+                 x: shapeStartRef.current.x + (dx >= 0 ? maxDim : -maxDim),
+                 y: shapeStartRef.current.y + (dy >= 0 ? maxDim : -maxDim)
+             };
+         }
+      }
+
       drawLiveLayer(null, {
           type: shapeType, 
           start: shapeStartRef.current, 
-          end: clampedPos,
+          end: endPos,
           borderColor: shapeBorderColor, 
           borderOpacity: shapeBorderOpacity, 
           borderStyle: shapeBorderStyle, 
@@ -413,7 +542,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     }
 
     const rawPos = getPointerPos(e);
-    const clampedPos = clampCoordinates(rawPos);
+    let clampedPos = clampCoordinates(rawPos);
     
     if (!selectedObjectIdRef.current && !drawingRef.current && !isDrawingShapeRef.current) {
         clearActiveLayer();
@@ -432,6 +561,29 @@ const Canvas = ({ fieldSize, fieldType }) => {
     
     if (isDrawingShapeRef.current && shapeStartRef.current) {
       const shapeType = activeTool.replace('shape_', '');
+
+      if (e.shiftKey) {
+         if (shapeType === 'line' || shapeType === 'arrow') {
+             const dx = clampedPos.x - shapeStartRef.current.x;
+             const dy = clampedPos.y - shapeStartRef.current.y;
+             const angle = Math.atan2(dy, dx);
+             const dist = Math.sqrt(dx*dx + dy*dy);
+             const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+             clampedPos = {
+                 x: shapeStartRef.current.x + Math.cos(snapAngle) * dist,
+                 y: shapeStartRef.current.y + Math.sin(snapAngle) * dist
+             };
+         } else {
+             const dx = clampedPos.x - shapeStartRef.current.x;
+             const dy = clampedPos.y - shapeStartRef.current.y;
+             const maxDim = Math.max(Math.abs(dx), Math.abs(dy));
+             clampedPos = {
+                 x: shapeStartRef.current.x + (dx >= 0 ? maxDim : -maxDim),
+                 y: shapeStartRef.current.y + (dy >= 0 ? maxDim : -maxDim)
+             };
+         }
+      }
+
       const shapeData = endShape(clampedPos, shapeType);
       if (shapeData) {
         const baseShapeData = {
