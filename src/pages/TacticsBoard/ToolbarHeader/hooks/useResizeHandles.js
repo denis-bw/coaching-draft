@@ -81,7 +81,19 @@ export const useResizeHandles = () => {
     let anchorPoint = { x: cx, y: cy }; 
     let handlePoint = { x: startPos.x, y: startPos.y }; 
 
-    if (handle.name === 'topLeft') {
+    if (object.shape === 'line' || object.shape === 'arrow') {
+        const globalStart = rotatePoint(object.startX, object.startY, cx, cy, rotation);
+        const globalEnd = rotatePoint(object.endX, object.endY, cx, cy, rotation);
+        
+        if (handle.name === 'start') {
+            handlePoint = globalStart;
+            anchorPoint = globalEnd; 
+        } else if (handle.name === 'end') {
+            handlePoint = globalEnd;
+            anchorPoint = globalStart;
+        }
+    }
+    else if (handle.name === 'topLeft') {
         handlePoint = corners[0];
         anchorPoint = corners[2]; 
     } else if (handle.name === 'topRight') {
@@ -94,7 +106,6 @@ export const useResizeHandles = () => {
         handlePoint = corners[3];
         anchorPoint = corners[1]; 
     } 
-
     else if (handle.name === 'top') {
         handlePoint = { x: (corners[0].x + corners[1].x)/2, y: (corners[0].y + corners[1].y)/2 };
         anchorPoint = { x: (corners[2].x + corners[3].x)/2, y: (corners[2].y + corners[3].y)/2 };
@@ -168,7 +179,7 @@ export const useResizeHandles = () => {
     };
   };
 
-  const updateResize = (pos) => {
+  const updateResize = (pos, isShiftPressed = false) => {
     if (!resizeHandleRef.current) return null;
 
     const {
@@ -231,16 +242,32 @@ export const useResizeHandles = () => {
     }
 
     if (object.type === 'shape' && (object.shape === 'line' || object.shape === 'arrow')) {
-       const globalStart = rotatePoint(lineStartX, lineStartY, startCenterX, startCenterY, rotation);
-       const globalEnd = rotatePoint(lineEndX, lineEndY, startCenterX, startCenterY, rotation);
+       let targetGlobalStart, targetGlobalEnd;
 
-       let targetGlobalStart = { ...globalStart };
-       let targetGlobalEnd = { ...globalEnd };
-
-       if (['start', 'topLeft', 'left', 'top'].includes(handle)) {
+       if (handle === 'start') {
+           targetGlobalEnd = anchorPoint;
            targetGlobalStart = { x: pos.x, y: pos.y };
-       } else {
+       } else if (handle === 'end') {
+           targetGlobalStart = anchorPoint;
            targetGlobalEnd = { x: pos.x, y: pos.y };
+       } else {
+           return updatedObject; 
+       }
+
+       if (isShiftPressed) {
+           const dx = targetGlobalEnd.x - targetGlobalStart.x;
+           const dy = targetGlobalEnd.y - targetGlobalStart.y;
+           const angle = Math.atan2(dy, dx);
+           const dist = Math.sqrt(dx*dx + dy*dy);
+           const snapAngle = Math.round(angle / (Math.PI / 4)) * (Math.PI / 4);
+
+           if (handle === 'start') {
+               targetGlobalStart.x = targetGlobalEnd.x - Math.cos(snapAngle) * dist;
+               targetGlobalStart.y = targetGlobalEnd.y - Math.sin(snapAngle) * dist;
+           } else {
+               targetGlobalEnd.x = targetGlobalStart.x + Math.cos(snapAngle) * dist;
+               targetGlobalEnd.y = targetGlobalStart.y + Math.sin(snapAngle) * dist;
+           }
        }
 
        const newCx = (targetGlobalStart.x + targetGlobalEnd.x) / 2;

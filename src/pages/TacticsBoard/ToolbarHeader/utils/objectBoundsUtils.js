@@ -1,31 +1,18 @@
-const rotatePoint = (x, y, centerX, centerY, angle) => {
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  const dx = x - centerX;
-  const dy = y - centerY;
+export const rotatePoint = (x, y, cx, cy, angleDegrees) => {
+  const rad = (angleDegrees * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  const dx = x - cx;
+  const dy = y - cy;
   return {
-    x: centerX + (dx * cos - dy * sin),
-    y: centerY + (dx * sin + dy * cos)
+    x: cx + (dx * cos - dy * sin),
+    y: cy + (dx * sin + dy * cos)
   };
 };
 
-const getCursorForRotation = (baseAngle, objectRotation) => {
-  const totalAngle = (baseAngle + objectRotation) % 360;
-  const normalized = (totalAngle < 0 ? totalAngle + 360 : totalAngle);
-  
-  const step = Math.round(normalized / 45) % 4;
-  
-  const cursors = [
-    'ns-resize',
-    'nesw-resize',
-    'ew-resize',
-    'nwse-resize'
-  ];
-  
-  return cursors[step];
-};
-
 export const getObjectBounds = (obj, canvas) => {
+  if (!obj) return null;
+
   if (obj.type === 'player') {
     const radius = obj.radius || 20;
     const rotation = obj.rotation || 0;
@@ -48,31 +35,6 @@ export const getObjectBounds = (obj, canvas) => {
         { x: textWidth / 2, y: textY }
       ];
       corners.forEach(corner => {
-        const rotatedX = corner.x * Math.cos(angle) - corner.y * Math.sin(angle);
-        const rotatedY = corner.x * Math.sin(angle) + corner.y * Math.cos(angle);
-        minX = Math.min(minX, obj.x + rotatedX);
-        maxX = Math.max(maxX, obj.x + rotatedX);
-        minY = Math.min(minY, obj.y + rotatedY);
-        maxY = Math.max(maxY, obj.y + rotatedY);
-      });
-    }
-    
-    if (obj.cards && obj.cards.length > 0) {
-      const cardWidth = radius * 0.35;
-      const cardHeight = cardWidth * 1.4;
-      const cardSpacing = 2;
-      const startAngle = Math.PI / 4;
-      const startX = Math.cos(startAngle) * radius * 0.7;
-      const startY = Math.sin(startAngle) * radius * 0.7;
-      const lastCardIndex = obj.cards.length - 1;
-      const lastCardX = startX - (lastCardIndex * (cardWidth + cardSpacing));
-      const cardCorners = [
-        { x: lastCardX - cardWidth, y: startY },
-        { x: startX, y: startY },
-        { x: lastCardX - cardWidth, y: startY + cardHeight },
-        { x: startX, y: startY + cardHeight }
-      ];
-      cardCorners.forEach(corner => {
         const rotatedX = corner.x * Math.cos(angle) - corner.y * Math.sin(angle);
         const rotatedY = corner.x * Math.sin(angle) + corner.y * Math.cos(angle);
         minX = Math.min(minX, obj.x + rotatedX);
@@ -106,15 +68,32 @@ export const getObjectBounds = (obj, canvas) => {
   
   if (obj.type === 'shape') {
     if (obj.shape === 'line' || obj.shape === 'arrow') {
-        const minX = Math.min(obj.startX, obj.endX);
-        const maxX = Math.max(obj.startX, obj.endX);
-        const minY = Math.min(obj.startY, obj.endY);
-        const maxY = Math.max(obj.startY, obj.endY);
         const padding = (obj.borderWidth || 2) + 10;
+        const cx = (obj.startX + obj.endX) / 2;
+        const cy = (obj.startY + obj.endY) / 2;
+        const rotation = obj.rotation || 0;
+
+        const pStart = rotatePoint(obj.startX, obj.startY, cx, cy, rotation);
+        const pEnd = rotatePoint(obj.endX, obj.endY, cx, cy, rotation);
+
+        const minX = Math.min(pStart.x, pEnd.x) - padding;
+        const maxX = Math.max(pStart.x, pEnd.x) + padding;
+        const minY = Math.min(pStart.y, pEnd.y) - padding;
+        const maxY = Math.max(pStart.y, pEnd.y) + padding;
+
         return {
-          x: minX - padding, y: minY - padding, 
-          width: (maxX - minX) + padding * 2, height: (maxY - minY) + padding * 2,
-          startX: obj.startX, startY: obj.startY, endX: obj.endX, endY: obj.endY
+            x: minX, 
+            y: minY, 
+            width: maxX - minX, 
+            height: maxY - minY,
+            rotatedEndpoints: { start: pStart, end: pEnd },
+            startX: obj.startX, 
+            startY: obj.startY, 
+            endX: obj.endX, 
+            endY: obj.endY,
+            centerX: cx,
+            centerY: cy,
+            rotation: rotation
         };
     }
     
@@ -126,19 +105,24 @@ export const getObjectBounds = (obj, canvas) => {
       const angle = (rotation * Math.PI) / 180;
       const centerX = obj.x + w / 2;
       const centerY = obj.y + h / 2;
+      
       const corners = [
         { x: obj.x, y: obj.y },
         { x: obj.x + w, y: obj.y },
         { x: obj.x + w, y: obj.y + h },
         { x: obj.x, y: obj.y + h }
       ];
-      const rotatedCorners = corners.map(corner => rotatePoint(corner.x, corner.y, centerX, centerY, angle));
+      
+      const rotatedCorners = corners.map(corner => rotatePoint(corner.x, corner.y, centerX, centerY, rotation));
+      
       let minX = rotatedCorners[0].x, maxX = rotatedCorners[0].x;
       let minY = rotatedCorners[0].y, maxY = rotatedCorners[0].y;
+      
       rotatedCorners.forEach(corner => {
         minX = Math.min(minX, corner.x); maxX = Math.max(maxX, corner.x);
         minY = Math.min(minY, corner.y); maxY = Math.max(maxY, corner.y);
       });
+
       return {
         x: minX, y: minY, width: maxX - minX, height: maxY - minY,
         centerX: centerX, centerY: centerY,
@@ -217,8 +201,6 @@ export const getObjectBounds = (obj, canvas) => {
       const pivotY = obj.y + totalHeight / 2;
       
       if (rotation !== 0) {
-        const angle = (rotation * Math.PI) / 180;
-        
         const corners = [
           { x: obj.x, y: obj.y },
           { x: obj.x + maxWidth, y: obj.y },
@@ -227,7 +209,7 @@ export const getObjectBounds = (obj, canvas) => {
         ];
         
         const rotatedCorners = corners.map(corner => 
-          rotatePoint(corner.x, corner.y, pivotX, pivotY, angle)
+          rotatePoint(corner.x, corner.y, pivotX, pivotY, rotation)
         );
         
         let minX = rotatedCorners[0].x, maxX = rotatedCorners[0].x;
@@ -294,10 +276,36 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
   const bounds = getObjectBounds(obj, canvas);
   if (!bounds) return false;
   
-  if (!isPointInBoundingBox(x, y, bounds, brushSize)) {
+  if (!isPointInBoundingBox(x, y, bounds, brushSize + 5)) {
       return false;
   }
  
+  if (obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
+    const tolerance = (obj.borderWidth / 2) + brushSize;
+    
+    const cx = (obj.startX + obj.endX) / 2;
+    const cy = (obj.startY + obj.endY) / 2;
+    const rotation = obj.rotation || 0;
+
+    const unrotatedPoint = rotatePoint(x, y, cx, cy, -rotation);
+    const mx = unrotatedPoint.x;
+    const my = unrotatedPoint.y;
+
+    const dx = obj.endX - obj.startX;
+    const dy = obj.endY - obj.startY;
+    const lenSq = dx * dx + dy * dy;
+    
+    let t = 0;
+    if (lenSq > 0) t = ((mx - obj.startX) * dx + (my - obj.startY) * dy) / lenSq;
+    t = Math.max(0, Math.min(1, t));
+    
+    const projX = obj.startX + t * dx;
+    const projY = obj.startY + t * dy;
+    
+    const distSq = (mx - projX) ** 2 + (my - projY) ** 2;
+    return distSq <= tolerance * tolerance;
+  }
+  
   if (obj.type === 'path') {
     const tolerance = (obj.brushSize / 2) + brushSize; 
     for (let i = 0; i < obj.points.length - 1; i++) {
@@ -314,20 +322,6 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
       if (distance <= tolerance) return true;
     }
     return false;
-  }
-  
-  if (obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
-    const tolerance = (obj.borderWidth / 2) + brushSize;
-    const dx = bounds.endX - bounds.startX;
-    const dy = bounds.endY - bounds.startY;
-    const lenSq = dx * dx + dy * dy;
-    let t = 0;
-    if (lenSq > 0) t = ((x - bounds.startX) * dx + (y - bounds.startY) * dy) / lenSq;
-    t = Math.max(0, Math.min(1, t));
-    const projX = bounds.startX + t * dx;
-    const projY = bounds.startY + t * dy;
-    const distSq = (x - projX) ** 2 + (y - projY) ** 2;
-    return distSq <= tolerance * tolerance;
   }
   
   if (obj.type === 'shape' && obj.shape === 'circle') {
@@ -354,6 +348,12 @@ export const getResizeHandles = (bounds, obj) => {
   const rotation = (obj && obj.rotation) || 0;
 
   if (obj && obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
+    if (bounds.rotatedEndpoints) {
+        return {
+          start: { x: bounds.rotatedEndpoints.start.x, y: bounds.rotatedEndpoints.start.y, cursor: 'crosshair' },
+          end: { x: bounds.rotatedEndpoints.end.x, y: bounds.rotatedEndpoints.end.y, cursor: 'crosshair' }
+        };
+    }
     return {
       start: { x: bounds.startX, y: bounds.startY, cursor: 'crosshair' },
       end: { x: bounds.endX, y: bounds.endY, cursor: 'crosshair' }
@@ -363,6 +363,22 @@ export const getResizeHandles = (bounds, obj) => {
   if (obj && obj.type === 'path') {
     return {};
   }
+  
+  const getCursorForRotation = (baseAngle, objectRotation) => {
+    const totalAngle = (baseAngle + objectRotation) % 360;
+    const normalized = (totalAngle < 0 ? totalAngle + 360 : totalAngle);
+    
+    const step = Math.round(normalized / 45) % 4;
+    
+    const cursors = [
+      'ns-resize',
+      'nesw-resize',
+      'ew-resize',
+      'nwse-resize'
+    ];
+    
+    return cursors[step];
+  };
   
   if (bounds.rotatedCorners && bounds.rotatedCorners.length === 4) {
     const corners = bounds.rotatedCorners;
@@ -398,7 +414,7 @@ export const getHandleAtPosition = (x, y, bounds, obj) => {
   for (const [name, handle] of Object.entries(handles)) {
     if (obj && obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
       const distance = Math.sqrt(Math.pow(x - handle.x, 2) + Math.pow(y - handle.y, 2));
-      if (distance <= handleSize * 2) {
+      if (distance <= handleSize * 1.5) {
         return { name, ...handle };
       }
     } else {
