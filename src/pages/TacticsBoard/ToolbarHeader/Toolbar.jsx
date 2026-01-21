@@ -13,6 +13,9 @@ import { ReactComponent as DoubleArrowRightBase } from '../../../assets/doubleAr
 import GeometricShapesTool from './GeometricShapesTool';
 import SportsFiguresTool from './SportsFiguresTool';
 import FieldSelectorModal from './FieldSelectorModal';
+import BallTools from './BallTools';
+
+import HelpTooltip from '../../MyTeams/Athlete/AthleteCreate/HelpTooltip';
 
 import {
   setActiveTool,
@@ -146,7 +149,6 @@ const ToolButton = styled.button`
     opacity: 0.5;
     cursor: not-allowed;
   }
-
 `;
 
 const SidebarToggleButton = styled.button`
@@ -173,7 +175,6 @@ const SidebarToggleButton = styled.button`
       fill: ${({ theme }) => theme.white};
     }
   }
-  
 `;
 
 const StyledFieldIcon = styled(FieldIcon)`
@@ -279,6 +280,83 @@ const ColorPickerStyled = styled.input`
   }
 `;
 
+const HelpWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; 
+  height: 28px;
+  margin-left: 16px;
+
+  svg {
+    stroke: ${({ theme }) => theme.textBlack} !important; 
+    width: 28px; 
+    height: 28px;
+    transition: all 0.2s ease;
+  }
+  
+  &:hover svg {
+    stroke: ${({ theme }) => theme.darkGreen} !important;
+    opacity: 0.8;
+  }
+`;
+
+const TooltipList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px; 
+  font-size: 13px;
+  color: ${({ theme }) => theme.textBlack};
+  text-align: left;
+  line-height: 1.5;
+  min-width: 240px;
+`;
+
+const TooltipItem = styled.div`
+  word-wrap: break-word; 
+`;
+
+const BoldKey = styled.span`
+  font-weight: 700;
+  color: ${({ theme }) => theme.textBlack};
+`;
+
+const HelpContent = () => (
+  <TooltipList>
+    <TooltipItem>
+      <BoldKey>Ctrl/Cmd + Z</BoldKey> — Скасувати останню дію
+    </TooltipItem>
+    
+    <TooltipItem>
+      <BoldKey>Ctrl/Cmd + Y або Ctrl/Cmd + Shift + Z</BoldKey> — Повернути скасовану дію
+    </TooltipItem>
+    
+    <TooltipItem>
+      <BoldKey>Delete</BoldKey> — Видалити виділений об'єкт
+    </TooltipItem>
+    
+    <TooltipItem>
+      <BoldKey>Esc</BoldKey> — Зняти виділення / Зберегти текст
+    </TooltipItem>
+    
+    <TooltipItem>
+      <BoldKey>Shift (при створенні)</BoldKey> — Створення правильної фігури
+    </TooltipItem>
+    
+    <TooltipItem>
+      <BoldKey>Shift (при обертанні)</BoldKey> — Обертання з кроком 15°
+    </TooltipItem>
+    
+    <TooltipItem>
+      <BoldKey>(←, ↑, ↓, →)</BoldKey> — Посунути об'єкт на 1 піксель
+    </TooltipItem>
+    
+    <TooltipItem>
+      <BoldKey>Shift + (←, ↑, ↓, →)</BoldKey> — Посунути об'єкт на 10 пікселів
+    </TooltipItem>
+  </TooltipList>
+);
+
 const DebouncedColorPicker = ({ value, onChange, ...props }) => {
   const [localValue, setLocalValue] = useState(value);
   const debounceTimerRef = useRef(null);
@@ -378,6 +456,10 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
     }
   };
 
+  const handleBallSelect = (ball) => {
+    dispatch(setActiveTool(`ball_${ball.id}`));
+  };
+
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
@@ -386,7 +468,7 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
       <ToolbarContainer>
         <ToolbarContent>
           <ToolbarWrapper>
-            {/* Обрати поле */}
+
             <ToolButton 
               title="Обрати поле"
               onClick={handleOpenModal}
@@ -396,7 +478,6 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
             
             <Separator />
           
-            {/* Курсор */}
             <ToolButton 
               title="Курсор (виділення та переміщення)"
               active={activeTool === 'cursor'}
@@ -413,7 +494,6 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
               <TextIcon/>
             </ToolButton>
 
-            {/* Малювання */}
             <ToolButton 
               title="Малювання"
               active={activeTool === 'drawing'}
@@ -422,7 +502,6 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
               <PencilIcon/>
             </ToolButton>
           
-            {/* Ластик (Додано) */}
             <ToolButton 
               title="Ластик"
               active={activeTool === 'eraser'}
@@ -431,13 +510,11 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
               <EraserIcon />
             </ToolButton>
           
-            {/* Геометричні фігури */}
             <GeometricShapesTool 
               activeTool={activeTool}
               onSelectShape={handleShapeSelect}
             />
             
-            {/* Спортивні фігури */}
             <SportsFiguresTool 
               activeTool={activeTool}
               onSelectFigure={handleFigureSelect}
@@ -445,7 +522,6 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
           
             <Separator />
           
-            {/* Команда 1 */}
             <TeamGroup>
               <TeamLabel>К1:</TeamLabel>
               <NumberInput 
@@ -463,7 +539,6 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
               />
             </TeamGroup>
           
-            {/* Команда 2 */}
             <TeamGroup>
               <TeamLabel>К2:</TeamLabel>
               <NumberInput 
@@ -483,14 +558,10 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
           
             <Separator />
           
-            {/* М'яч */}
-            <ToolButton 
-              title="М'яч"
-              active={activeTool === 'ball'}
-              onClick={() => handleToolClick('ball')}
-            >
-              ⚽
-            </ToolButton>
+            <BallTools 
+              activeTool={activeTool}
+              onSelectBall={handleBallSelect}
+            />
           
             <Separator />
           
@@ -516,6 +587,11 @@ const Toolbar = ({ currentField, onSelectField, isSidebarOpen, onToggleSidebar }
             >
               <СancelIcon />
             </ToolButton>
+
+            <HelpWrapper>
+                <HelpTooltip title="Гарячі клавіші" text={<HelpContent />} />
+            </HelpWrapper>
+
           </ToolbarWrapper>
 
           <SidebarToggleContainer>

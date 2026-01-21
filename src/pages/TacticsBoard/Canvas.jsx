@@ -1,6 +1,24 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import styled from 'styled-components';
+import RotateIconSrc from '../../assets/RotateIcon.svg';
+
+import rugbySrc from '../../assets/balls/RugbyBallMarker.svg';
+import rugby1Src from '../../assets/balls/RugbyBallMarker1.svg';
+import amFootballSrc from '../../assets/balls/AmericanFootballBallMarker.svg';
+import volleyballSrc from '../../assets/balls/VolleyballBallMarker.svg';
+import basketSrc from '../../assets/balls/BasketballBallMarker.svg';
+import basket1Src from '../../assets/balls/BasketballBallMarker1.svg';
+import footballSrc from '../../assets/balls/FootballBallMarker.svg';
+import football1Src from '../../assets/balls/FootballBallMarker1.svg';
+import tennisSrc from '../../assets/balls/TennisBallMarker.svg';
+import tennis1Src from '../../assets/balls/TennisBallMarker1.svg';
+import puckSrc from '../../assets/balls/PuckBallMarker.svg';
+import baseballSrc from '../../assets/balls/BaseballBallMarker.svg';
+import simpleSrc from '../../assets/balls/SimpleBallMarker.svg';
+import football2Src from '../../assets/balls/FootballBallMarker2.svg';
+import volleyball1Src from '../../assets/balls/VolleyballBallMarker1.svg';
+
 
 import {
   addPath,
@@ -46,9 +64,7 @@ const CanvasContainer = styled.div`
   
   cursor: ${props => {
     if (props.$isTextInput) return 'default';
-    
     if (props.$activeTool === 'drawing' || props.$activeTool === 'eraser' || props.$activeTool === 'text') return 'none';
-    
     return props.cursor;
   }};
 `;
@@ -129,6 +145,8 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const textIdRef = useRef(null);
   const selectedObjectIdRef = useRef(null);
   const cursorRef = useRef(null);
+  const rotationIconRef = useRef(null);
+  const ballImagesRef = useRef({});
   
   const lastEraserPosRef = useRef(null);
   const tempErasedIdsRef = useRef(new Set());
@@ -171,6 +189,42 @@ const Canvas = ({ fieldSize, fieldType }) => {
   } = useSelector((state) => state.tacticsBoard);
 
   useEffect(() => {
+    const img = new Image();
+    img.src = RotateIconSrc;
+    img.onload = () => {
+        rotationIconRef.current = img;
+    };
+  }, []);
+
+  useEffect(() => {
+    const balls = {
+      'football': footballSrc,
+      'football1': football1Src,
+      'basketball': basketSrc,
+      'basketball1': basket1Src,
+      'volleyball': volleyballSrc,
+      'rugby': rugbySrc,
+      'rugby1': rugby1Src,
+      'am_football': amFootballSrc,
+      'tennis': tennisSrc,
+      'tennis1': tennis1Src,
+      'baseball': baseballSrc,
+      'puck': puckSrc,
+      'simple': simpleSrc,
+      'volleyball1': volleyball1Src,
+      'football2': football2Src
+    };
+
+    Object.entries(balls).forEach(([key, src]) => {
+      const img = new Image();
+      img.src = src;
+      img.onload = () => {
+        ballImagesRef.current[key] = img;
+      };
+    });
+  }, []);
+
+  useEffect(() => {
     selectedObjectIdRef.current = selectedObjectId;
   }, [selectedObjectId]);
 
@@ -181,7 +235,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     clearActiveLayer,
     tempObjectDataRef,
     tempPathDataRef
-  } = useCanvasDrawing(staticCanvasRef, activeCanvasRef);
+  } = useCanvasDrawing(staticCanvasRef, activeCanvasRef, ballImagesRef.current);
 
   const {
     cursorStyle,
@@ -189,6 +243,10 @@ const Canvas = ({ fieldSize, fieldType }) => {
     startDrag,
     updateDragPosition,
     endDrag,
+    startRotate,
+    updateRotate,
+    endRotate,
+    rotationRef,
     updateCursor,
     checkForHandle,
     draggedObjectRef,
@@ -439,30 +497,50 @@ const Canvas = ({ fieldSize, fieldType }) => {
         cursorRef.current.style.top = `${clientY}px`;
     }
 
-    if (!draggedObjectRef.current && !resizeHandleRef.current && !drawingRef.current && !isDrawingShapeRef.current && !(activeTool === 'eraser' && isDraggingRef.current)) {
+    if (!draggedObjectRef.current && !resizeHandleRef.current && !rotationRef.current && !drawingRef.current && !isDrawingShapeRef.current && !(activeTool === 'eraser' && isDraggingRef.current)) {
         return; 
     }
     if(e.cancelable) e.preventDefault(); 
     const rawPos = getPointerPos(e);
     const clampedPos = clampCoordinates(rawPos);
     
-    if ((draggedObjectRef.current || resizeHandleRef.current || activeTool === 'eraser') && !isDraggingRef.current) {
+    if ((draggedObjectRef.current || resizeHandleRef.current || rotationRef.current || activeTool === 'eraser') && !isDraggingRef.current) {
         isDraggingRef.current = true;
+
+        const hiddenIds = new Set(tempErasedIdsRef.current);
+        
+        if (draggedObjectRef.current) {
+            hiddenIds.add(draggedObjectRef.current.id);
+        } else if (resizeHandleRef.current && selectedObjectId) {
+            hiddenIds.add(selectedObjectId);
+        } else if (rotationRef.current) {
+            hiddenIds.add(rotationRef.current.object.id);
+        }
+
+        if (hiddenIds.size > 0) {
+             const currentSelectedId = draggedObjectRef.current ? draggedObjectRef.current.id : selectedObjectIdRef.current;
+             redrawStatic(paths, objects, activeTool, drawColor, brushSize, currentSelectedId, hiddenIds);
+        }
     }
 
     if (activeTool === 'eraser' && isDraggingRef.current) {
         handleEraserMove(clampedPos);
     }
+    else if (rotationRef.current) {
+         const updatedObject = updateRotate(clampedPos, e.shiftKey);
+         if (updatedObject) {
+             drawSingleObjectOnActive(updatedObject, drawColor, true, rotationIconRef.current);
+         }
+    } 
     else if (resizeHandleRef.current) {
-
       const updatedObject = updateResize(rawPos, e.shiftKey, e.altKey);
       if (updatedObject) {
-        drawSingleObjectOnActive(updatedObject, drawColor, true);
+        drawSingleObjectOnActive(updatedObject, drawColor, true, rotationIconRef.current);
       }
     } else if (draggedObjectRef.current) {
       const updatedObject = updateDragPosition(rawPos, canvasSize.width, canvasSize.height);
       if (updatedObject) {
-        drawSingleObjectOnActive(updatedObject, drawColor, true);
+        drawSingleObjectOnActive(updatedObject, drawColor, true, rotationIconRef.current);
       }
     } 
     else if (drawingRef.current) {
@@ -482,7 +560,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
       if (e.shiftKey) {
          if (shapeType === 'line' || shapeType === 'arrow') {
-
              const dx = endPos.x - shapeStartRef.current.x;
              const dy = endPos.y - shapeStartRef.current.y;
              const angle = Math.atan2(dy, dx);
@@ -493,7 +570,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
                  y: shapeStartRef.current.y + Math.sin(snapAngle) * dist
              };
          } else {
-
              const dx = endPos.x - shapeStartRef.current.x;
              const dy = endPos.y - shapeStartRef.current.y;
              const maxDim = Math.max(Math.abs(dx), Math.abs(dy));
@@ -523,7 +599,8 @@ const Canvas = ({ fieldSize, fieldType }) => {
     updateDragPosition, updateResize, drawLiveLayer, drawSingleObjectOnActive, continueDrawing, 
     activeTool, drawColor, brushSize, eraserSize, shapeStartRef,
     shapeBorderColor, shapeBorderOpacity, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
-    brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd, handleEraserMove, isTextInput
+    brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd, handleEraserMove, isTextInput,
+    updateRotate, rotationRef, selectedObjectId, objects, paths, redrawStatic
   ]);
 
   const handleGlobalPointerUp = useCallback((e) => {
@@ -603,7 +680,12 @@ const Canvas = ({ fieldSize, fieldType }) => {
       clearActiveLayer();
     }
     
-    if (draggedObjectRef.current) {
+    if (rotationRef.current) {
+        const rotatedObj = endRotate();
+        if (rotatedObj) {
+            dispatch(updateObject({ id: rotatedObj.id, updates: { rotation: rotatedObj.rotation } }));
+        }
+    } else if (draggedObjectRef.current) {
       const draggedObject = endDrag();
       if (draggedObject) {
         if (draggedObject.type === 'path') {
@@ -613,9 +695,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
           dispatch(updateObject({ id: draggedObject.id, updates: draggedObject }));
         }
       }
-    }
-    
-    if (resizeHandleRef.current) {
+    } else if (resizeHandleRef.current) {
       const resizeData = endResize();
       if (resizeData && resizeData.id) {
         if (resizeData.type === 'path') {
@@ -633,7 +713,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     resizeHandleRef, activeTool, endDrawing, endShape, endDrag, endResize, dispatch, 
     drawColor, brushSize, shapeBorderColor, shapeBorderOpacity, shapeBorderWidth, 
     shapeBorderStyle, shapeFillColor, shapeFillOpacity, shapeLineCapStart, 
-    shapeLineCapEnd, setCursorStyle, clearActiveLayer
+    shapeLineCapEnd, setCursorStyle, clearActiveLayer, endRotate, rotationRef
   ]);
 
   const handlePointerDown = (e) => {
@@ -664,11 +744,18 @@ const Canvas = ({ fieldSize, fieldType }) => {
         if (bounds) {
           const handle = checkForHandle(pos, selectedObj, canvas);
           if (handle) {
-            startResize(handle, selectedObj, pos, bounds);
+            if (handle.name === 'rotate') {
+                startRotate(selectedObj, pos, bounds);
+            } else {
+                startResize(handle, selectedObj, pos, bounds);
+            }
+            redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObj.id, new Set([selectedObj.id]));
             return;
           }
           if (checkIfPointInSelectedBounds(pos, selectedObj, canvas)) {
             startDrag(selectedObj, pos, canvas);
+            redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObj.id, new Set([selectedObj.id]));
+            drawSingleObjectOnActive(selectedObj, drawColor, true, rotationIconRef.current);
             return;
           }
         }
@@ -681,10 +768,14 @@ const Canvas = ({ fieldSize, fieldType }) => {
         const bounds = getObjectBounds(clickedObject, canvas);
         if (bounds) {
           startDrag(clickedObject, pos, canvas);
+          redrawStatic(paths, objects, activeTool, drawColor, brushSize, clickedObject.id, new Set([clickedObject.id]));
+          drawSingleObjectOnActive(clickedObject, drawColor, true, rotationIconRef.current);
         }
       } else {
         selectedObjectIdRef.current = null;
         dispatch(deselectObject());
+        clearActiveLayer();
+        redrawStatic(paths, objects, activeTool, drawColor, brushSize, null);
       }
       
     } else if (activeTool === 'drawing') {
@@ -705,8 +796,16 @@ const Canvas = ({ fieldSize, fieldType }) => {
        const figureIcons = { 'player': '👤', 'goalkeeper': '🧤', 'coach': '🧠', 'referee': '⚖️', 'goal': '🥅', 'cone': '🟨' };
        const figureId = activeTool.replace('figure_', '');
        dispatch(addObject({ type: 'figure', figureType: figureId, icon: figureIcons[figureId], x: pos.x, y: pos.y, size: 30 }));
-    } else if (activeTool === 'ball') {
-      dispatch(addObject({ type: 'ball', x: pos.x, y: pos.y, radius: 10 }));
+    } else if (activeTool.startsWith('ball_')) {
+      const ballType = activeTool.replace('ball_', '');
+      dispatch(addObject({ 
+        type: 'ball', 
+        ballType: ballType, 
+        x: pos.x, 
+        y: pos.y, 
+        width: 30, 
+        height: 30 
+      }));
     } else if (activeTool === 'text') {
       const newTextId = `text_${Date.now()}_${Math.random()}`;
       setIsTextInput(true);
@@ -719,7 +818,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
   };
 
   const handleCanvasMouseMove = (e) => {
-    if (draggedObjectRef.current || resizeHandleRef.current || drawingRef.current || isDrawingShapeRef.current || isDraggingRef.current) return;
+    if (draggedObjectRef.current || resizeHandleRef.current || rotationRef.current || drawingRef.current || isDrawingShapeRef.current || isDraggingRef.current) return;
     if (e.touches) return;
     
     if ((activeTool === 'drawing' || activeTool === 'eraser' || activeTool === 'text') && cursorRef.current && !isTextInput) {
@@ -810,7 +909,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     }
 
     if (isOnlySelectedChanged && changedObject) {
-        drawSingleObjectOnActive(changedObject, drawColor, true);
+        drawSingleObjectOnActive(changedObject, drawColor, true, rotationIconRef.current);
     } else {
         redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId, tempErasedIdsRef.current);
         
@@ -823,7 +922,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
                 selObj = objects.find(o => o.id === selectedObjectId);
             }
             if (selObj) {
-                drawSingleObjectOnActive(selObj, drawColor, true);
+                drawSingleObjectOnActive(selObj, drawColor, true, rotationIconRef.current);
             } else {
                 clearActiveLayer();
             }
@@ -917,8 +1016,23 @@ const Canvas = ({ fieldSize, fieldType }) => {
   const handleTextInputKeyDown = (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
+      
+      const text = textInputValue.trim();
+      
+      if (text) {
+        dispatch(addText({
+          id: textIdRef.current,
+          x: textInputPos.x,
+          y: textInputPos.y,
+          text: text,
+          fontSize: textFontSize,
+          color: textColor
+        }));
+      }
+
       setIsTextInput(false);
       setTextInputValue('');
+      textIdRef.current = null;
       dispatch(deselectObject());
       selectedObjectIdRef.current = null;
       dispatch(setActiveTool('cursor'));
@@ -927,7 +1041,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
   return (
     <OuterContainer>
-      {/* ОНОВЛЕНО: CustomCursor ховається, коли isTextInput === true (щоб не заважати) */}
       <CustomCursor 
         ref={cursorRef}
         size={activeTool === 'eraser' ? eraserSize : brushSize} 
@@ -942,7 +1055,6 @@ const Canvas = ({ fieldSize, fieldType }) => {
         {activeTool === 'text' && 'T'}
       </CustomCursor>
 
-      {/* ОНОВЛЕНО: Передаємо $isTextInput у CanvasContainer */}
       <CanvasContainer 
         ref={containerRef} 
         cursor={cursorStyle} 

@@ -3,8 +3,8 @@ import { useRef } from 'react';
 const MIN_SHAPE_SIZE = 10;
 const MIN_PLAYER_SIZE = 8;
 const MAX_PLAYER_SIZE = 70;
-const MIN_BALL_SIZE = 5;
-const MAX_BALL_SIZE = 50;
+const MIN_BALL_SIZE = 10;
+const MAX_BALL_SIZE = 150;
 
 const getCorners = (cx, cy, w, h, rotation) => {
   const rad = (rotation * Math.PI) / 180;
@@ -46,9 +46,12 @@ export const useResizeHandles = () => {
 
     let actualWidth, actualHeight;
     
-    if (object.type === 'player' || object.type === 'ball') {
+    if (object.type === 'player') {
        actualWidth = (object.radius || 20) * 2;
        actualHeight = (object.radius || 20) * 2;
+    } else if (object.type === 'ball') {
+       actualWidth = object.width || 30;
+       actualHeight = object.height || 30;
     } else if (object.type === 'figure') {
        actualWidth = object.size || 30;
        actualHeight = object.size || 30;
@@ -64,9 +67,12 @@ export const useResizeHandles = () => {
     if (object.shape === 'line' || object.shape === 'arrow') {
       cx = (object.startX + object.endX) / 2;
       cy = (object.startY + object.endY) / 2;
-    } else if (object.type === 'player' || object.type === 'ball' || object.type === 'figure') {
+    } else if (object.type === 'player' || object.type === 'figure') {
       cx = object.x;
       cy = object.y;
+    } else if (object.type === 'ball') {
+      cx = object.x + actualWidth / 2;
+      cy = object.y + actualHeight / 2;
     } else if (object.type === 'text') {
       cx = bounds.centerX;
       cy = bounds.centerY;
@@ -185,7 +191,7 @@ export const useResizeHandles = () => {
     const {
       handle, object, startFontSize,
       startCenterX, startCenterY, startDistanceFromCenter,
-      rotation, lineStartX, lineStartY, lineEndX, lineEndY,
+      rotation,
       startPos, startLocalLeft, startLocalRight, startLocalTop, startLocalBottom,
       isHandleLeft, isHandleRight, isHandleTop, isHandleBottom,
       startFlippedX, startFlippedY, startWidth, startHeight,
@@ -297,8 +303,11 @@ export const useResizeHandles = () => {
            updatedObject.radius = Math.max(MIN_PLAYER_SIZE, Math.min(MAX_PLAYER_SIZE, r));
        } 
        else if (object.type === 'ball') {
-           const r = (absStartWidth / 2) * scale;
-           updatedObject.radius = Math.max(MIN_BALL_SIZE, Math.min(MAX_BALL_SIZE, r));
+           const newSize = Math.max(MIN_BALL_SIZE, Math.min(MAX_BALL_SIZE, absStartWidth * scale));
+           updatedObject.width = newSize;
+           updatedObject.height = newSize;
+           updatedObject.x = startCenterX - newSize / 2;
+           updatedObject.y = startCenterY - newSize / 2;
        } 
        else {
            updatedObject.size = Math.max(10, absStartWidth * scale);

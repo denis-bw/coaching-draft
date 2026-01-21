@@ -1048,25 +1048,45 @@ export const drawPlayer = (ctx, player, isSelected) => {
   ctx.restore();
 };
 
-export const drawBall = (ctx, ball, isSelected = false) => {
-  const radius = ball.radius || 10;
-  const strokeColor = isSelected ? '#FFD700' : 'black';
-  const lineWidth = isSelected ? 3 : 2;
-
-  ctx.fillStyle = 'white';
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = lineWidth;
-  ctx.beginPath();
-  ctx.arc(ball.x, ball.y, radius, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
+export const drawBall = (ctx, obj, isSelected, ballImages = {}) => {
+  const x = obj.x;
+  const y = obj.y;
+  const width = obj.width || (obj.radius ? obj.radius * 2 : 30);
+  const height = obj.height || (obj.radius ? obj.radius * 2 : 30);
   
-  ctx.beginPath();
-  ctx.arc(ball.x - radius/3, ball.y - radius/3, radius/3, 0, Math.PI * 2);
-  ctx.fillStyle = 'black';
-  ctx.fill();
-};
+  ctx.save();
+  
+  if (obj.rotation) {
+      const cx = x + width / 2;
+      const cy = y + height / 2;
+      ctx.translate(cx, cy);
+      ctx.rotate((obj.rotation * Math.PI) / 180);
+      ctx.translate(-cx, -cy);
+  }
 
+  const img = ballImages[obj.ballType];
+
+  if (img) {
+
+      ctx.drawImage(img, x, y, width, height);
+  } else {
+      ctx.beginPath();
+      const radius = width / 2;
+      ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = '#000';
+      ctx.font = `${radius}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('⚽', x + radius, y + radius);
+  }
+
+  ctx.restore();
+};
 export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') => {
   ctx.save();
   
@@ -1298,20 +1318,53 @@ export const drawSelectionBox = (ctx, bounds) => {
   ctx.restore();
 };
 
-export const drawResizeHandles = (ctx, bounds, obj) => {
+export const drawResizeHandles = (ctx, bounds, obj, rotateIconImage = null) => {
   const handles = getResizeHandles(bounds, obj);
   const handleSize = 8;
   
-  ctx.fillStyle = 'white';
-  ctx.strokeStyle = '#FFD700';
-  ctx.lineWidth = 2;
+  const connectorColor = '#FFD700';
+
+  ctx.save();
   
   Object.entries(handles).forEach(([name, handle]) => {
-    ctx.save();
-    ctx.fillRect(handle.x - handleSize/2, handle.y - handleSize/2, handleSize, handleSize);
-    ctx.strokeRect(handle.x - handleSize/2, handle.y - handleSize/2, handleSize, handleSize);
-    ctx.restore();
+    if (name === 'rotate') {
+        
+        const rSize = 24;
+        
+        ctx.beginPath();
+        ctx.arc(handle.x, handle.y, rSize / 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        if (rotateIconImage) {
+            const iconSize = 16;
+            ctx.drawImage(
+                rotateIconImage, 
+                handle.x - iconSize / 2, 
+                handle.y - iconSize / 2, 
+                iconSize, 
+                iconSize
+            );
+        } else {
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('↻', handle.x, handle.y); 
+        }
+    } else {
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.fillRect(handle.x - handleSize/2, handle.y - handleSize/2, handleSize, handleSize);
+        ctx.strokeRect(handle.x - handleSize/2, handle.y - handleSize/2, handleSize, handleSize);
+    }
   });
+
+  ctx.restore();
 };
 
 export const createObjectCache = (object, canvas) => {

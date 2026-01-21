@@ -4,6 +4,7 @@ import { createObjectCache } from '../utils/drawingUtils';
 
 export const useObjectInteraction = () => {
   const draggedObjectRef = useRef(null);
+  const rotationRef = useRef(null);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
   const initialDragStateRef = useRef(null); 
   const [cursorStyle, setCursorStyle] = useState('default');
@@ -134,8 +135,55 @@ export const useObjectInteraction = () => {
     return draggedObject;
   };
 
+  const startRotate = (object, pos, bounds) => {
+    const cx = bounds.centerX !== undefined ? bounds.centerX : (object.x + (object.width || 0)/2);
+    const cy = bounds.centerY !== undefined ? bounds.centerY : (object.y + (object.height || 0)/2);
+
+    const startAngleRad = Math.atan2(pos.y - cy, pos.x - cx);
+    const startAngleDeg = (startAngleRad * 180) / Math.PI;
+
+    rotationRef.current = {
+      object: { ...object },
+      centerX: cx,
+      centerY: cy,
+      startMouseAngle: startAngleDeg,
+      startObjectRotation: object.rotation || 0
+    };
+  };
+
+  const updateRotate = (pos, isShiftPressed) => {
+    if (!rotationRef.current) return null;
+
+    const { object, centerX, centerY, startMouseAngle, startObjectRotation } = rotationRef.current;
+
+    const currentAngleRad = Math.atan2(pos.y - centerY, pos.x - centerX);
+    const currentAngleDeg = (currentAngleRad * 180) / Math.PI;
+
+    let angleDelta = currentAngleDeg - startMouseAngle;
+    let newRotation = startObjectRotation + angleDelta;
+
+    while (newRotation > 180) newRotation -= 360;
+    while (newRotation <= -180) newRotation += 360;
+
+    if (isShiftPressed) {
+       const snapStep = 15;
+       newRotation = Math.round(newRotation / snapStep) * snapStep;
+    }
+
+    const updatedObject = { ...object, rotation: Math.round(newRotation) };
+    rotationRef.current.object = updatedObject;
+
+    return updatedObject;
+  };
+
+  const endRotate = () => {
+    const data = rotationRef.current;
+    rotationRef.current = null;
+    return data ? data.object : null;
+  };
+
   const updateCursor = (pos, objects, paths, selectedObjectId, brushSize, canvas) => {
-    if (draggedObjectRef.current) return;
+    if (draggedObjectRef.current || rotationRef.current) return;
 
     if (selectedObjectId) {
       const selectedObj = selectedObjectId ? 
@@ -182,12 +230,16 @@ export const useObjectInteraction = () => {
   
   return {
     draggedObjectRef,
+    rotationRef,
     dragOffsetRef,
     cursorStyle,
     setCursorStyle,
     startDrag,
     updateDragPosition,
     endDrag,
+    startRotate,
+    updateRotate,
+    endRotate,
     updateCursor,
     checkForHandle,
     checkIfPointInSelectedBounds  

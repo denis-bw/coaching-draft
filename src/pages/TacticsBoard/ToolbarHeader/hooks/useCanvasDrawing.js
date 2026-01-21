@@ -13,7 +13,7 @@ import {
 } from '../utils/drawingUtils';
 import { getObjectBounds } from '../utils/objectBoundsUtils';
 
-export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
+export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef, ballImages = {}) => {
   const tempObjectDataRef = useRef(null);
   const tempPathDataRef = useRef(null);
   
@@ -32,14 +32,14 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
   }, [activeCanvasRef]);
 
-  const drawRealObject = (ctx, obj, drawColor, isSelected) => {
+  const drawRealObject = (ctx, obj, drawColor, isSelected, images) => {
       ctx.save();
       if (obj.type === 'path') {
         drawPath(ctx, obj, isSelected);
       } else {
         switch (obj.type) {
             case 'player': drawPlayer(ctx, obj, isSelected); break;
-            case 'ball': drawBall(ctx, obj, isSelected); break;
+            case 'ball': drawBall(ctx, obj, isSelected, images); break;
             case 'shape': 
                drawShape(ctx, obj, isSelected, obj.borderColor || drawColor); 
                break;
@@ -53,7 +53,7 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
 
   const drawCachedOrReal = useCallback((ctx, obj, drawColor, isSelected, canvas) => {
       if (isSelected) {
-          drawRealObject(ctx, obj, drawColor, true);
+          drawRealObject(ctx, obj, drawColor, true, ballImages);
           return;
       }
 
@@ -67,7 +67,7 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
              const padding = (obj.brushSize || obj.borderWidth || 10) * 2 + 20;
              ctx.drawImage(cache.canvas, bounds.x - padding, bounds.y - padding);
           } else {
-             drawRealObject(ctx, obj, drawColor, false);
+             drawRealObject(ctx, obj, drawColor, false, ballImages);
           }
           return;
       }
@@ -84,11 +84,11 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
              ctx.drawImage(newCache.canvas, bounds.x - padding, bounds.y - padding);
           }
       } else {
-          drawRealObject(ctx, obj, drawColor, false);
+          drawRealObject(ctx, obj, drawColor, false, ballImages);
       }
-  }, []);
+  }, [ballImages]);
 
-  const redrawStatic = useCallback((paths, objects, activeTool, drawColor, brushSize, excludeObjectId = null, hiddenIds = new Set()) => {
+  const redrawStatic = useCallback((paths, objects, activeTool, drawColor, brushSize, selectedObjectId, hiddenObjectIds = new Set()) => {
     const canvas = staticCanvasRef.current;
     if (!canvas) return;
     
@@ -97,22 +97,23 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
 
     paths.forEach((path, index) => {
         const pathId = `path_${index}`;
+        if (selectedObjectId === pathId || hiddenObjectIds.has(pathId)) return;
+        if (path.points.length < 2) return;
         
-      if (pathId === excludeObjectId || hiddenIds.has(pathId)) return;
-      if (path.points.length < 2) return;
-      
-      const pathObj = { ...path, type: 'path', id: pathId };
-      drawCachedOrReal(ctx, pathObj, drawColor, false, canvas);
+        const pathObj = { ...path, type: 'path', id: pathId };
+        drawCachedOrReal(ctx, pathObj, drawColor, false, canvas);
     });
 
     objects.forEach(obj => {
-      if (obj.id === excludeObjectId || hiddenIds.has(obj.id)) return;
-      drawCachedOrReal(ctx, obj, drawColor, false, canvas);
-    });
+          if (hiddenObjectIds.has(obj.id)) return;
+          
+          const isSelected = obj.id === selectedObjectId;
+          drawRealObject(ctx, obj, drawColor, isSelected, ballImages);
+      });
 
-  }, [staticCanvasRef, clearCanvas, drawCachedOrReal]);
+  }, [staticCanvasRef, clearCanvas, drawCachedOrReal, ballImages]);
 
-  const drawSingleObjectOnActive = useCallback((obj, drawColor, isSelected = true) => {
+  const drawSingleObjectOnActive = useCallback((obj, drawColor, isSelected = true, rotateIconImage = null) => {
     const canvas = activeCanvasRef.current;
     if (!canvas || !obj) return;
     const ctx = canvas.getContext('2d');
@@ -120,28 +121,20 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     
-    if (obj._cache) {
-         const { canvas: cacheImg } = obj._cache;
-         const bounds = getObjectBounds(obj, canvas);
-         const padding = (obj.brushSize || obj.borderWidth || 10) * 2 + 20;
-         ctx.drawImage(cacheImg, bounds.x - padding, bounds.y - padding);
-    } 
-    else {
-        drawRealObject(ctx, obj, drawColor, isSelected);
-    }
+    drawRealObject(ctx, obj, drawColor, isSelected, ballImages);
 
     if (isSelected) {
         const bounds = getObjectBounds(obj, canvas);
         if (bounds) {
             drawSelectionBox(ctx, bounds);
             if (!obj._cache) { 
-                drawResizeHandles(ctx, bounds, obj);
+                drawResizeHandles(ctx, bounds, obj, rotateIconImage);
             }
         }
     }
     ctx.restore();
 
-  }, [activeCanvasRef]);
+  }, [activeCanvasRef, ballImages]);
 
   const drawLiveLayer = useCallback((livePath, previewShape, isIncremental = false) => {
       const canvas = activeCanvasRef.current;
@@ -178,39 +171,16 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef) => {
          
          if (type === 'line' || type === 'arrow') {
              const tempShape = {
-                 type: 'shape',
-                 shape: type,
-                 startX: start.x,
-                 startY: start.y,
-                 endX: end.x,
-                 endY: end.y,
-                 borderColor: borderColor,
-                 borderOpacity: borderOpacity,
-                 borderWidth: borderWidth,
-                 borderStyle: borderStyle,
-                 lineCapStart: lineCapStart,
-                 lineCapEnd: lineCapEnd,
-                 rotation: 0
+                 type: 'shape', shape: type, startX: start.x, startY: start.y, endX: end.x, endY: end.y,
+                 borderColor, borderOpacity, borderWidth, borderStyle, lineCapStart, lineCapEnd, rotation: 0
              };
              drawShape(ctx, tempShape, false, borderColor);
          } else {
              const width = end.x - start.x;
              const height = end.y - start.y;
              const tempShape = {
-                 type: 'shape',
-                 shape: type,
-                 x: start.x,
-                 y: start.y,
-                 width: width,
-                 height: height,
-                 borderColor: borderColor,
-                 borderOpacity: borderOpacity,
-                 borderWidth: borderWidth,
-                 borderStyle: borderStyle,
-                 fillColor: fillColor,
-                 fillOpacity: fillOpacity,
-                 rotation: 0,
-                 ignoreMinSize: true 
+                 type: 'shape', shape: type, x: start.x, y: start.y, width, height,
+                 borderColor, borderOpacity, borderWidth, borderStyle, fillColor, fillOpacity, rotation: 0, ignoreMinSize: true 
              };
              drawShape(ctx, tempShape, false, borderColor);
          }
