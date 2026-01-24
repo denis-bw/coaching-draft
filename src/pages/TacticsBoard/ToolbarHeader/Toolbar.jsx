@@ -178,10 +178,11 @@ const SidebarToggleButton = styled.button`
 `;
 
 const StyledFieldIcon = styled(FieldIcon)`
-  width: 60%;
-  height: 60%;
-  fill: none;
-  stroke: ${({ theme }) => theme.textBlack};
+  width: 68%;
+  height: 68%;
+  fill:  ${({ theme }) => theme.textBlack};
+  transform: rotate(90deg);
+  transform-origin: center center;
 `;
 
 const Separator = styled.div`

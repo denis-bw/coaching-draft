@@ -96,6 +96,22 @@ const TooltipInner = styled.div`
   white-space: normal; 
   font-size: 14px; 
   font-weight: 300;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+  }
 `;
 
 const Title = styled.div`

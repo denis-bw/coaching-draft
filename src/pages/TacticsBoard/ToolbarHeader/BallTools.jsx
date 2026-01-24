@@ -54,7 +54,7 @@ const ToolButton = styled.button`
 const Dropdown = styled.div`
   position: fixed;
   background: ${({ theme }) => theme.ContainerBGColor};
-  border: 1px solid ${({ theme }) => theme.gray};
+  border: 1px solid ${({ theme }) => theme.textBlack};
   border-radius: 4px;
   z-index: 1000;
   display: ${props => props.isOpen ? 'grid' : 'none'};
