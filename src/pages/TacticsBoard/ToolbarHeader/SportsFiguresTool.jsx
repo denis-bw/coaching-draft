@@ -8,10 +8,10 @@ const ToolContainer = styled.div`
 `;
 
 const ToolButton = styled.button`
-  width: 30px; 
-  height: 30px;
-  min-width: 30px;
-  min-height: 30px;
+  width: 24px; 
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
   
   border: 1px solid ${({ theme }) => theme.textBlack};
   background: ${props => props.active ? props.theme.greenMain : props.theme.ContainerBGColor};
@@ -22,17 +22,14 @@ const ToolButton = styled.button`
   justify-content: center;
   border-radius: 4px;
   
-  /* ВАЖЛИВО: Відступи, щоб іконка не торкалася країв */
   padding: 3px; 
   
-  /* ВАЖЛИВО: Обрізаємо все, що намагається вилізти */
   overflow: hidden; 
 
   &:hover {
     background: ${props => props.active ? props.theme.darkGreen : props.theme.lightGreen};
   }
 
-  /* Примушуємо SVG завжди вписуватися в кнопку */
   svg {
     width: 100%;
     height: 100%;
@@ -54,7 +51,7 @@ const FiguresDropdown = styled.div`
 `;
 
 const FigureOption = styled.button`
-  width: 36px; /* Трохи більші в меню */
+  width: 36px;
   height: 36px;
   border: 1px solid transparent;
   background: transparent;
@@ -63,8 +60,8 @@ const FigureOption = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4px; /* Відступ всередині опції */
-  overflow: hidden; /* Обрізка */
+  padding: 4px;
+  overflow: hidden;
   
   &:hover {
     background: ${({ theme }) => theme.lightGreen};
@@ -82,21 +79,20 @@ export const FIGURE_CONFIG = {
   cone3d: { name: 'Конус', width: 36, height: 36 },
   cone: { name: 'Конус', width: 30, height: 30 },
   ladder: { name: 'Драбина', width: 74, height: 74 },
-  ladder5: { name: 'Драбина (5)', width: 74, height: 74 },
+  ladder5: { name: 'Драбина', width: 74, height: 74 },
   pole: { name: 'Стійка', width: 40, height: 40 },
   pole3d: { name: 'Стійка', width: 40, height: 40 },
   marker: { name: 'Фішка', width: 26, height: 26 },
   marker3d: { name: 'Фішка', width: 30, height: 30 },
-  
-marker3d1: { 
-    name: 'Фішка Купол', 
-    width: 26, 
-    height: 26, 
-    viewBox: "0 0 196 123" 
-  },
-  
-  disc: { name: 'Півсфера', width: 40, height: 25 },
+  marker3d1: {  name: 'Фішка Купол',  width: 26, height: 26, viewBox: "0 0 196 123" },
   dummy: { name: 'Манекен', width: 50, height: 50 },
+  dummy1: { name: 'Манекен', width: 50, height: 50 },
+    dummy2: { name: 'Манекен', width: 50, height: 50 },
+  baton: { name: 'Естафетна паличка', width: 20, height: 20},
+  kettlebell: {name: 'Гиря',   width: 24, height: 24  },
+  hammer: {  name: 'Молот',  width: 24,  height: 24  },
+  dumbbell: { name: 'Гантеля', width: 30, height: 30 },
+  
 };
 
 const figuresList = Object.keys(FIGURE_CONFIG).map(id => ({
@@ -159,7 +155,7 @@ const SportsFiguresTool = ({ activeTool, onSelectFigure }) => {
   const buttonRef = useRef(null);
 
   const isFigureActive = activeTool.startsWith('figure_');
-  const activeFigureId = isFigureActive ? activeTool.replace('figure_', '') : 'marker';
+  const activeFigureId = isFigureActive ? activeTool.replace('figure_', '') : 'cone3d';
   const activePaths = figureIconsPaths[activeFigureId] || figureIconsPaths.marker;
 
   const handleToggle = () => {
