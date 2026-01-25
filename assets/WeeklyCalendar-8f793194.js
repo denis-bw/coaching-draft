@@ -1,1 +1,0 @@
-import{j as e,N as r}from"./index-2c318999.js";const a=()=>e.jsxs("div",{children:[e.jsx("h1",{children:"Календар за тиждень"}),e.jsx(r,{to:"/calendar",children:"Перейти до календаря за місяць/ "}),e.jsx(r,{to:"/calendar/event",children:"Перейти до подій/"})]});export{a as default};
