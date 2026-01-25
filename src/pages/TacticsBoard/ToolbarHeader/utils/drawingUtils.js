@@ -1,5 +1,41 @@
 import { getResizeHandles, getObjectBounds } from './objectBoundsUtils';
 
+
+export const figureIconsPaths = {
+  cone: "M32 78 L48 15 L52 15 L68 78 Z M22 78 L78 78 L80 88 L20 88 Z",
+  cone3d: [
+    "M20 75 L20 79 L50 92 L80 79 L80 75 L50 88 Z",
+    "M20 75 L50 62 L80 75 L50 88 Z",
+    "M36 72 L48 22 L52 22 L64 72 Q50 80 36 72 Z"
+  ],
+  ladder: "M35 5 H40 V95 H35 Z M60 5 H65 V95 H60 Z M35 20 H65 V24 H35 Z M35 43 H65 V47 H35 Z M35 66 H65 V70 H35 Z M35 89 H65 V93 H35 Z",
+  ladder5: "M35 5 H40 V95 H35 Z M60 5 H65 V95 H60 Z M35 20 H65 V24 H35 Z M35 37 H65 V41 H35 Z M35 54 H65 V58 H35 Z M35 71 H65 V75 H35 Z M35 88 H65 V92 H35 Z",
+  pole: "M49 5 L51 5 L51 60 L49 60 Z M38 90 L46 60 L54 60 L62 90 Z M30 90 L70 90 L72 98 L28 98 Z",
+  pole3d: [
+    "M25 88 L25 91 L50 99 L75 91 L75 88 L50 97 Z",
+    "M25 88 L50 78 L75 88 L50 97 Z",
+    "M40 85 L47 55 L53 55 L60 85 Q50 90 40 85 Z",
+    "M49 5 H51 V55 H49 Z"
+  ],
+  marker: "M50 15 A35 35 0 1 0 50 85 A35 35 0 1 0 50 15 M50 35 A15 15 0 1 1 50 65 A15 15 0 1 1 50 35",
+  marker3d: "M15 65 A35 22 0 1 0 85 65 A35 22 0 1 0 15 65 M42 52 A8 4.5 0 1 1 58 52 A8 4.5 0 1 1 42 52",
+marker3d1: [
+    "M108 16.4827C108 18.6919 101.508 20.4827 93.5001 20.4827C85.4919 20.4827 79.0001 18.6919 79.0001 16.4827C79.0001 14.2736 85.4919 12.4827 93.5001 12.4827C101.508 12.4827 108 14.2736 108 16.4827Z",
+    "M151 88.4827C146.428 57.3496 138.23 43.7883 111.5 27.9827C97.8323 31.3421 90.168 31.5893 76.5002 27.9827C48.0645 44.2434 40.0167 57.7002 38.0002 88.4827C80.5069 99.052 105.128 99.8426 151 88.4827Z",
+    "M126.5 16.9827C126.247 21.723 125.728 23.8783 123.5 25.9827C150.042 40.4354 159.59 53.019 163.5 86.4827C176.283 83.0363 183.214 79.3525 195 68.4827C185.433 31.9463 172.142 24.7499 147.5 13.4827C135.764 13.6906 130.61 14.2747 126.5 16.9827Z",
+    "M0.500061 79.3961C38.5001 112.384 151.5 116.442 192 82C177.5 112.035 145.522 120.055 96.5001 122.431C42.0677 118.51 15.0001 108.413 0.500061 79.3961Z",
+    "M111.5 9.98268C96.2317 4.13685 87.9288 4.36149 73.5002 9.98268C67.5234 7.87311 63.9526 7.29128 57.5002 6.48268C83.9245 -0.818985 99.0358 -2.14208 128 6.48268C121.663 6.91121 118.028 7.86947 111.5 9.98268Z",
+    "M151 88.4827C146.428 57.3496 138.23 43.7883 111.5 27.9827C97.8323 31.3421 90.168 31.5893 76.5002 27.9827C48.0645 44.2434 40.0167 57.7002 38.0002 88.4827C80.5069 99.052 105.128 99.8426 151 88.4827Z",
+    "M126.5 16.9827C126.247 21.723 125.728 23.8783 123.5 25.9827C150.042 40.4354 159.59 53.019 163.5 86.4827C176.283 83.0363 183.214 79.3525 195 68.4827C185.433 31.9463 172.142 24.7499 147.5 13.4827C135.764 13.6906 130.61 14.2747 126.5 16.9827Z",
+    "M0.500061 79.3961C38.5001 112.384 151.5 116.442 192 82C177.5 112.035 145.522 120.055 96.5001 122.431C42.0677 118.51 15.0001 108.413 0.500061 79.3961Z",
+    "M111.5 9.98268C96.2317 4.13685 87.9288 4.36149 73.5002 9.98268C67.5234 7.87311 63.9526 7.29128 57.5002 6.48268C83.9245 -0.818985 99.0358 -2.14208 128 6.48268C121.663 6.91121 118.028 7.86947 111.5 9.98268Z",
+    "M59.5001 26.9241C37.9384 39.3276 31.6134 52.1571 27.1596 82C15.8057 77.311 10.3737 73.7593 2.50006 65.6138C7.08472 41.3374 12.9754 29.2895 40.9043 16C46.6601 16.3405 50.1789 16.8992 57.4788 19.1862C58.1303 22.9432 58.5337 24.847 59.5001 26.9241Z"
+  ],
+  disc: "M15 82 Q50 35 85 82 L80 88 Q50 45 20 88 Z M44 54 A6 4 0 1 0 56 54 A6 4 0 1 0 44 54",
+  dummy: "M50 8 A10 10 0 1 0 50 28 A10 10 0 1 0 50 8 M35 32 L65 32 L72 92 L28 92 Z M30 52 L70 52 M30 72 L70 72 M50 32 L50 92",
+  
+};
+
 const hexToRgba = (hex, alpha = 1) => {
   if (!hex) return 'rgba(0, 0, 0, 1)';
   let cleanHex = hex.replace('#', '');
@@ -1282,20 +1318,52 @@ export const drawShape = (ctx, shape, isSelected = false, drawColor = '#000') =>
 };
 
 export const drawFigure = (ctx, figure, isSelected = false) => {
-  const size = figure.size || 30;
+  const width = figure.width || 40;
+  const height = figure.height || 40;
+  const color = figure.color || '#000000';
+  const opacity = (figure.opacity !== undefined ? figure.opacity : 100) / 100;
+  const rotation = figure.rotation || 0;
   
-  ctx.font = `${size}px Arial`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(figure.icon, figure.x, figure.y);
-  
-  if (isSelected) {
-    ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(figure.x - size/2, figure.y - size/2, size, size);
-  }
-};
+  let pathData = figureIconsPaths[figure.figureId] || figureIconsPaths.cone;
+  const paths = Array.isArray(pathData) ? pathData : [pathData];
 
+  ctx.save();
+  ctx.translate(figure.x + width / 2, figure.y + height / 2);
+  ctx.rotate((rotation * Math.PI) / 180);
+  
+  let nativeWidth = 100;
+  let nativeHeight = 100;
+
+  if (figure.figureId === 'marker3d1') {
+      nativeWidth = 196;
+      nativeHeight = 123;
+  }
+
+  const scale = Math.min(width / nativeWidth, height / nativeHeight);
+
+  ctx.scale(scale, scale);
+  
+  ctx.translate(-nativeWidth / 2, -nativeHeight / 2);
+
+  ctx.fillStyle = hexToRgba(color, opacity);
+  
+  paths.forEach(d => {
+    const pathObj = new Path2D(d);
+    ctx.fill(pathObj);
+    
+    if (isSelected) {
+      ctx.strokeStyle = '#FFD700';
+      ctx.lineWidth = 3 / scale; 
+      ctx.stroke(pathObj);
+    } else {
+      ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+      ctx.lineWidth = 1 / scale;
+      ctx.stroke(pathObj);
+    }
+  });
+
+  ctx.restore();
+};
 export const drawSelectionBox = (ctx, bounds) => {
   ctx.save();
   ctx.strokeStyle = '#FFD700';

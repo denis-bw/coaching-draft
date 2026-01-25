@@ -55,9 +55,9 @@ export const getObjectBounds = (obj, canvas) => {
     };
   }
   
-  if (obj.type === 'ball') {
-    const width = obj.width || (obj.radius * 2) || 30;
-    const height = obj.height || (obj.radius * 2) || 30;
+if (obj.type === 'ball' || obj.type === 'figure') {
+    const width = obj.width || 30;
+    const height = obj.height || 30;
     const rotation = obj.rotation || 0;
     
     const centerX = obj.x + width / 2;
@@ -89,13 +89,8 @@ export const getObjectBounds = (obj, canvas) => {
     }
 
     return {
-      x: obj.x,
-      y: obj.y,
-      width: width,
-      height: height,
-      centerX: centerX,
-      centerY: centerY,
-      rotation: 0
+      x: obj.x, y: obj.y, width: width, height: height,
+      centerX: centerX, centerY: centerY, rotation: 0
     };
   }
   
@@ -374,8 +369,15 @@ export const isPointInObject = (x, y, obj, brushSize = 10, canvas) => {
 export const getResizeHandles = (bounds, obj) => {
   const rotation = (obj && obj.rotation) || 0;
   const ROTATE_HANDLE_OFFSET = 25; 
-
   const handles = {};
+
+  const getCursorForRotation = (baseAngle, objectRotation) => {
+    const totalAngle = (baseAngle + objectRotation) % 360;
+    const normalized = (totalAngle < 0 ? totalAngle + 360 : totalAngle);
+    const step = Math.round(normalized / 45) % 4;
+    const cursors = ['ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize'];
+    return cursors[step];
+  };
 
   if (obj && obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
     if (bounds.rotatedEndpoints) {
@@ -394,14 +396,6 @@ export const getResizeHandles = (bounds, obj) => {
   if (obj && obj.type === 'path') {
     return {};
   }
-  
-  const getCursorForRotation = (baseAngle, objectRotation) => {
-    const totalAngle = (baseAngle + objectRotation) % 360;
-    const normalized = (totalAngle < 0 ? totalAngle + 360 : totalAngle);
-    const step = Math.round(normalized / 45) % 4;
-    const cursors = ['ns-resize', 'nesw-resize', 'ew-resize', 'nwse-resize'];
-    return cursors[step];
-  };
 
   const cx = bounds.centerX !== undefined ? bounds.centerX : (bounds.x + bounds.width / 2);
   const cy = bounds.centerY !== undefined ? bounds.centerY : (bounds.y + bounds.height / 2);
@@ -409,25 +403,20 @@ export const getResizeHandles = (bounds, obj) => {
   let rotateHandlePos;
 
   if (obj && obj.type === 'shape' && (obj.shape === 'line' || obj.shape === 'arrow')) {
-
       const angleDeg = bounds.totalRotation || 0;
       const angleRad = (angleDeg * Math.PI) / 180;
-      
       const boxHalfHeight = (bounds.rotatedCorners 
             ? Math.sqrt(Math.pow(bounds.rotatedCorners[0].x - bounds.rotatedCorners[3].x, 2) + Math.pow(bounds.rotatedCorners[0].y - bounds.rotatedCorners[3].y, 2)) / 2
             : 10);
-      
       const dist = boxHalfHeight + ROTATE_HANDLE_OFFSET;
 
       rotateHandlePos = {
           x: cx + dist * Math.cos(angleRad - Math.PI / 2),
           y: cy + dist * Math.sin(angleRad - Math.PI / 2)
       };
-
   } else {
       const halfHeight = (bounds.originalHeight !== undefined ? bounds.originalHeight : bounds.height) / 2;
       const unrotatedTopY = cy - Math.abs(halfHeight) - ROTATE_HANDLE_OFFSET;
-      
       rotateHandlePos = rotatePoint(cx, unrotatedTopY, cx, cy, rotation);
   }
 

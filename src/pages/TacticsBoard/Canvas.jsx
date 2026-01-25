@@ -19,6 +19,7 @@ import simpleSrc from '../../assets/balls/SimpleBallMarker.svg';
 import football2Src from '../../assets/balls/FootballBallMarker2.svg';
 import volleyball1Src from '../../assets/balls/VolleyballBallMarker1.svg';
 
+import { FIGURE_CONFIG } from './ToolbarHeader/SportsFiguresTool';
 
 import {
   addPath,
@@ -716,7 +717,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     shapeLineCapEnd, setCursorStyle, clearActiveLayer, endRotate, rotationRef
   ]);
 
-  const handlePointerDown = (e) => {
+const handlePointerDown = (e) => {
     if (e.button !== undefined && e.button !== 0) return;
     
     window.addEventListener('mousemove', handleGlobalPointerMove);
@@ -793,18 +794,30 @@ const Canvas = ({ fieldSize, fieldType }) => {
     } else if (activeTool.startsWith('shape_')) {
       startShape(pos);
     } else if (activeTool.startsWith('figure_')) {
-       const figureIcons = { 'player': '👤', 'goalkeeper': '🧤', 'coach': '🧠', 'referee': '⚖️', 'goal': '🥅', 'cone': '🟨' };
        const figureId = activeTool.replace('figure_', '');
-       dispatch(addObject({ type: 'figure', figureType: figureId, icon: figureIcons[figureId], x: pos.x, y: pos.y, size: 30 }));
+       const config = FIGURE_CONFIG[figureId] || { width: 40, height: 40 };
+       
+       dispatch(addObject({ 
+          type: 'figure', 
+          figureId: figureId, 
+          x: pos.x - config.width / 2, 
+          y: pos.y - config.height / 2, 
+          width: config.width, 
+          height: config.height, 
+          color: '#000000', 
+          opacity: 100, 
+          rotation: 0 
+       }));
     } else if (activeTool.startsWith('ball_')) {
       const ballType = activeTool.replace('ball_', '');
       dispatch(addObject({ 
         type: 'ball', 
         ballType: ballType, 
-        x: pos.x, 
-        y: pos.y, 
+        x: pos.x - 15, 
+        y: pos.y - 15, 
         width: 30, 
-        height: 30 
+        height: 30,
+        rotation: 0
       }));
     } else if (activeTool === 'text') {
       const newTextId = `text_${Date.now()}_${Math.random()}`;

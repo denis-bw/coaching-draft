@@ -12,6 +12,7 @@ import ShapeToolsPanel from './ShapeToolsPanel';
 import PlayerPropertiesPanel from './PlayerPropertiesPanel';
 import EraserToolsPanel from './EraserToolsPanel';
 import BallPropertiesPanel from './BallPropertiesPanel';
+import FigurePropertiesPanel from './FigurePropertiesPanel';
 
 const DoubleArrowRight = styled(DoubleArrowRightBase)`
   width: 100%;
@@ -159,6 +160,13 @@ const Sidebar = ({ isOpen, onClose }) => {
               </DeleteButton>
             </>
           );
+        case 'figure':
+        return (
+          <>
+            <FigurePropertiesPanel selectedObject={selectedObject} />
+            <DeleteButton onClick={handleDelete}>Видалити фігуру</DeleteButton>
+          </>
+        );
         case 'player':
           return (
             <>
