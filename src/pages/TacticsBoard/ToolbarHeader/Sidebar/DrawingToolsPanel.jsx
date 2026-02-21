@@ -12,7 +12,6 @@ import {
 import ColorOpacityControl from './ColorOpacityControl';
 import CustomSelect from './CustomSelect';
 
-
 import markerImg from '../../../../assets/brushes/brush_marker.png';
 import pencilImg from '../../../../assets/brushes/brush_pencil.png';
 import penImg from '../../../../assets/brushes/brush_pen.png';
@@ -93,7 +92,6 @@ const Slider = styled.input.attrs({ type: 'range' })`
   }
 `;
 
-
 const BrushGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -147,11 +145,8 @@ const DrawingToolsPanel = () => {
     paths 
   } = useSelector((state) => state.tacticsBoard);
 
-  const selectedPathIndex = selectedObjectId && selectedObjectId.startsWith('path_') 
-    ? parseInt(selectedObjectId.replace('path_', '')) 
-    : -1;
-    
-  const selectedPath = selectedPathIndex >= 0 ? paths[selectedPathIndex] : null;
+  // НОВА ЛОГІКА: Шукаємо шлях за його унікальним ID, а не по індексу
+  const selectedPath = selectedObjectId ? paths.find(p => p.id === selectedObjectId) : null;
 
   const currentStyle = selectedPath ? selectedPath.brushStyle : brushStyle;
   const currentColor = selectedPath ? selectedPath.color : drawColor;
@@ -181,7 +176,7 @@ const DrawingToolsPanel = () => {
   const handleBrushSelect = (style) => {
     if (selectedPath) {
       dispatch(updatePath({
-        index: selectedPathIndex,
+        id: selectedObjectId, // Використовуємо id замість index
         updates: { 
           brushStyle: style,
           lineType: ['oil', 'watercolor', 'splatter', 'calligraphy'].includes(style) ? 'solid' : currentLineType
@@ -197,7 +192,7 @@ const DrawingToolsPanel = () => {
 
   const handleColorChange = (color) => {
     if (selectedPath) {
-      dispatch(updatePath({ index: selectedPathIndex, updates: { color } }));
+      dispatch(updatePath({ id: selectedObjectId, updates: { color } })); // Використовуємо id
     } else {
       dispatch(setDrawColor(color));
     }
@@ -205,7 +200,7 @@ const DrawingToolsPanel = () => {
 
   const handleOpacityChange = (opacity) => {
     if (selectedPath) {
-      dispatch(updatePath({ index: selectedPathIndex, updates: { opacity } }));
+      dispatch(updatePath({ id: selectedObjectId, updates: { opacity } })); // Використовуємо id
     } else {
       dispatch(setBrushOpacity(opacity));
     }
@@ -217,7 +212,7 @@ const DrawingToolsPanel = () => {
 
   const handleSizeCommit = () => {
     if (selectedPath) {
-      dispatch(updatePath({ index: selectedPathIndex, updates: { brushSize: localSize } }));
+      dispatch(updatePath({ id: selectedObjectId, updates: { brushSize: localSize } })); // Використовуємо id
     } else {
       dispatch(setBrushSize(localSize));
     }
@@ -225,7 +220,7 @@ const DrawingToolsPanel = () => {
 
   const handleLineTypeChange = (value) => {
     if (selectedPath) {
-      dispatch(updatePath({ index: selectedPathIndex, updates: { lineType: value } }));
+      dispatch(updatePath({ id: selectedObjectId, updates: { lineType: value } })); // Використовуємо id
     } else {
       dispatch(setLineType(value));
     }
@@ -235,7 +230,7 @@ const DrawingToolsPanel = () => {
     <>
       <Section>
         <SectionTitle>
-          {selectedPath ? 'Пензель' : 'Тип пензля'}
+          {selectedPath ? 'Пензель (обрана лінія)' : 'Тип пензля'}
         </SectionTitle>
         <BrushGrid>
           <BrushButton active={currentStyle === 'hard'} onClick={() => handleBrushSelect('hard')} title="Маркер">

@@ -182,15 +182,15 @@ export const useObjectInteraction = () => {
     return data ? data.object : null;
   };
 
-  const updateCursor = (pos, objects, paths, selectedObjectId, brushSize, canvas) => {
-    if (draggedObjectRef.current || rotationRef.current) return;
-
+  const updateCursor = (pos, objects, paths, selectedObjectId, brushSize, canvas, layerOrder = []) => {
     if (selectedObjectId) {
-      const selectedObj = selectedObjectId ? 
-        (selectedObjectId.startsWith('path_') ? 
-          { ...paths[parseInt(selectedObjectId.replace('path_', ''))], type: 'path', id: selectedObjectId } :
-          objects.find(o => o.id === selectedObjectId)) : 
-        null;
+      // Спочатку шукаємо в об'єктах
+      let selectedObj = objects.find(o => o.id === selectedObjectId);
+      // Якщо об'єкта немає, шукаємо в лініях і гарантуємо тип 'path'
+      if (!selectedObj) {
+          const p = paths.find(p => p.id === selectedObjectId);
+          if (p) selectedObj = { ...p, type: 'path' };
+      }
       
       if (selectedObj) {
         const bounds = getObjectBounds(selectedObj, canvas);
@@ -208,7 +208,7 @@ export const useObjectInteraction = () => {
       }
     }
     
-    const hoveredObject = getObjectAtPosition(pos.x, pos.y, objects, paths, brushSize, canvas);
+    const hoveredObject = getObjectAtPosition(pos.x, pos.y, objects, paths, brushSize, canvas, layerOrder);
     if (hoveredObject) {
       setCursorStyle('pointer');
     } else {

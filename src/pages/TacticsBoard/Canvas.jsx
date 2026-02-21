@@ -58,7 +58,7 @@ const CanvasContainer = styled.div`
   border: 2px solid #ddd;
   margin-top: 10px;
   background: white;
-  overflow: hidden;
+  overflow: hidden; /* Повертаємо, щоб відрізати візуальне сміття за межами */
   display: inline-block;
   max-width: 100%;
   position: relative;
@@ -96,7 +96,7 @@ const TextArea = styled.textarea`
   background: white;
   padding: 4px 6px;
   transform: translateY(-50%);
-  min-width: 150px;
+  min-width: 20px; 
   min-height: auto;
   outline: none;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -104,8 +104,7 @@ const TextArea = styled.textarea`
   resize: none;
   overflow: hidden;
   line-height: 1.5;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: pre; 
 `;
 
 const CustomCursor = styled.div`
@@ -137,7 +136,7 @@ const CustomCursor = styled.div`
   white-space: nowrap;
 `;
 
-const Canvas = ({ fieldSize, fieldType }) => {
+const Canvas = ({ fieldSize, fieldType, isFullscreen }) => {
   const staticCanvasRef = useRef(null);
   const activeCanvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -177,6 +176,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
     paths, 
     objects, 
     selectedObjectId,
+    layerOrder,
     textFontSize,
     textColor,
     shapeBorderColor,
@@ -350,12 +350,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
         const y = lastPos.y + dy * t;
         
         const hittingObjects = getCollidingObjects(
-            x, 
-            y, 
-            objects, 
-            paths, 
-            effectiveRadius, 
-            staticCanvasRef.current
+            x, y, objects, paths, effectiveRadius, staticCanvasRef.current, layerOrder
         );
 
         hittingObjects.forEach(obj => {
@@ -369,19 +364,13 @@ const Canvas = ({ fieldSize, fieldType }) => {
     if (hasNewDeletions) {
         requestAnimationFrame(() => {
             redrawStatic(
-                paths, 
-                objects, 
-                activeTool, 
-                drawColor, 
-                brushSize, 
-                null, 
-                tempErasedIdsRef.current
+                paths, objects, activeTool, drawColor, brushSize, null, tempErasedIdsRef.current, layerOrder
             );
         });
     }
     
     lastEraserPosRef.current = currentPos;
-  }, [objects, paths, eraserSize, activeTool, drawColor, brushSize, redrawStatic]);
+  }, [objects, paths, layerOrder, eraserSize, activeTool, drawColor, brushSize, redrawStatic]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
@@ -403,9 +392,9 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
       if (e.key === 'Delete') {
           if (selectedObjectId) {
-              if (selectedObjectId.startsWith('path_')) {
-                  const idx = parseInt(selectedObjectId.replace('path_', ''));
-                  dispatch(deletePath(idx));
+              const isPath = paths.some(p => p.id === selectedObjectId);
+              if (isPath) {
+                  dispatch(deletePath(selectedObjectId));
               } else {
                   dispatch(deleteObject(selectedObjectId));
               }
@@ -425,13 +414,8 @@ const Canvas = ({ fieldSize, fieldType }) => {
              if (e.key === 'ArrowLeft') dx = -step;
              if (e.key === 'ArrowRight') dx = step;
 
-             let objToMove = null;
-             if (selectedObjectId.startsWith('path_')) {
-                 const idx = parseInt(selectedObjectId.replace('path_', ''));
-                 objToMove = { ...paths[idx], type: 'path' }; 
-             } else {
-                 objToMove = objects.find(o => o.id === selectedObjectId);
-             }
+             const foundPath = paths.find(p => p.id === selectedObjectId);
+             const objToMove = foundPath ? { ...foundPath, type: 'path' } : objects.find(o => o.id === selectedObjectId);
 
              if (objToMove) {
                  const bounds = getObjectBounds(objToMove, staticCanvasRef.current);
@@ -457,10 +441,10 @@ const Canvas = ({ fieldSize, fieldType }) => {
                  }
 
                  if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
-                     if (selectedObjectId.startsWith('path_')) {
-                        const idx = parseInt(selectedObjectId.replace('path_', ''));
-                        const newPoints = paths[idx].points.map(p => ({ x: p.x + dx, y: p.y + dy }));
-                        dispatch(updatePath({ index: idx, updates: { points: newPoints } }));
+                     const isPath = paths.some(p => p.id === selectedObjectId);
+                     if (isPath) {
+                        const newPoints = objToMove.points.map(p => ({ x: p.x + dx, y: p.y + dy }));
+                        dispatch(updatePath({ id: selectedObjectId, updates: { points: newPoints } }));
                      } else {
                         if (objToMove.type === 'shape' && (objToMove.shape === 'line' || objToMove.shape === 'arrow')) {
                            dispatch(updateObject({ id: selectedObjectId, updates: { 
@@ -520,7 +504,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
 
         if (hiddenIds.size > 0) {
              const currentSelectedId = draggedObjectRef.current ? draggedObjectRef.current.id : selectedObjectIdRef.current;
-             redrawStatic(paths, objects, activeTool, drawColor, brushSize, currentSelectedId, hiddenIds);
+             redrawStatic(paths, objects, activeTool, drawColor, brushSize, currentSelectedId, hiddenIds, layerOrder);
         }
     }
 
@@ -598,7 +582,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
   }, [
     canvasSize, draggedObjectRef, resizeHandleRef, drawingRef, isDrawingShapeRef, 
     updateDragPosition, updateResize, drawLiveLayer, drawSingleObjectOnActive, continueDrawing, 
-    activeTool, drawColor, brushSize, eraserSize, shapeStartRef,
+    activeTool, drawColor, brushSize, eraserSize, shapeStartRef, layerOrder,
     shapeBorderColor, shapeBorderOpacity, shapeBorderStyle, shapeBorderWidth, shapeFillColor, shapeFillOpacity,
     brushOpacity, brushStyle, lineType, shapeLineCapStart, shapeLineCapEnd, handleEraserMove, isTextInput,
     updateRotate, rotationRef, selectedObjectId, objects, paths, redrawStatic
@@ -690,8 +674,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
       const draggedObject = endDrag();
       if (draggedObject) {
         if (draggedObject.type === 'path') {
-          const pathIndex = parseInt(draggedObject.id.replace('path_', ''));
-          dispatch(updatePath({ index: pathIndex, updates: draggedObject }));
+          dispatch(updatePath({ id: draggedObject.id, updates: draggedObject }));
         } else {
           dispatch(updateObject({ id: draggedObject.id, updates: draggedObject }));
         }
@@ -700,8 +683,7 @@ const Canvas = ({ fieldSize, fieldType }) => {
       const resizeData = endResize();
       if (resizeData && resizeData.id) {
         if (resizeData.type === 'path') {
-          const pathIndex = parseInt(resizeData.id.replace('path_', ''));
-          dispatch(updatePath({ index: pathIndex, updates: resizeData }));
+          dispatch(updatePath({ id: resizeData.id, updates: resizeData }));
         } else {
           dispatch(updateObject({ id: resizeData.id, updates: resizeData }));
         }
@@ -734,11 +716,11 @@ const handlePointerDown = (e) => {
     }
     
     if (activeTool === 'cursor') {
-      const selectedObj = selectedObjectId ? 
-        (selectedObjectId.startsWith('path_') ? 
-          { ...paths[parseInt(selectedObjectId.replace('path_', ''))], type: 'path', id: selectedObjectId } :
-          objects.find(o => o.id === selectedObjectId)) : 
-        null;
+      let selectedObj = null;
+      if (selectedObjectId) {
+          const foundPath = paths.find(path => path.id === selectedObjectId);
+          selectedObj = foundPath ? { ...foundPath, type: 'path' } : objects.find(o => o.id === selectedObjectId);
+      }
 
       if (selectedObj) {
         const bounds = getObjectBounds(selectedObj, canvas);
@@ -750,33 +732,33 @@ const handlePointerDown = (e) => {
             } else {
                 startResize(handle, selectedObj, pos, bounds);
             }
-            redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObj.id, new Set([selectedObj.id]));
+            redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObj.id, new Set([selectedObj.id]), layerOrder);
             return;
           }
           if (checkIfPointInSelectedBounds(pos, selectedObj, canvas)) {
             startDrag(selectedObj, pos, canvas);
-            redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObj.id, new Set([selectedObj.id]));
+            redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObj.id, new Set([selectedObj.id]), layerOrder);
             drawSingleObjectOnActive(selectedObj, drawColor, true, rotationIconRef.current);
             return;
           }
         }
       }
       
-      const clickedObject = getObjectAtPosition(pos.x, pos.y, objects, paths, brushSize, canvas);
+      const clickedObject = getObjectAtPosition(pos.x, pos.y, objects, paths, brushSize, canvas, layerOrder);
       if (clickedObject) {
         selectedObjectIdRef.current = clickedObject.id;
         dispatch(selectObject(clickedObject.id));
         const bounds = getObjectBounds(clickedObject, canvas);
         if (bounds) {
           startDrag(clickedObject, pos, canvas);
-          redrawStatic(paths, objects, activeTool, drawColor, brushSize, clickedObject.id, new Set([clickedObject.id]));
+          redrawStatic(paths, objects, activeTool, drawColor, brushSize, clickedObject.id, new Set([clickedObject.id]), layerOrder);
           drawSingleObjectOnActive(clickedObject, drawColor, true, rotationIconRef.current);
         }
       } else {
         selectedObjectIdRef.current = null;
         dispatch(deselectObject());
         clearActiveLayer();
-        redrawStatic(paths, objects, activeTool, drawColor, brushSize, null);
+        redrawStatic(paths, objects, activeTool, drawColor, brushSize, null, new Set(), layerOrder);
       }
       
     } else if (activeTool === 'drawing') {
@@ -842,12 +824,20 @@ const handlePointerDown = (e) => {
     const pos = getPointerPos(e);
     const canvas = staticCanvasRef.current;
     if (activeTool === 'cursor') {
-      updateCursor(pos, objects, paths, selectedObjectIdRef.current, brushSize, canvas);
+      updateCursor(pos, objects, paths, selectedObjectIdRef.current, brushSize, canvas, layerOrder);
     }
   };
 
   const handleMouseEnter = () => setIsCursorVisible(true);
   const handleMouseLeave = () => setIsCursorVisible(false);
+
+  // 🔥 ГОЛОВНИЙ ФІКС: Блокуємо спроби браузера скролити контейнер за текстом
+  const handleContainerScroll = (e) => {
+    if (e.target) {
+      e.target.scrollLeft = 0;
+      e.target.scrollTop = 0;
+    }
+  };
 
   useEffect(() => {
     const updateCanvasSize = () => {
@@ -857,8 +847,14 @@ const handlePointerDown = (e) => {
 
     updateCanvasSize();
     window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
-  }, [calculateCanvasSize]);
+
+    const timer = setTimeout(updateCanvasSize, 100);
+
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+      clearTimeout(timer);
+    };
+  }, [calculateCanvasSize, isFullscreen]);
 
   useEffect(() => {
     const staticCanvas = staticCanvasRef.current;
@@ -886,9 +882,9 @@ const handlePointerDown = (e) => {
         }));
         initializedRef.current = true;
       }
-      redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId);
+      redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId, new Set(), layerOrder);
     }
-  }, [canvasSize, dispatch, redrawStatic, paths, objects, selectedObjectId, activeTool, drawColor, brushSize]);
+  }, [canvasSize, dispatch, redrawStatic, paths, objects, selectedObjectId, activeTool, drawColor, brushSize, layerOrder]);
 
   useEffect(() => {
     if (isDraggingRef.current) return;
@@ -901,16 +897,16 @@ const handlePointerDown = (e) => {
     let changedObject = null;
 
     if (selectedObjectId && selectedObjectId === prevSelectedId) {
-        if (selectedObjectId.startsWith('path_')) {
-             const idx = parseInt(selectedObjectId.replace('path_', ''));
-             if (paths[idx] !== prevPaths[idx]) {
-                 isOnlySelectedChanged = true;
-                 changedObject = { ...paths[idx], type: 'path', id: selectedObjectId };
-             }
+        const pathObj = paths.find(p => p.id === selectedObjectId);
+        const prevPathObj = prevPaths.find(p => p.id === selectedObjectId);
+        
+        if (pathObj && pathObj !== prevPathObj) {
+             isOnlySelectedChanged = true;
+             changedObject = { ...pathObj, type: 'path' }; 
         } else {
              const newObj = objects.find(o => o.id === selectedObjectId);
              const oldObj = prevObjects.find(o => o.id === selectedObjectId);
-             if (newObj !== oldObj) {
+             if (newObj && newObj !== oldObj) {
                  isOnlySelectedChanged = true;
                  changedObject = newObj;
              }
@@ -924,16 +920,11 @@ const handlePointerDown = (e) => {
     if (isOnlySelectedChanged && changedObject) {
         drawSingleObjectOnActive(changedObject, drawColor, true, rotationIconRef.current);
     } else {
-        redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId, tempErasedIdsRef.current);
+        redrawStatic(paths, objects, activeTool, drawColor, brushSize, selectedObjectId, tempErasedIdsRef.current, layerOrder);
         
         if (selectedObjectId) {
-            let selObj = null;
-            if (selectedObjectId.startsWith('path_')) {
-                const idx = parseInt(selectedObjectId.replace('path_', ''));
-                if (paths[idx]) selObj = { ...paths[idx], type: 'path', id: selectedObjectId };
-            } else {
-                selObj = objects.find(o => o.id === selectedObjectId);
-            }
+            const foundPath = paths.find(p => p.id === selectedObjectId);
+            const selObj = foundPath ? { ...foundPath, type: 'path' } : objects.find(o => o.id === selectedObjectId);
             if (selObj) {
                 drawSingleObjectOnActive(selObj, drawColor, true, rotationIconRef.current);
             } else {
@@ -948,7 +939,7 @@ const handlePointerDown = (e) => {
     prevPathsRef.current = paths;
     prevSelectedIdRef.current = selectedObjectId;
 
-  }, [paths, objects, selectedObjectId, redrawStatic, drawSingleObjectOnActive, clearActiveLayer, activeTool, drawColor, brushSize]);
+  }, [paths, objects, layerOrder, selectedObjectId, redrawStatic, drawSingleObjectOnActive, clearActiveLayer, activeTool, drawColor, brushSize]);
 
   useEffect(() => {
     if (canvasSize.width > 0 && canvasSize.height > 0) {
@@ -972,12 +963,21 @@ const handlePointerDown = (e) => {
       const scaleY = canvas.height / rect.height;
       const screenX = textInputPos.x / scaleX;
       const screenY = textInputPos.y / scaleY;
+      
       input.style.left = `${screenX}px`;
       input.style.top = `${screenY}px`;
       input.style.fontSize = `${textFontSize / scaleY}px`;
       input.style.color = textColor;
+      
       input.style.width = 'auto';
       input.style.height = 'auto';
+      
+      requestAnimationFrame(() => {
+        if (input) {
+          input.style.width = (input.scrollWidth + 4) + 'px';
+          input.style.height = input.scrollHeight + 'px';
+        }
+      });
     }
   }, [isTextInput, textInputPos, textColor, textFontSize]);
 
@@ -993,8 +993,11 @@ const handlePointerDown = (e) => {
   }, [selectedObjectId, isTextInput, dispatch]);
 
   useEffect(() => {
-    dispatch(deselectObject());
-    selectedObjectIdRef.current = null;
+    if (activeTool !== 'cursor') {
+      dispatch(deselectObject());
+      selectedObjectIdRef.current = null;
+    }
+    
     if (activeTool === 'shape_arrow') {
        dispatch(setShapeLineCapEnd('arrow'));
     }
@@ -1003,8 +1006,18 @@ const handlePointerDown = (e) => {
   const handleTextInputChange = (e) => {
     setTextInputValue(e.target.value);
     if (textAreaRef.current) {
-      textAreaRef.current.style.height = 'auto';
-      textAreaRef.current.style.height = textAreaRef.current.scrollHeight + 'px';
+      const input = textAreaRef.current;
+      
+      input.style.height = 'auto';
+      input.style.width = 'auto';
+      
+      input.style.height = input.scrollHeight + 'px';
+      input.style.width = (input.scrollWidth + 4) + 'px';
+      
+      // Додатковий захист від зсуву під час друкування
+      if (containerRef.current) {
+        containerRef.current.scrollLeft = 0;
+      }
     }
   };
 
@@ -1075,6 +1088,7 @@ const handlePointerDown = (e) => {
         $isTextInput={isTextInput} 
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        onScroll={handleContainerScroll} /* 🔥 ОСЬ ВІН, СПЯСИТЕЛЬ ВІД ЗСУВУ! */
       >
         <StaticCanvas ref={staticCanvasRef} />
         

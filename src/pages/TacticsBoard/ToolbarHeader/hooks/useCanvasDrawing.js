@@ -88,28 +88,39 @@ export const useCanvasDrawing = (staticCanvasRef, activeCanvasRef, ballImages = 
       }
   }, [ballImages]);
 
-  const redrawStatic = useCallback((paths, objects, activeTool, drawColor, brushSize, selectedObjectId, hiddenObjectIds = new Set()) => {
+  const redrawStatic = useCallback((paths, objects, activeTool, drawColor, brushSize, selectedObjectId, hiddenObjectIds = new Set(), layerOrder = []) => {
     const canvas = staticCanvasRef.current;
     if (!canvas) return;
     
     clearCanvas(canvas, true);
     const ctx = canvas.getContext('2d');
 
-    paths.forEach((path, index) => {
-        const pathId = `path_${index}`;
-        if (selectedObjectId === pathId || hiddenObjectIds.has(pathId)) return;
-        if (path.points.length < 2) return;
-        
-        const pathObj = { ...path, type: 'path', id: pathId };
-        drawCachedOrReal(ctx, pathObj, drawColor, false, canvas);
-    });
+    const allItems = {};
+    // ВАЖЛИВО: Гарантуємо наявність type: 'path' для всіх ліній
+    paths.forEach(p => allItems[p.id] = { ...p, type: 'path' });
+    objects.forEach(o => allItems[o.id] = o);
 
-    objects.forEach(obj => {
-          if (hiddenObjectIds.has(obj.id)) return;
-          
-          const isSelected = obj.id === selectedObjectId;
-          drawRealObject(ctx, obj, drawColor, isSelected, ballImages);
-      });
+    const renderItem = (item) => {
+        if (!item || hiddenObjectIds.has(item.id)) return;
+
+        if (item.type === 'path') {
+            if (selectedObjectId === item.id) return;
+            if (item.points.length < 2) return;
+            drawCachedOrReal(ctx, item, drawColor, false, canvas);
+        } else {
+            const isSelected = item.id === selectedObjectId;
+            drawRealObject(ctx, item, drawColor, isSelected, ballImages);
+        }
+    };
+
+    if (layerOrder && layerOrder.length > 0) {
+        for (let i = layerOrder.length - 1; i >= 0; i--) {
+            renderItem(allItems[layerOrder[i]]);
+        }
+    } else {
+        paths.forEach(renderItem);
+        objects.forEach(renderItem);
+    }
 
   }, [staticCanvasRef, clearCanvas, drawCachedOrReal, ballImages]);
 

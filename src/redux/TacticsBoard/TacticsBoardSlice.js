@@ -13,7 +13,7 @@ const REF_MARGIN_X = 60;
 const getTemplatePlayer = (objects, teamId, defaultColor) => {
   const existingPlayer = [...objects].reverse().find(o => o.type === 'player' && o.team === teamId);
   if (existingPlayer) {
-    const { id, x, y, number, ...styles } = existingPlayer;
+    const { id, x, y, number, layerName, isLocked, ...styles } = existingPlayer;
     return styles;
   }
   return {
@@ -103,6 +103,7 @@ const initialState = {
       shape_arrow: { ...defaultShapeConfig, lineCapEnd: 'arrow' }
   },
 
+  layerOrder: [],
   paths: [],
   objects: [],
   selectedObjectId: null,
@@ -118,6 +119,32 @@ const TacticsBoardSlice = createSlice({
   name: 'tacticsBoard',
   initialState,
   reducers: {
+    toggleLock: (state, action) => {
+      const id = action.payload;
+      const obj = state.objects.find(o => o.id === id);
+      if (obj) obj.isLocked = !obj.isLocked;
+      const path = state.paths.find(p => p.id === id);
+      if (path) path.isLocked = !path.isLocked;
+      if (state.selectedObjectId === id) state.selectedObjectId = null;
+      TacticsBoardSlice.caseReducers.saveToHistory(state);
+    },
+    renameLayer: (state, action) => {
+      const { id, name } = action.payload;
+      const obj = state.objects.find(o => o.id === id);
+      if (obj) obj.layerName = name;
+      const path = state.paths.find(p => p.id === id);
+      if (path) path.layerName = name;
+      TacticsBoardSlice.caseReducers.saveToHistory(state);
+    },
+    reorderLayers: (state, action) => {
+      const { sourceIndex, destinationIndex } = action.payload;
+      const result = Array.from(state.layerOrder);
+      const [removed] = result.splice(sourceIndex, 1);
+      result.splice(destinationIndex, 0, removed);
+      state.layerOrder = result;
+      TacticsBoardSlice.caseReducers.saveToHistory(state);
+    },
+
     setActiveTool: (state, action) => { 
         const newTool = action.payload;
         const oldTool = state.activeTool;
@@ -244,28 +271,58 @@ const TacticsBoardSlice = createSlice({
     },
 
     addPath: (state, action) => {
-      state.paths.push(action.payload);
+      const newPath = {
+        id: action.payload.id || `path_${Date.now()}_${Math.random()}`,
+        type: 'path',
+        ...action.payload
+      };
+      state.paths.push(newPath);
+      state.layerOrder.unshift(newPath.id);
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
     updatePath: (state, action) => {
-      const { index, updates } = action.payload;
-      if (state.paths[index]) {
-        state.paths[index] = { ...state.paths[index], ...updates };
-        TacticsBoardSlice.caseReducers.saveToHistory(state);
+      const { index, id, updates } = action.payload;
+      if (id) {
+          const pathIndex = state.paths.findIndex(p => p.id === id);
+          if (pathIndex !== -1) {
+              state.paths[pathIndex] = { ...state.paths[pathIndex], ...updates };
+          }
+      } else if (index !== undefined && state.paths[index]) {
+          state.paths[index] = { ...state.paths[index], ...updates };
       }
+      TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
     deletePath: (state, action) => {
-        const index = action.payload;
-        state.paths = state.paths.filter((_, i) => i !== index);
-        if (state.selectedObjectId === `path_${index}`) state.selectedObjectId = null;
+        const payload = action.payload;
+        let idToDelete = null;
+        let indexToDelete = -1;
+        
+        if (typeof payload === 'string') {
+            indexToDelete = state.paths.findIndex(p => p.id === payload);
+            if(indexToDelete !== -1) {
+                idToDelete = payload;
+            } else {
+                indexToDelete = parseInt(payload.replace('path_', ''));
+            }
+        } else {
+            indexToDelete = payload;
+        }
+
+        if (indexToDelete !== -1 && state.paths[indexToDelete]) {
+            idToDelete = idToDelete || state.paths[indexToDelete].id || `path_${indexToDelete}`;
+            state.paths = state.paths.filter((_, i) => i !== indexToDelete);
+            state.layerOrder = state.layerOrder.filter(id => id !== idToDelete);
+            if (state.selectedObjectId === idToDelete) state.selectedObjectId = null;
+        }
         TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
     addObject: (state, action) => {
       const newObject = {
-        id: `obj_${Date.now()}_${Math.random()}`,
+        id: action.payload.id || `obj_${Date.now()}_${Math.random()}`,
         ...action.payload
       };
       state.objects.push(newObject);
+      state.layerOrder.unshift(newObject.id);
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
     updateObject: (state, action) => {
@@ -286,6 +343,7 @@ const TacticsBoardSlice = createSlice({
       }
 
       state.objects = state.objects.filter(obj => obj.id !== idToDelete);
+      state.layerOrder = state.layerOrder.filter(id => id !== idToDelete);
       if (state.selectedObjectId === idToDelete) state.selectedObjectId = null;
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
@@ -307,13 +365,17 @@ const TacticsBoardSlice = createSlice({
         const pathIndicesToDelete = new Set();
         idsToDelete.forEach(id => {
             if (id.startsWith('path_')) {
-                pathIndicesToDelete.add(parseInt(id.replace('path_', '')));
+                const maybeIndex = parseInt(id.replace('path_', ''));
+                if(!isNaN(maybeIndex)) pathIndicesToDelete.add(maybeIndex);
             }
         });
 
         if (pathIndicesToDelete.size > 0) {
              state.paths = state.paths.filter((_, index) => !pathIndicesToDelete.has(index));
         }
+        
+        state.paths = state.paths.filter(p => !idsToDelete.has(p.id));
+        state.layerOrder = state.layerOrder.filter(id => !idsToDelete.has(id));
 
         if (state.selectedObjectId && idsToDelete.has(state.selectedObjectId)) {
             state.selectedObjectId = null;
@@ -354,8 +416,9 @@ const TacticsBoardSlice = createSlice({
         while (added < needed) {
             if (!existingNumbers.has(numToCheck)) {
                 const pos = calculateGridPosition(numToCheck - 1, 1, w, h);
+                const newId = `player_team1_${Date.now()}_${added}`;
                 state.objects.push({
-                    id: `player_team1_${Date.now()}_${added}`,
+                    id: newId,
                     type: 'player',
                     team: 1,
                     number: numToCheck,
@@ -363,6 +426,7 @@ const TacticsBoardSlice = createSlice({
                     y: pos.y,
                     ...template
                 });
+                state.layerOrder.unshift(newId); // ВАЖЛИВО: unshift замість push
                 added++;
             }
             numToCheck++;
@@ -375,6 +439,7 @@ const TacticsBoardSlice = createSlice({
         const idsToRemove = objectsToRemove.map(o => o.id);
         
         state.objects = state.objects.filter(obj => !idsToRemove.includes(obj.id));
+        state.layerOrder = state.layerOrder.filter(id => !idsToRemove.includes(id));
       }
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
@@ -405,8 +470,9 @@ const TacticsBoardSlice = createSlice({
         while (added < needed) {
              if (!existingNumbers.has(numToCheck)) {
                 const pos = calculateGridPosition(numToCheck - 1, 2, w, h);
+                const newId = `player_team2_${Date.now()}_${added}`;
                 state.objects.push({
-                    id: `player_team2_${Date.now()}_${added}`,
+                    id: newId,
                     type: 'player',
                     team: 2,
                     number: numToCheck,
@@ -414,6 +480,7 @@ const TacticsBoardSlice = createSlice({
                     y: pos.y,
                     ...template
                 });
+                state.layerOrder.unshift(newId); // ВАЖЛИВО: unshift замість push
                 added++;
              }
              numToCheck++;
@@ -426,6 +493,7 @@ const TacticsBoardSlice = createSlice({
         const idsToRemove = objectsToRemove.map(o => o.id);
         
         state.objects = state.objects.filter(obj => !idsToRemove.includes(obj.id));
+        state.layerOrder = state.layerOrder.filter(id => !idsToRemove.includes(id));
       }
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
@@ -445,28 +513,30 @@ const TacticsBoardSlice = createSlice({
       if (existingPlayers.length === 0) {
         for (let i = 0; i < state.team1.count; i++) {
           const pos = calculateGridPosition(i, 1, canvasWidth, canvasHeight);
-          
+          const newId = `player_team1_${i}`;
           state.objects.push({
-            id: `player_team1_${i}`, type: 'player', team: 1, number: i + 1,
+            id: newId, type: 'player', team: 1, number: i + 1,
             x: pos.x, y: pos.y, 
             color: state.team1.color, radius: 20, rotation: 0,
             topText: '', textSize: 10, numberColor: '#ffffff', numberOpacity: 100,
             textColor: '#000000', textOpacity: 100, colorOpacity: 100,
             borderColor: '#000000', borderOpacity: 100, borderWidth: 2, borderStyle: 'solid', cards: []
           });
+          state.layerOrder.unshift(newId); // ВАЖЛИВО: unshift замість push
         }
 
         for (let i = 0; i < state.team2.count; i++) {
           const pos = calculateGridPosition(i, 2, canvasWidth, canvasHeight);
-          
+          const newId = `player_team2_${i}`;
           state.objects.push({
-            id: `player_team2_${i}`, type: 'player', team: 2, number: i + 1,
+            id: newId, type: 'player', team: 2, number: i + 1,
             x: pos.x, y: pos.y, 
             color: state.team2.color, radius: 20, rotation: 0,
             topText: '', textSize: 10, numberColor: '#ffffff', numberOpacity: 100,
             textColor: '#000000', textOpacity: 100, colorOpacity: 100,
             borderColor: '#000000', borderOpacity: 100, borderWidth: 2, borderStyle: 'solid', cards: []
           });
+          state.layerOrder.unshift(newId); // ВАЖЛИВО: unshift замість push
         }
         TacticsBoardSlice.caseReducers.saveToHistory(state);
       }
@@ -529,12 +599,14 @@ const TacticsBoardSlice = createSlice({
         rotation: rotation || 0
       };
       state.objects.push(newText);
+      state.layerOrder.unshift(newText.id);
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
     saveToHistory: (state) => {
       const snapshot = {
         paths: JSON.parse(JSON.stringify(state.paths)),
         objects: JSON.parse(JSON.stringify(state.objects)),
+        layerOrder: JSON.parse(JSON.stringify(state.layerOrder)),
         team1: JSON.parse(JSON.stringify(state.team1)),
         team2: JSON.parse(JSON.stringify(state.team2)),
         boardDimensions: state.boardDimensions,
@@ -561,6 +633,7 @@ const TacticsBoardSlice = createSlice({
         const snapshot = state.history[state.historyIndex];
         state.paths = JSON.parse(JSON.stringify(snapshot.paths));
         state.objects = JSON.parse(JSON.stringify(snapshot.objects));
+        state.layerOrder = snapshot.layerOrder ? JSON.parse(JSON.stringify(snapshot.layerOrder)) : [];
         state.team1 = JSON.parse(JSON.stringify(snapshot.team1));
         state.team2 = JSON.parse(JSON.stringify(snapshot.team2));
         if (snapshot.boardDimensions) state.boardDimensions = snapshot.boardDimensions;
@@ -584,6 +657,7 @@ const TacticsBoardSlice = createSlice({
         const snapshot = state.history[state.historyIndex];
         state.paths = JSON.parse(JSON.stringify(snapshot.paths));
         state.objects = JSON.parse(JSON.stringify(snapshot.objects));
+        state.layerOrder = snapshot.layerOrder ? JSON.parse(JSON.stringify(snapshot.layerOrder)) : [];
         state.team1 = JSON.parse(JSON.stringify(snapshot.team1));
         state.team2 = JSON.parse(JSON.stringify(snapshot.team2));
         if (snapshot.boardDimensions) state.boardDimensions = snapshot.boardDimensions;
@@ -605,12 +679,14 @@ const TacticsBoardSlice = createSlice({
       const players = state.objects.filter(obj => obj.type === 'player');
       state.paths = [];
       state.objects = players;
+      state.layerOrder = players.map(p => p.id); 
       state.selectedObjectId = null;
       TacticsBoardSlice.caseReducers.saveToHistory(state);
     },
-    resetBoard: (state) => ({ ...initialState, team1: state.team1, team2: state.team2 }),
-    importState: (state, action) => ({ ...state, ...action.payload, history: [], historyIndex: -1 }),
+    resetBoard: (state) => ({ ...initialState, team1: state.team1, team2: state.team2, layerOrder: [] }),
+    importState: (state, action) => ({ ...state, ...action.payload, layerOrder: action.payload.layerOrder || [], history: [], historyIndex: -1 }),
     exportState: (state) => ({
+      layerOrder: state.layerOrder,
       paths: state.paths, objects: state.objects,
       team1: state.team1, team2: state.team2,
       drawColor: state.drawColor, brushSize: state.brushSize,
@@ -622,7 +698,11 @@ const TacticsBoardSlice = createSlice({
     }),
     setFormation: (state, action) => {
       const { canvasWidth, canvasHeight, formation } = action.payload;
+      
+      const playerIds = state.objects.filter(o => o.type === 'player').map(o => o.id);
+      state.layerOrder = state.layerOrder.filter(id => !playerIds.includes(id));
       state.objects = state.objects.filter(obj => obj.type !== 'player');
+      
       const margin = 100;
       const fieldWidth = canvasWidth - margin * 2;
       const fieldHeight = canvasHeight - margin * 2;
@@ -632,22 +712,26 @@ const TacticsBoardSlice = createSlice({
       if (formation.team1) {
         formation.team1.forEach((playerPos, index) => {
           if (index < state.team1.count) {
+            const newId = `player_team1_${index}`;
             state.objects.push({
-              id: `player_team1_${index}`, type: 'player', team: 1, number: index + 1,
+              id: newId, type: 'player', team: 1, number: index + 1,
               x: margin + (playerPos.x * fieldWidth), y: margin + (playerPos.y * fieldHeight),
               ...template1
             });
+            state.layerOrder.unshift(newId); // ВАЖЛИВО: unshift замість push
           }
         });
       }
       if (formation.team2) {
         formation.team2.forEach((playerPos, index) => {
           if (index < state.team2.count) {
+             const newId = `player_team2_${index}`;
             state.objects.push({
-              id: `player_team2_${index}`, type: 'player', team: 2, number: index + 1,
+              id: newId, type: 'player', team: 2, number: index + 1,
               x: margin + (playerPos.x * fieldWidth), y: margin + (playerPos.y * fieldHeight),
               ...template2
             });
+            state.layerOrder.unshift(newId); // ВАЖЛИВО: unshift замість push
           }
         });
       }
@@ -674,6 +758,7 @@ const TacticsBoardSlice = createSlice({
 });
 
 export const {
+  toggleLock, renameLayer, reorderLayers,
   setActiveTool, setDrawColor, setBrushSize,
   setEraserSize, deleteObjects, setTextFontSize, setTextColor, setTextOpacity, 
   setTextFontFamily, setTextFontWeight, setTextFontStyle, 

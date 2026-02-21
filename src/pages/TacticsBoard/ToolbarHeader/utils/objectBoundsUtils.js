@@ -55,7 +55,7 @@ export const getObjectBounds = (obj, canvas) => {
     };
   }
   
-if (obj.type === 'ball' || obj.type === 'figure') {
+  if (obj.type === 'ball' || obj.type === 'figure') {
     const width = obj.width || 30;
     const height = obj.height || 30;
     const rotation = obj.rotation || 0;
@@ -479,26 +479,48 @@ export const getHandleAtPosition = (x, y, bounds, obj) => {
   return null;
 };
 
-export const getCollidingObjects = (x, y, objects, paths, brushSize, canvas) => {
+export const getCollidingObjects = (x, y, objects, paths, brushSize, canvas, layerOrder = []) => {
   const hits = [];
   
-  for (let i = objects.length - 1; i >= 0; i--) {
-    if (isPointInObject(x, y, objects[i], brushSize, canvas)) {
-      hits.push(objects[i]);
+  const allItems = {};
+  objects.forEach(o => allItems[o.id] = o);
+  paths.forEach((p, index) => {
+      const pathId = p.id || `path_${index}`;
+      // ГАРАНТУЄМО TYPE: 'path', щоб старі лінії теж знаходились
+      allItems[pathId] = { ...p, type: 'path', id: pathId }; 
+  });
+
+  if (layerOrder && layerOrder.length > 0) {
+    for (let i = 0; i < layerOrder.length; i++) {
+      const id = layerOrder[i];
+      const item = allItems[id];
+      
+      if (!item || item.isLocked) continue;
+
+      if (isPointInObject(x, y, item, brushSize, canvas)) {
+        hits.push(item);
+      }
     }
-  }
-  
-  for (let i = paths.length - 1; i >= 0; i--) {
-    const pathObj = { ...paths[i], type: 'path', id: `path_${i}` };
-    if (isPointInObject(x, y, pathObj, brushSize, canvas)) {
-      hits.push(pathObj);
+  } else {
+    for (let i = objects.length - 1; i >= 0; i--) {
+      if (objects[i].isLocked) continue;
+      if (isPointInObject(x, y, objects[i], brushSize, canvas)) {
+        hits.push(objects[i]);
+      }
+    }
+    for (let i = paths.length - 1; i >= 0; i--) {
+      const pathObj = { ...paths[i], type: 'path', id: paths[i].id || `path_${i}` };
+      if (pathObj.isLocked) continue;
+      if (isPointInObject(x, y, pathObj, brushSize, canvas)) {
+        hits.push(pathObj);
+      }
     }
   }
   
   return hits;
 };
 
-export const getObjectAtPosition = (x, y, objects, paths, brushSize, canvas) => {
-    const hits = getCollidingObjects(x, y, objects, paths, brushSize, canvas);
+export const getObjectAtPosition = (x, y, objects, paths, brushSize, canvas, layerOrder = []) => {
+    const hits = getCollidingObjects(x, y, objects, paths, brushSize, canvas, layerOrder);
     return hits.length > 0 ? hits[0] : null;
 };
