@@ -49,20 +49,33 @@ import { getCollidingObjects, getObjectAtPosition, getObjectBounds } from './Too
 
 const OuterContainer = styled.div`
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
   width: 100%;
+  flex: 1; /* Займає всю висоту, яку дає MainContent */
 `;
 
 const CanvasContainer = styled.div`
   border: 2px solid #ddd;
-  margin-top: 10px;
   background: white;
-  overflow: hidden; /* Повертаємо, щоб відрізати візуальне сміття за межами */
-  display: inline-block;
-  max-width: 100%;
   position: relative;
+  display: inline-block;
+  margin: auto 0; 
+  max-width: 100%;
+  flex-shrink: 0; 
+
+  /* 🔥 ОСЬ ВІН, ФІКС ПЕРЕКРИТТЯ БОРДЕРА: 
+     Тепер 2px рамки будуть додаватися ЗОВНІ від розмірів канвасу */
+  box-sizing: content-box; 
   
+  /* І гарантовано обрізаємо все, що ти намалюєш за межами поля */
+  overflow: hidden; 
+
+  canvas {
+    display: block; 
+    max-width: 100%;
+  }
+
   cursor: ${props => {
     if (props.$isTextInput) return 'default';
     if (props.$activeTool === 'drawing' || props.$activeTool === 'eraser' || props.$activeTool === 'text') return 'none';
